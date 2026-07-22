@@ -1,0 +1,15 @@
+Name: FX.PARAMETRO.VALIDAR
+Scope: Workbook
+Source Workbook: Excel Data Framework DBB.xlsx
+Source Workbook Folder: Excel Data Framework DBB__xlsx
+Description: Executa todas as validaÃ§Ãµes de um parÃ¢metro e retorna a primeira inconsistÃªncia encontrada. Retorna vazio quando a linha Ã© vÃ¡lida.
+
+
+Formula:
+=LAMBDA(parametro,tipo,obrigatorio,valor,permitidos,parametros,IF(NOT(FX.PARAMETRO.DEFINIDO(parametro, tipo, obrigatorio, valor, permitidos)), "", LET(_Mensagens, VSTACK(FX.PARAMETRO.VALIDAR.PARAMETRO(parametro, tipo, obrigatorio, valor, permitidos, parametros), FX.PARAMETRO.VALIDAR.VALOR(parametro, tipo, obrigatorio, valor, permitidos), FX.PARAMETRO.VALIDAR.OBRIGATORIO(parametro, tipo, obrigatorio, valor, permitidos), FX.PARAMETRO.VALIDAR.PERMITIDOS(parametro, tipo, obrigatorio, valor, permitidos)), _resultado, IFERROR(TEXTJOIN("; ", TRUE, FILTER(_Mensagens, _Mensagens <> "")), "✔"), _resultado)))
+
+Localized Formula (pt-BR) - Preview Only:
+=LAMBDA(parametro,tipo,obrigatorio,valor,permitidos,parametros,SE(NÃO(FX.PARAMETRO.DEFINIDO(parametro, tipo, obrigatorio, valor, permitidos)), "", LET(_Mensagens, EMPILHARV(FX.PARAMETRO.VALIDAR.PARAMETRO(parametro, tipo, obrigatorio, valor, permitidos, parametros), FX.PARAMETRO.VALIDAR.VALOR(parametro, tipo, obrigatorio, valor, permitidos), FX.PARAMETRO.VALIDAR.OBRIGATORIO(parametro, tipo, obrigatorio, valor, permitidos), FX.PARAMETRO.VALIDAR.PERMITIDOS(parametro, tipo, obrigatorio, valor, permitidos)), _resultado, SEERRO(UNIRTEXTO("; ", VERDADEIRO, FILTRO(_Mensagens, _Mensagens <> "")), "✔"), _resultado)))
+
+Raw Formula Snapshot (en-US) - Preview Only:
+=_xlfn.LAMBDA(_xlpm.parametro,_xlpm.tipo,_xlpm.obrigatorio,_xlpm.valor,_xlpm.permitidos,_xlpm.parametros,IF(NOT(FX.PARAMETRO.DEFINIDO(_xlpm.parametro, _xlpm.tipo, _xlpm.obrigatorio, _xlpm.valor, _xlpm.permitidos)), "", _xlfn.LET(_xlpm._Mensagens, _xlfn.VSTACK(FX.PARAMETRO.VALIDAR.PARAMETRO(_xlpm.parametro, _xlpm.tipo, _xlpm.obrigatorio, _xlpm.valor, _xlpm.permitidos, _xlpm.parametros), FX.PARAMETRO.VALIDAR.VALOR(_xlpm.parametro, _xlpm.tipo, _xlpm.obrigatorio, _xlpm.valor, _xlpm.permitidos), FX.PARAMETRO.VALIDAR.OBRIGATORIO(_xlpm.parametro, _xlpm.tipo, _xlpm.obrigatorio, _xlpm.valor, _xlpm.permitidos), FX.PARAMETRO.VALIDAR.PERMITIDOS(_xlpm.parametro, _xlpm.tipo, _xlpm.obrigatorio, _xlpm.valor, _xlpm.permitidos)), _xlpm._resultado, IFERROR(_xlfn.TEXTJOIN("; ", TRUE, _xlfn._xlws.FILTER(_xlpm._Mensagens, _xlpm._Mensagens <> "")), "✔"), _xlpm._resultado)))

@@ -1,0 +1,15 @@
+Name: FX.MATRIZ.TRANSPOR
+Scope: Workbook
+Source Workbook: Excel Data Framework DBB.xlsx
+Source Workbook Folder: Excel Data Framework DBB__xlsx
+Description: ConstrÃ³i uma matriz transposta de tÃ­tulos e valores separados por um delimitador para exibiÃ§Ã£o na planilha, expandindo automaticamente os valores.
+
+
+Formula:
+=LAMBDA(titulos,valores,delimitador,LET(_Demimitador, IF(ISOMITTED(delimitador), ";", delimitador), _Filtro, titulos <> "", _Titulos, TRANSPOSE(FILTER(titulos, _Filtro, "")), _Valores, TRANSPOSE(FILTER(valores, _Filtro, "")), _Altura, MAX(MAP(_Valores, LAMBDA(v, IF(v <> "", COLUMNS(TEXTSPLIT(v, _Demimitador)), 0)))), _ValoresExpandido, DROP(REDUCE(EXPAND("", _Altura, 1, ""), SEQUENCE(COLUMNS(_Valores)), LAMBDA(ac,i, HSTACK(ac, EXPAND(IF(INDEX(_Valores, i) = "", "", TRANSPOSE(TEXTSPLIT(INDEX(_Valores, i), _Demimitador))), _Altura, 1, "")))), , 1), _Matriz, VSTACK(_Titulos, _ValoresExpandido), _Resultado, IFERROR(_Matriz, ""), _Resultado))
+
+Localized Formula (pt-BR) - Preview Only:
+=LAMBDA(titulos,valores,delimitador,LET(_Demimitador, SE(ISOMITTED(delimitador), ";", delimitador), _Filtro, titulos <> "", _Titulos, TRANSPOR(FILTRO(titulos, _Filtro, "")), _Valores, TRANSPOR(FILTRO(valores, _Filtro, "")), _Altura, MÁXIMO(MAP(_Valores, LAMBDA(v, SE(v <> "", COLS(DIVIDIRTEXTO(v, _Demimitador)), 0)))), _ValoresExpandido, DESCARTAR(REDUCE(EXPANDIR("", _Altura, 1, ""), SEQUÊNCIA(COLS(_Valores)), LAMBDA(ac,i, EMPILHARH(ac, EXPANDIR(SE(ÍNDICE(_Valores, i) = "", "", TRANSPOR(DIVIDIRTEXTO(ÍNDICE(_Valores, i), _Demimitador))), _Altura, 1, "")))), , 1), _Matriz, EMPILHARV(_Titulos, _ValoresExpandido), _Resultado, SEERRO(_Matriz, ""), _Resultado))
+
+Raw Formula Snapshot (en-US) - Preview Only:
+=_xlfn.LAMBDA(_xlpm.titulos,_xlpm.valores,_xlop.delimitador,_xlfn.LET(_xlpm._Demimitador, IF(_xlfn.ISOMITTED(_xlpm.delimitador), ";", _xlpm.delimitador), _xlpm._Filtro, _xlpm.titulos <> "", _xlpm._Titulos, TRANSPOSE(_xlfn._xlws.FILTER(_xlpm.titulos, _xlpm._Filtro, "")), _xlpm._Valores, TRANSPOSE(_xlfn._xlws.FILTER(_xlpm.valores, _xlpm._Filtro, "")), _xlpm._Altura, MAX(_xlfn.MAP(_xlpm._Valores, _xlfn.LAMBDA(_xlpm.v, IF(_xlpm.v <> "", COLUMNS(_xlfn.TEXTSPLIT(_xlpm.v, _xlpm._Demimitador)), 0)))), _xlpm._ValoresExpandido, _xlfn.DROP(_xlfn.REDUCE(_xlfn.EXPAND("", _xlpm._Altura, 1, ""), _xlfn.SEQUENCE(COLUMNS(_xlpm._Valores)), _xlfn.LAMBDA(_xlpm.ac,_xlpm.i, _xlfn.HSTACK(_xlpm.ac, _xlfn.EXPAND(IF(INDEX(_xlpm._Valores, _xlpm.i) = "", "", TRANSPOSE(_xlfn.TEXTSPLIT(INDEX(_xlpm._Valores, _xlpm.i), _xlpm._Demimitador))), _xlpm._Altura, 1, "")))), , 1), _xlpm._Matriz, _xlfn.VSTACK(_xlpm._Titulos, _xlpm._ValoresExpandido), _xlpm._Resultado, IFERROR(_xlpm._Matriz, ""), _xlpm._Resultado))

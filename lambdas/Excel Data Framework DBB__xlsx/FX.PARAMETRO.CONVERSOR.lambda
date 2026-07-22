@@ -1,0 +1,15 @@
+Name: FX.PARAMETRO.CONVERSOR
+Scope: Workbook
+Source Workbook: Excel Data Framework DBB.xlsx
+Source Workbook Folder: Excel Data Framework DBB__xlsx
+Description: Converte um valor para o tipo informado utilizando as regras de conversÃ£o adotadas pela tabela de parÃ¢metros. Suporta Texto, NÃºmero inteiro, NÃºmero decimal, Booleano, Data, Data e hora, Hora, Lista e Qualquer valor.
+
+
+Formula:
+=LAMBDA(valor,tipo,LET(_Tipo, UPPER(TRIM(tipo & "")), IF(OR(_Tipo = "", _Tipo = "QUALQUER VALOR"), valor, IF(_Tipo = "TEXTO", TRIM(TEXT(valor, "@")), IF(_Tipo = "DATA/HORA/FUSO", TRIM(TEXT(valor, "@")), IF(_Tipo = "BOOLEANO", FX.PARAMETRO.BOOLEANO(valor), LET(_Numero, VALUE(valor), IF(_Tipo = "NÚMERO INTEIRO", IF(_Numero = INT(_Numero), _Numero, NA()), IF(_Tipo = "NÚMERO DECIMAL", _Numero, IF(_Tipo = "DATA", IF(MOD(_Numero, 1) = 0, _Numero, NA()), IF(_Tipo = "DATA E HORA", IF(AND(INT(_Numero) > 0, MOD(_Numero, 1) > 0), _Numero, NA()), IF(_Tipo = "HORA", IF(AND(_Numero >= 0, _Numero < 1), _Numero, NA()), valor))))))))))))
+
+Localized Formula (pt-BR) - Preview Only:
+=LAMBDA(valor,tipo,LET(_Tipo, MAIÚSCULA(ARRUMAR(tipo & "")), SE(OU(_Tipo = "", _Tipo = "QUALQUER VALOR"), valor, SE(_Tipo = "TEXTO", ARRUMAR(TEXTO(valor, "@")), SE(_Tipo = "DATA/HORA/FUSO", ARRUMAR(TEXTO(valor, "@")), SE(_Tipo = "BOOLEANO", FX.PARAMETRO.BOOLEANO(valor), LET(_Numero, VALOR(valor), SE(_Tipo = "NÚMERO INTEIRO", SE(_Numero = INT(_Numero), _Numero, NÃO.DISP()), SE(_Tipo = "NÚMERO DECIMAL", _Numero, SE(_Tipo = "DATA", SE(MOD(_Numero, 1) = 0, _Numero, NÃO.DISP()), SE(_Tipo = "DATA E HORA", SE(E(INT(_Numero) > 0, MOD(_Numero, 1) > 0), _Numero, NÃO.DISP()), SE(_Tipo = "HORA", SE(E(_Numero >= 0, _Numero < 1), _Numero, NÃO.DISP()), valor))))))))))))
+
+Raw Formula Snapshot (en-US) - Preview Only:
+=_xlfn.LAMBDA(_xlpm.valor,_xlpm.tipo,_xlfn.LET(_xlpm._Tipo, UPPER(TRIM(_xlpm.tipo & "")), IF(OR(_xlpm._Tipo = "", _xlpm._Tipo = "QUALQUER VALOR"), _xlpm.valor, IF(_xlpm._Tipo = "TEXTO", TRIM(TEXT(_xlpm.valor, "@")), IF(_xlpm._Tipo = "DATA/HORA/FUSO", TRIM(TEXT(_xlpm.valor, "@")), IF(_xlpm._Tipo = "BOOLEANO", FX.PARAMETRO.BOOLEANO(_xlpm.valor), _xlfn.LET(_xlpm._Numero, VALUE(_xlpm.valor), IF(_xlpm._Tipo = "NÚMERO INTEIRO", IF(_xlpm._Numero = INT(_xlpm._Numero), _xlpm._Numero, NA()), IF(_xlpm._Tipo = "NÚMERO DECIMAL", _xlpm._Numero, IF(_xlpm._Tipo = "DATA", IF(MOD(_xlpm._Numero, 1) = 0, _xlpm._Numero, NA()), IF(_xlpm._Tipo = "DATA E HORA", IF(AND(INT(_xlpm._Numero) > 0, MOD(_xlpm._Numero, 1) > 0), _xlpm._Numero, NA()), IF(_xlpm._Tipo = "HORA", IF(AND(_xlpm._Numero >= 0, _xlpm._Numero < 1), _xlpm._Numero, NA()), _xlpm.valor))))))))))))

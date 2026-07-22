@@ -1,0 +1,15 @@
+Name: FX.PARAMETRO.VALIDAR.VALOR
+Scope: Workbook
+Source Workbook: Excel Data Framework DBB.xlsx
+Source Workbook Folder: Excel Data Framework DBB__xlsx
+Description: Valida a coluna Valor. Verifica se um valor foi informado quando a linha estÃ¡ definida e se ele pertence ao conjunto de valores permitidos para o parÃ¢metro. Retorna vazio quando nÃ£o hÃ¡ inconsistÃªncias.
+
+
+Formula:
+=LAMBDA(parametro,tipo,obrigatorio,valor,permitidos,LET(_resultado, IF(NOT(FX.PARAMETRO.DEFINIDO(parametro, tipo, obrigatorio, valor, permitidos)), "", IF(TRIM(valor & "") = "", IF(FX.PARAMETRO.BOOLEANO(obrigatorio), "✖ Valor não informado.", ""), LET(_ValorConvertido, IFERROR(FX.PARAMETRO.CONVERSOR(valor, tipo), NA()), IF(ISNA(_ValorConvertido), "✖ Valor incompatível com o tipo informado.", LET(_Permitidos, FX.PARAMETRO.PERMITIDOS(tipo, permitidos), IF(_Permitidos = "", "", LET(_PermitidosConvertidos, MAP(_Permitidos, LAMBDA(p, FX.PARAMETRO.CONVERSOR(p, tipo))), IF(FX.PARAMETRO.VALIDO(_ValorConvertido, _PermitidosConvertidos), "", "✖ Valor não permitido.")))))))), _resultado))
+
+Localized Formula (pt-BR) - Preview Only:
+=LAMBDA(parametro,tipo,obrigatorio,valor,permitidos,LET(_resultado, SE(NÃO(FX.PARAMETRO.DEFINIDO(parametro, tipo, obrigatorio, valor, permitidos)), "", SE(ARRUMAR(valor & "") = "", SE(FX.PARAMETRO.BOOLEANO(obrigatorio), "✖ Valor não informado.", ""), LET(_ValorConvertido, SEERRO(FX.PARAMETRO.CONVERSOR(valor, tipo), NÃO.DISP()), SE(É.NÃO.DISP(_ValorConvertido), "✖ Valor incompatível com o tipo informado.", LET(_Permitidos, FX.PARAMETRO.PERMITIDOS(tipo, permitidos), SE(_Permitidos = "", "", LET(_PermitidosConvertidos, MAP(_Permitidos, LAMBDA(p, FX.PARAMETRO.CONVERSOR(p, tipo))), SE(FX.PARAMETRO.VALIDO(_ValorConvertido, _PermitidosConvertidos), "", "✖ Valor não permitido.")))))))), _resultado))
+
+Raw Formula Snapshot (en-US) - Preview Only:
+=_xlfn.LAMBDA(_xlpm.parametro,_xlpm.tipo,_xlpm.obrigatorio,_xlpm.valor,_xlpm.permitidos,_xlfn.LET(_xlpm._resultado, IF(NOT(FX.PARAMETRO.DEFINIDO(_xlpm.parametro, _xlpm.tipo, _xlpm.obrigatorio, _xlpm.valor, _xlpm.permitidos)), "", IF(TRIM(_xlpm.valor & "") = "", IF(FX.PARAMETRO.BOOLEANO(_xlpm.obrigatorio), "✖ Valor não informado.", ""), _xlfn.LET(_xlpm._ValorConvertido, IFERROR(FX.PARAMETRO.CONVERSOR(_xlpm.valor, _xlpm.tipo), NA()), IF(ISNA(_xlpm._ValorConvertido), "✖ Valor incompatível com o tipo informado.", _xlfn.LET(_xlpm._Permitidos, FX.PARAMETRO.PERMITIDOS(_xlpm.tipo, _xlpm.permitidos), IF(_xlpm._Permitidos = "", "", _xlfn.LET(_xlpm._PermitidosConvertidos, _xlfn.MAP(_xlpm._Permitidos, _xlfn.LAMBDA(_xlpm.p, FX.PARAMETRO.CONVERSOR(_xlpm.p, _xlpm.tipo))), IF(FX.PARAMETRO.VALIDO(_xlpm._ValorConvertido, _xlpm._PermitidosConvertidos), "", "✖ Valor não permitido.")))))))), _xlpm._resultado))

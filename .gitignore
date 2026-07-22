@@ -1,0 +1,7 @@
+Roteiros/
+*.xlsx
+*.xlsm
+*.xlsb
+*.xls
+.agents/
+.vscode/

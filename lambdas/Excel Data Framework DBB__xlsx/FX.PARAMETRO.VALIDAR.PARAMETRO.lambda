@@ -1,0 +1,15 @@
+Name: FX.PARAMETRO.VALIDAR.PARAMETRO
+Scope: Workbook
+Source Workbook: Excel Data Framework DBB.xlsx
+Source Workbook Folder: Excel Data Framework DBB__xlsx
+Description: Valida a coluna ParÃ¢metro. Verifica se o nome foi informado quando a linha estÃ¡ definida e se nÃ£o existem parÃ¢metros duplicados na tabela. Retorna vazio quando a validaÃ§Ã£o Ã© bem-sucedida ou uma mensagem descrevendo o erro encontrado.
+
+
+Formula:
+=LAMBDA(parametro,tipo,obrigatorio,valor,permitidos,parametros,LET(_Parametro, TRIM(parametro & ""), _Definido, FX.PARAMETRO.DEFINIDO(parametro, tipo, obrigatorio, valor, permitidos), IF(NOT(_Definido), "", IF(_Parametro = "", "✖ Parâmetro não informado.", IF(COUNTIF(parametros, _Parametro) > 1, "✖ Parâmetro duplicado.", "")))))
+
+Localized Formula (pt-BR) - Preview Only:
+=LAMBDA(parametro,tipo,obrigatorio,valor,permitidos,parametros,LET(_Parametro, ARRUMAR(parametro & ""), _Definido, FX.PARAMETRO.DEFINIDO(parametro, tipo, obrigatorio, valor, permitidos), SE(NÃO(_Definido), "", SE(_Parametro = "", "✖ Parâmetro não informado.", SE(CONT.SE(parametros, _Parametro) > 1, "✖ Parâmetro duplicado.", "")))))
+
+Raw Formula Snapshot (en-US) - Preview Only:
+=_xlfn.LAMBDA(_xlpm.parametro,_xlpm.tipo,_xlpm.obrigatorio,_xlpm.valor,_xlpm.permitidos,_xlpm.parametros,_xlfn.LET(_xlpm._Parametro, TRIM(_xlpm.parametro & ""), _xlpm._Definido, FX.PARAMETRO.DEFINIDO(_xlpm.parametro, _xlpm.tipo, _xlpm.obrigatorio, _xlpm.valor, _xlpm.permitidos), IF(NOT(_xlpm._Definido), "", IF(_xlpm._Parametro = "", "✖ Parâmetro não informado.", IF(COUNTIF(_xlpm.parametros, _xlpm._Parametro) > 1, "✖ Parâmetro duplicado.", "")))))

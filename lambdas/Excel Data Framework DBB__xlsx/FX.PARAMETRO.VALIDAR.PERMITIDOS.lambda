@@ -1,0 +1,15 @@
+Name: FX.PARAMETRO.VALIDAR.PERMITIDOS
+Scope: Workbook
+Source Workbook: Excel Data Framework DBB.xlsx
+Source Workbook Folder: Excel Data Framework DBB__xlsx
+Description: Valida a coluna Permitidos. Para parÃ¢metros do tipo Booleano, verifica se todos os aliases informados existem em tbBooleano. Para os demais tipos, considera a coluna vÃ¡lida. Retorna vazio quando nÃ£o hÃ¡ inconsistÃªncias.
+
+
+Formula:
+=LAMBDA(parametro,tipo,obrigatorio,valor,permitidos,LET(_Tipo, UPPER(TRIM(tipo & "")), _Permitidos, TRIM(permitidos & ""), IF(NOT(FX.PARAMETRO.DEFINIDO(parametro, tipo, obrigatorio, valor, permitidos)), "", IF(_Permitidos = "", "", IF(_Tipo <> "BOOLEANO", "", LET(_Lista, FX.PARAMETRO.PERMITIDOS(_Tipo, _Permitidos), IF(SUM(--ISERROR(XMATCH(UPPER(_Lista), UPPER(tbParametrosBooleanos[Descrição]), 0))) > 0, "✖ Valores permitidos inválidos.", "")))))))
+
+Localized Formula (pt-BR) - Preview Only:
+=LAMBDA(parametro,tipo,obrigatorio,valor,permitidos,LET(_Tipo, MAIÚSCULA(ARRUMAR(tipo & "")), _Permitidos, ARRUMAR(permitidos & ""), SE(NÃO(FX.PARAMETRO.DEFINIDO(parametro, tipo, obrigatorio, valor, permitidos)), "", SE(_Permitidos = "", "", SE(_Tipo <> "BOOLEANO", "", LET(_Lista, FX.PARAMETRO.PERMITIDOS(_Tipo, _Permitidos), SE(SOMA(--ÉERROS(CORRESPX(MAIÚSCULA(_Lista), MAIÚSCULA(tbParametrosBooleanos[Descrição]), 0))) > 0, "✖ Valores permitidos inválidos.", "")))))))
+
+Raw Formula Snapshot (en-US) - Preview Only:
+=_xlfn.LAMBDA(_xlpm.parametro,_xlpm.tipo,_xlpm.obrigatorio,_xlpm.valor,_xlpm.permitidos,_xlfn.LET(_xlpm._Tipo, UPPER(TRIM(_xlpm.tipo & "")), _xlpm._Permitidos, TRIM(_xlpm.permitidos & ""), IF(NOT(FX.PARAMETRO.DEFINIDO(_xlpm.parametro, _xlpm.tipo, _xlpm.obrigatorio, _xlpm.valor, _xlpm.permitidos)), "", IF(_xlpm._Permitidos = "", "", IF(_xlpm._Tipo <> "BOOLEANO", "", _xlfn.LET(_xlpm._Lista, FX.PARAMETRO.PERMITIDOS(_xlpm._Tipo, _xlpm._Permitidos), IF(SUM(--ISERROR(_xlfn.XMATCH(UPPER(_xlpm._Lista), UPPER(tbParametrosBooleanos[Descrição]), 0))) > 0, "✖ Valores permitidos inválidos.", "")))))))

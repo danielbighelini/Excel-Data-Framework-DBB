@@ -1,0 +1,15 @@
+Name: FX.PARAMETRO.PERMITIDOS
+Scope: Workbook
+Source Workbook: Excel Data Framework DBB.xlsx
+Source Workbook Folder: Excel Data Framework DBB__xlsx
+Description: Retorna os valores que devem ser exibidos para um parÃ¢metro. Para tipos Lista e Booleano, expande os valores permitidos; para os demais tipos, retorna o valor atual do parÃ¢metro.
+
+
+Formula:
+=LAMBDA(tipo,permitidos,LET(_Tipo, IF(tipo = "", "", tipo), _Permitidos, TRIM(permitidos), IF(_Permitidos = "", "", LET(_Lista, TRANSPOSE(TEXTSPLIT(_Permitidos, ";")), IF(_Tipo = "Booleano", UNIQUE(FILTER(_Lista, ISNUMBER(XMATCH(UPPER(_Lista), UPPER(tbParametrosBooleanos[Descrição]), 0)))), _Lista)))))
+
+Localized Formula (pt-BR) - Preview Only:
+=LAMBDA(tipo,permitidos,LET(_Tipo, SE(tipo = "", "", tipo), _Permitidos, ARRUMAR(permitidos), SE(_Permitidos = "", "", LET(_Lista, TRANSPOR(DIVIDIRTEXTO(_Permitidos, ";")), SE(_Tipo = "Booleano", ÚNICO(FILTRO(_Lista, ÉNÚM(CORRESPX(MAIÚSCULA(_Lista), MAIÚSCULA(tbParametrosBooleanos[Descrição]), 0)))), _Lista)))))
+
+Raw Formula Snapshot (en-US) - Preview Only:
+=_xlfn.LAMBDA(_xlpm.tipo,_xlpm.permitidos,_xlfn.LET(_xlpm._Tipo, IF(_xlpm.tipo = "", "", _xlpm.tipo), _xlpm._Permitidos, TRIM(_xlpm.permitidos), IF(_xlpm._Permitidos = "", "", _xlfn.LET(_xlpm._Lista, TRANSPOSE(_xlfn.TEXTSPLIT(_xlpm._Permitidos, ";")), IF(_xlpm._Tipo = "Booleano", _xlfn.UNIQUE(_xlfn._xlws.FILTER(_xlpm._Lista, ISNUMBER(_xlfn.XMATCH(UPPER(_xlpm._Lista), UPPER(tbParametrosBooleanos[Descrição]), 0)))), _xlpm._Lista)))))

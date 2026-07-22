@@ -1,0 +1,15 @@
+Name: FX.PARAMETRO.VALIDO
+Scope: Workbook
+Source Workbook: Excel Data Framework DBB.xlsx
+Source Workbook Folder: Excel Data Framework DBB__xlsx
+Description: Verifica se o valor informado Ã© vÃ¡lido. Confirma se o valor pertence ao conjunto de valores permitidos.
+
+
+Formula:
+=LAMBDA(valor,permitidos,IF(ISOMITTED(permitidos), TRUE, ISNUMBER(XMATCH(valor, permitidos, 0))))
+
+Localized Formula (pt-BR) - Preview Only:
+=LAMBDA(valor,permitidos,SE(ISOMITTED(permitidos), VERDADEIRO, ÉNÚM(CORRESPX(valor, permitidos, 0))))
+
+Raw Formula Snapshot (en-US) - Preview Only:
+=_xlfn.LAMBDA(_xlpm.valor,_xlop.permitidos,IF(_xlfn.ISOMITTED(_xlpm.permitidos), TRUE, ISNUMBER(_xlfn.XMATCH(_xlpm.valor, _xlpm.permitidos, 0))))
