@@ -1,6 +1,6 @@
 // Power Query from: Excel Data Framework DBB.xlsx
 // Pathname: c:\Users\daniel-bighelini\OneDrive\Documentos\Planilhas\Excel Data Framework DBB\Excel Data Framework DBB.xlsx
-// Extracted: 2026-07-27T00:40:11.450Z
+// Extracted: 2026-07-27T13:39:37.125Z
 
 section Section1;
 
@@ -437,7 +437,17 @@ let
 
         Table.FromRecords(
 
-            Objetos
+            Objetos,
+            type table [
+                Origem = text,
+                Nome = text,
+                Prefix = nullable text,
+                Kind = text,
+                Tipo = text,
+                Type = type,
+                Categoria = text,
+                IsStructured = logical
+            ]
 
         )
 
@@ -527,8 +537,17 @@ let
 
         Table.FromRecords(
 
-            Objetos
-
+            Objetos,
+            type table [
+                Origem = text,
+                Nome = text,
+                Prefix = nullable text,
+                Kind = text,
+                Tipo = text,
+                Type = type,
+                Categoria = text,
+                IsStructured = logical
+            ]
         )
 
 in
@@ -592,9 +611,7 @@ let
             }
 
         )
-
 in
-
     Resultado;
 
 shared stgTabelasExcel = /*
@@ -619,8 +636,10 @@ let
 //--------------------------------------------------------------------------
 
     Fonte =
-
         stgObjetosExcel,
+
+    LinhasFiltradas = 
+        Table.SelectRows(Fonte, each not Text.Contains([Nome], "!")),
 
 //--------------------------------------------------------------------------
 // Metadados
@@ -631,7 +650,7 @@ let
         List.Transform(
 
             Table.ToRecords(
-                Fonte
+                LinhasFiltradas
             ),
 
             (Objeto) =>
@@ -671,11 +690,21 @@ let
     Resultado =
 
         Table.FromRecords(
-            Registros
+            Registros,
+            type table [
+                Origem = text,
+                Nome = text,
+                Prefix = nullable text,
+                Kind = text,
+                Tipo = text,
+                Type = type,
+                Categoria = text,
+                IsStructured = logical,
+                Columns = list,
+                ColumnCount = number
+            ]
         )
-
 in
-
     Resultado;
 
 shared stgTabelasPowerQuery = let
@@ -798,7 +827,19 @@ Fonte =
 
         Table.FromRecords(
 
-            Registros
+            Registros,
+            type table [
+                Origem = text,
+                Nome = text,
+                Prefix = nullable text,
+                Kind = text,
+                Tipo = text,
+                Type = type,
+                Categoria = text,
+                IsStructured = logical,
+                Columns = list,
+                ColumnCount = number
+            ]            
 
         )
 
@@ -2415,40 +2456,7 @@ shared diagConsultasPQ = let
 //--------------------------------------------------------------------------
 
     Objetos =
-
-        Record.FieldValues(
-
-            cfgObjetos[PowerQuery]
-
-        ),
-
-//--------------------------------------------------------------------------
-// Tabela
-//--------------------------------------------------------------------------
-
-    Consultas =
-
-        Table.FromRecords(
-
-            List.Transform(
-
-                Objetos,
-
-                each
-
-                    [
-
-                        Consulta = [Nome],
-
-                        Categoria = [Categoria],
-
-                        Tipo = [Tipo]
-
-                    ]
-
-            )
-
-        ),
+        Table.SelectColumns(stgObjetosPowerQuery, {"Nome", "Categoria", "Tipo"}),
 
 //--------------------------------------------------------------------------
 // Resultado
@@ -2458,13 +2466,13 @@ shared diagConsultasPQ = let
 
         Table.Sort(
 
-            Consultas,
+            Objetos,
 
             {
 
                 {"Categoria", Order.Ascending},
 
-                {"Consulta", Order.Ascending}
+                {"Nome", Order.Ascending}
 
             }
 
@@ -2477,38 +2485,16 @@ in
 shared diagTabelasExcel = let
 
     Fonte =
+        Table.SelectColumns(stgTabelasExcel, {"Nome", "Columns"}),
 
-        Record.ToTable(
-            cfgTabelasExcel
-        ),
-
-    Expandir =
-
-        Table.ExpandRecordColumn(
+    ColunasTexto =
+        Table.TransformColumns(
 
             Fonte,
 
-            "Value",
-
-            {
-                "Columns"
-            },
-
-            {
-                "Colunas"
-            }
-
-        ),
-
-    ColunasTexto =
-
-        Table.TransformColumns(
-
-            Expandir,
-
             {
                 {
-                    "Colunas",
+                    "Columns",
                     each Text.Combine(_, ";"),
                     type text
                 }
@@ -2516,47 +2502,11 @@ shared diagTabelasExcel = let
 
         ),
 
-    Renomeadas =
-
-        Table.RenameColumns(
-
-            ColunasTexto,
-
-            {
-                {"Name", "Tabela"}
-            }
-
-        ),
-
-    Tipado =
-
-        Table.TransformColumnTypes(
-
-            Renomeadas,
-
-            {
-                {"Tabela", type text},
-                {"Colunas", type text}
-            }
-
-        ),
-
-    Resultado =
-
-        Table.SelectColumns(
-
-            Tipado,
-
-            {
-                "Tabela",
-                "Colunas"
-            }
-
-        )
+    ColunasRenomeadas = Table.RenameColumns(ColunasTexto,{{"Nome", "Tabela"}, {"Columns", "Colunas"}})
 
 in
 
-    Resultado;
+    ColunasRenomeadas;
 
 shared stgClientes = let
     Fonte =
@@ -3773,66 +3723,6 @@ in
     Resultado
 
 ;
-
-shared cfgFuncoesPowerQuery = let
-
-//--------------------------------------------------------------------------
-// Objetos
-//--------------------------------------------------------------------------
-
-    Objetos =
-
-        List.Select(
-
-            Record.FieldValues(
-
-                cfgObjetos[PowerQuery]
-
-            ),
-
-            each
-
-                [Kind] = "Function"
-
-        ),
-
-//--------------------------------------------------------------------------
-// Funções
-//--------------------------------------------------------------------------
-
-    Funcoes =
-
-        Record.FromList(
-
-            List.Transform(
-
-                Objetos,
-
-                each
-
-                    Record.Field(
-
-                        #sections[Section1],
-
-                        [Nome]
-
-                    )
-
-            ),
-
-            List.Transform(
-
-                Objetos,
-
-                each [Nome]
-
-            )
-
-        )
-
-in
-
-    Funcoes;
 
 shared fxFiltrarArquivos = (Tabela as table) as table =>
 
@@ -7693,15 +7583,18 @@ let
 //--------------------------------------------------------------------------
 
     ProcessarTratamentos =
-
         fxParametro(
             "Processar_Tratamentos"
         ),
 
     ProcessarValidacoes =
-
         fxParametro(
             "Processar_Validacoes"
+        ),
+    
+    RemoverRegistrosBloqueantes =
+        fxParametro(
+            "Remover_Registros_Bloqueantes"
         ),
 
 //--------------------------------------------------------------------------
@@ -7736,9 +7629,14 @@ let
 
     Resultado =
 
-        fxNrmRemoverRegistrosBloqueantes(
+        if RemoverRegistrosBloqueantes then
+            fxNrmRemoverRegistrosBloqueantes(
+                Validada
+            )
+        
+        else
+            
             Validada
-        )
 
 in
 
@@ -8317,150 +8215,6 @@ in
 
     Resultado;
 
-shared stgPipeline = let
-
-//--------------------------------------------------------------------------
-// Defaults
-//--------------------------------------------------------------------------
-
-    Defaults =
-
-        [
-
-            COLUNAS =
-                [
-                Tipo = type any,
-
-                Obrigatório = false,
-
-                Ordem = null,
-
-                Tratamentos =
-
-                    Record.FieldValues(
-                        cfgOperadoresTratamentosDefaults
-                    ),
-
-                Validações =
-
-                    Record.FieldValues(
-                        cfgOperadoresValidacoesDefaults
-                    )
-                ]
-        ],
-
-//--------------------------------------------------------------------------
-// Schemas
-//--------------------------------------------------------------------------
-
-    Schemas =
-
-        Record.FieldNames(
-            cfgSchema
-        ),
-
-//--------------------------------------------------------------------------
-// Pipeline padrão
-//--------------------------------------------------------------------------
-
-    PipelineDefault =
-
-        [
-
-            Schema = "DEFAULTS",
-
-            Pipeline = Defaults
-
-        ],
-
-//--------------------------------------------------------------------------
-// Pipelines com Schema
-//--------------------------------------------------------------------------
-
-    Pipelines =
-
-        List.Transform(
-
-            Schemas,
-
-            (Schema) =>
-
-                let
-
-                    Definicao =
-
-                        Record.Field(
-                            cfgSchema,
-                            Schema
-                        ),
-
-                    Colunas =
-
-                        Record.FieldNames(
-                            Definicao
-                        ),
-
-                    Pipeline =
-
-                        Record.FromList(
-
-                            List.Transform(
-
-                                Colunas,
-
-                                (Coluna) =>
-
-                                    Record.Combine({
-
-                                        Defaults,
-
-                                        Record.Field(
-                                            Definicao,
-                                            Coluna
-                                        )
-
-                                    })
-
-                            ),
-
-                            Colunas
-
-                        )
-
-                in
-
-                    [
-
-                        Schema = Schema,
-
-                        Pipeline = Pipeline
-
-                    ]
-
-        ),
-
-//--------------------------------------------------------------------------
-// Resultado
-//--------------------------------------------------------------------------
-
-    Resultado =
-
-        Table.FromRecords(
-
-            List.Combine({
-
-                { PipelineDefault },
-
-                Pipelines
-
-            })
-
-        )
-
-in
-
-    Resultado;
-
 shared fxParametroLerParametroPQ = let
 
     fxParametroLerParametroPowerQuery =
@@ -8565,70 +8319,6 @@ shared cfgOperadores = let
 in
 
     Resultado;
-
-shared cfgOperadoresTratamentosDefaults = let
-
-//--------------------------------------------------------------------------
-// Fonte
-//--------------------------------------------------------------------------
-
-    Fonte = 
-
-        Record.SelectFields(
-
-            cfgOperadores,
-
-            List.Select(
-
-                Record.FieldNames(
-                    cfgOperadores
-                ),
-
-                (Nome) => 
-                    let
-                        Campo = Record.Field(cfgOperadores, Nome)
-                    in
-                        Value.Is(Campo, type record) and Campo[Categoria] = "Tratamento" and Campo[Padrão] = true
-
-            )
-
-        )
-
-in
-
-    Fonte;
-
-shared cfgOperadoresValidacoesDefaults = let
-
-//--------------------------------------------------------------------------
-// Fonte
-//--------------------------------------------------------------------------
-
-    Fonte = 
-
-        Record.SelectFields(
-
-            cfgOperadores,
-
-            List.Select(
-
-                Record.FieldNames(
-                    cfgOperadores
-                ),
-
-                (Nome) => 
-                    let
-                        Campo = Record.Field(cfgOperadores, Nome)
-                    in
-                        Value.Is(Campo, type record) and Campo[Categoria] = "Validação" and Campo[Padrão] = true
-
-            )
-
-        )
-
-in
-
-    Fonte;
 
 shared cfgSchema = /*
 ------------------------------------------------------------------------------
