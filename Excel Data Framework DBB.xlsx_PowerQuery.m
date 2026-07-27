@@ -1,9 +1,12 @@
 // Power Query from: Excel Data Framework DBB.xlsx
 // Pathname: c:\Users\daniel-bighelini\OneDrive\Documentos\Planilhas\Excel Data Framework DBB\Excel Data Framework DBB.xlsx
-// Extracted: 2026-07-27T18:07:14.698Z
+// Extracted: 2026-07-27T21:51:36.106Z
 
 section Section1;
 
+//==============================================================================
+// TIPOS DE DADOS - Configuração Central
+//==============================================================================
 shared srcTiposDados = /*
 Tipos de dados
 Define os tipos de parâmetros aceitos pelas funções de tratamento e validação,
@@ -35,7 +38,6 @@ e convertidos durante a execução do framework.
     #"ANY" = type any,
     #"TEXT" = type text
 ];
-
 shared srcObjetosPowerQuery = let
 
     Resultado =
@@ -48,9 +50,7 @@ shared srcObjetosPowerQuery = let
 
 in
 
-    Resultado
-;
-
+    Resultado;
 shared srcCategoriasPowerQuery = let
     Fonte = srcWorkbook{[Name=parTabelaCategoriasConsultasPQ]}[Content]
 in
@@ -60,11 +60,7 @@ shared srcWorkbook = let
     srcWorkbook = Table.Buffer(Excel.CurrentWorkbook())
 in
     srcWorkbook;
-
 shared srcParametrosExcel = let
-    // Procura a tabela definida no parâmetro 'parTabelaParametros' e, caso não exista,
-    // retorna uma tabela vazia para evitar erros nas consultas dependentes.
-
     Fonte =
         try
             srcWorkbook{[Name = parTabelaParametros]}[Content]
@@ -79,12 +75,10 @@ shared srcParametrosExcel = let
                 )
 in
     Fonte;
-
 shared srcParametrosFormatosArquivos = let
     Fonte = srcWorkbook{[Name=parTabelaParametrosFormatosArquivos]}[Content]
 in
     Fonte;
-
 shared srcOperadores = let
     CategoriaTratamento = "Tratamento",
     CategoriaValidacao = "Validação",
@@ -140,46 +134,42 @@ shared srcOperadores = let
 in
     TabelaParametros;
 
+//==============================================================================
+// PARÂMETROS - Configuração do Framework
+//==============================================================================
+
 shared srcParametrosTratamentos = let
     Fonte = srcWorkbook{[Name=parTabelaParametrosTratamentos]}[Content]
 in
     Fonte;
-
 shared srcParametrosValidacoes = let
     Fonte = srcWorkbook{[Name=parTabelaParametrosValidacoes]}[Content]
 in
     Fonte;
-
 shared srcParametrosSeveridades = let
     Fonte = srcWorkbook{[Name=parTabelaParametrosSeveridades]}[Content]
 in
     Fonte;
-
 shared srcSchema = let
     Fonte = srcWorkbook{[Name=parTabelaSchema]}[Content]
 in
     Fonte;
-
 shared srcClientes = let
     Fonte = srcWorkbook{[Name=parTabelaClientes]}[Content]
 in
     Fonte;
-
 shared srcProdutos = let
     Fonte = srcWorkbook{[Name=parTabelaProdutos]}[Content]
 in
     Fonte;
-
 shared srcVendas = let
     Fonte = srcWorkbook{[Name=parTabelaVendas]}[Content]
 in
     Fonte;
-
 shared srcDadosGenericos = let
     Fonte = srcWorkbook{[Name=parTabelaDadosGenericos]}[Content]
 in
     Fonte;
-
 shared parTabelaParametros = "tbParametros" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
 
 shared cfgParametros = // Materializa a tabela consolidada em um Record para permitir
@@ -1075,13 +1065,11 @@ in
     Resultado
 
 ;
-
 shared fxParametroIdentificarTipo = (tipo as nullable text) as nullable type =>
 
 let
     Nome =
-        if tipo = null then
-            null
+        if tipo = null then null
         else
             Text.Upper(
                 Text.Trim(
@@ -1089,26 +1077,14 @@ let
                 )
             )
 in
-    if Nome = null then
-
-        null
-
-    else if Record.HasFields(
-        cfgTiposDados,
-        Nome
-    ) then
-
-        Record.Field(
-            cfgTiposDados,
-            Nome
-        )
-
+    if Nome = null then null
+    else if Record.HasFields(cfgTiposDados, Nome) then
+        Record.Field(cfgTiposDados, Nome)
     else
-
         error Error.Record(
             "Tipo inválido",
             Text.Format(
-                "O tipo '#{0}' não está cadastrado em tbParametrosTipos.",
+                "O tipo '#{0}' não está cadastrado.",
                 {tipo}
             ),
             [
@@ -1116,19 +1092,17 @@ in
                 TiposDisponiveis =
                     Text.Combine(
                         List.Sort(
-                            Record.FieldNames(
-                                cfgTiposDados
-                            )
+                            Record.FieldNames(cfgTiposDados)
                         ),
                         ", "
                     )
             ]
         );
 
+
 shared cfgTiposDados = srcTiposDados;
 
 shared cfgTiposObjetos = srcTiposObjetos;
-
 shared srcTiposObjetos = [
 
         Table = [
@@ -1276,6 +1250,7 @@ shared srcTiposObjetos = [
         ]
 
     ];
+
 
 shared stgParametrosFormatosArquivos = let
     Fonte =
@@ -1906,7 +1881,6 @@ in
 ;
 
 shared cfgTiposBooleanos = srcTiposBooleanos;
-
 shared srcTiposBooleanos = /*
 Valores Booleanos
 Define os valores reconhecidos pelo framework como equivalentes aos valores
@@ -1924,8 +1898,8 @@ textuais durante o processamento dos dados.
     #"0" = false
 ];
 
-shared cfgConversores = srcConversores;
 
+shared cfgConversores = srcConversores;
 shared srcConversores = [
     Any = (v as any, local as text) as any => v,
     Text = (v as any, local as text) as any => Text.From(v, local),
@@ -1939,7 +1913,6 @@ shared srcConversores = [
     Duration = (v as any, local as text) as any => Duration.From(v),
     Logical = (v as any, local as text) as any => fxParseBooleano(v, local)
 ];
-
 shared fxListaNormalizar = (
     valor as any,
     optional separador as nullable text,
@@ -1949,110 +1922,51 @@ shared fxListaNormalizar = (
 as nullable list =>
 
 let
-    Separador =
-        if separador = null then
-            ";"
-        else
-            separador,
-
-    RemoverVazios =
-        if removerVazios = null then
-            true
-        else
-            removerVazios,
-
-    Trim =
-        if trim = null then
-            true
-        else
-            trim,
+    Separador = if separador = null then ";" else separador,
+    RemoverVazios = if removerVazios = null then true else removerVazios,
+    Trim = if trim = null then true else trim,
 
     Lista =
-        if valor = null then
-
-            null
-
-        else if Value.Is(valor, type list) then
-
-            valor
-
-        else
-
-            Text.Split(
-                Text.From(valor),
-                Separador
-            ),
+        if valor = null then null
+        else if Value.Is(valor, type list) then valor
+        else Text.Split(Text.From(valor), Separador),
 
     ListaTratada =
-        if Lista = null then
-            null
+        if Lista = null then null
         else
             List.Transform(
                 Lista,
-                each
-                    if Trim then
-                        Text.Trim(Text.From(_))
-                    else
-                        Text.From(_)
+                each if Trim then Text.Trim(Text.From(_)) else Text.From(_)
             ),
 
     Resultado =
-        if ListaTratada = null then
-            null
+        if ListaTratada = null then null
         else if RemoverVazios then
-            List.RemoveItems(
-                ListaTratada,
-                {""}
-            )
+            List.RemoveItems(ListaTratada, {""})
         else
             ListaTratada
 
 in
-    if Resultado = null then
-        null
-    else
-        List.Buffer(
-            List.Distinct(Resultado)
-        );
-
+    if Resultado = null then null 
+    else List.Buffer(List.Distinct(Resultado));
 shared fxParseBooleano = (valor as any, optional local as nullable text) as nullable logical =>
 
 let
-    Local =
-        if local = null then
-            "pt-BR"
-        else
-            local,
+    Local = if local = null then "pt-BR" else local,
 
     Nome =
-        if valor = null then
-            null
+        if valor = null then null
         else
             Text.Upper(
                 Text.Trim(
-                    Text.From(
-                        valor,
-                        Local
-                    )
+                    Text.From(valor, Local)
                 )
             )
 in
-    if Nome = null then
-
-        null
-
-    else if Record.HasFields(
-        cfgTiposBooleanos,
-        Nome
-    ) then
-
-        Record.Field(
-            cfgTiposBooleanos,
-            Nome
-        )
-
+    if Nome = null then null
+    else if Record.HasFields(cfgTiposBooleanos, Nome) then
+        Record.Field(cfgTiposBooleanos, Nome)
     else
-
         error Error.Record(
             "Valor lógico inválido",
             Text.Format(
@@ -2070,58 +1984,29 @@ in
                     )
             ]
         );
-
 shared fxComoTabela = (Valor as any) as table =>
 
 let
     Resultado =
         if Valor = null then
-
             #table(
-                type table
-                [
-                    Value = any
-                ],
+                type table [Value = any],
                 {}
             )
-
-        else if Value.Is(
-            Valor,
-            type table
-        ) then
-
+        else if Value.Is(Valor, type table) then
             Valor
-
-        else if Value.Is(
-            Valor,
-            type record
-        ) then
-
-            Record.ToTable(
-                Valor
-            )
-
-        else if Value.Is(
-            Valor,
-            type list
-        ) then
-
+        else if Value.Is(Valor, type record) then
+            Record.ToTable(Valor)
+        else if Value.Is(Valor, type list) then
             Table.FromList(
                 Valor,
                 Splitter.SplitByNothing(),
                 {"Value"}
             )
-
         else
-
             #table(
-                type table
-                [
-                    Value = any
-                ],
-                {
-                    {Valor}
-                }
+                type table [Value = any],
+                {{Valor}}
             )
 
 in
@@ -2159,6 +2044,7 @@ let
     Resultado = Conversor(valor, Local)
 in
     Resultado;
+
 
 shared fxConectorLocal = (Caminho as text) as table =>
 
@@ -2419,122 +2305,41 @@ in
     ColunasRenomeadas;
 
 shared stgClientes = let
-    Fonte =
-        srcClientes,
-
-    Stage =
-        fxStgAplicar(
-            Fonte,
-            parTabelaClientes
-        ),
-
-    Resultado =
-        Table.Distinct(
-            Stage
-        )
+    Fonte = srcClientes,
+    Preparada = fxStgAplicar(Fonte, parTabelaClientes),
+    Resultado = Table.Distinct(Preparada)
 in
     Resultado;
 
 shared stgProdutos = let
-    Fonte =
-        srcProdutos,
-
-    Stage =
-        fxStgAplicar(
-            Fonte,
-            parTabelaProdutos
-        ),
-
-    Resultado =
-        Table.Distinct(
-            Stage
-        )
+    Fonte = srcProdutos,
+    Preparada = fxStgAplicar(Fonte, parTabelaProdutos),
+    Resultado = Table.Distinct(Preparada)
 in
     Resultado;
 
 shared stgVendas = let
-    Fonte =
-        srcVendas,
+    Fonte = srcVendas,
+    Preparada = fxStgAplicar(Fonte, parTabelaVendas),
+    Resultado = Table.Distinct(Preparada)
+in
+    Resultado;
 
-    Preparado =
-        fxStgAplicar(
-            Fonte,
-            parTabelaVendas
-        ),
-
-    RegistrosUnicos =
-        Table.Distinct(
-            Preparado
-        )
+shared nrmClientes = let
+    Fonte = qaClientes,
+    Valida = fxQaFiltrarPorStatus(Fonte, "OK"),
+    Normalizada = fxNrmAplicar(Valida, parTabelaClientes),
+    RegistrosUnicos = Table.Distinct(Normalizada, {"CPF"})
 in
     RegistrosUnicos;
 
-shared nrmClientes = let
-
-    Fonte =
-        stgClientes,
-
-    Normalizacao =
-        fxNrmAplicar(
-            Fonte,
-            "tbClientes"
-        )
-
-in
-
-    Normalizacao;
-
 shared dimClientes = let
-    // Obtém a entidade normalizada.
-    Fonte =
-        nrmClientes,
-
-    // Seleciona apenas os atributos da dimensão.
-    Atributos =
-        Fonte,
-
-    // Remove registros duplicados.
-    RegistrosUnicos =
-        Table.Distinct(
-            Atributos
-        ),
-
-    // Ordena os registros para garantir estabilidade da chave substituta.
-    RegistrosOrdenados =
-        Table.Sort(
-            RegistrosUnicos,
-            {
-                {"CPF", Order.Ascending}
-            }
-        ),
-
-    // Gera a chave substituta da dimensão.
-    Chaves =
-        Table.AddIndexColumn(
-            RegistrosOrdenados,
-            "IDCliente",
-            1,
-            1,
-            Int64.Type
-        ),
-
-    // Reorganiza as colunas da dimensão.
-    ColunasReordenadas =
-        Table.ReorderColumns(
-            Chaves,
-            {
-                "IDCliente",
-                "CPF",
-                "Nome",
-                "DataNascimento",
-                "Cidade",
-                "Estado"
-            }
-        ),
-    
-    Buffer = Table.Buffer(ColunasReordenadas)
+    Fonte = nrmClientes,
+    Chaves = Table.AddIndexColumn(Fonte, "IDCliente", 1, 1, Int64.Type),
+    Reordenada = Table.ReorderColumns(Chaves, 
+        {"IDCliente", "CPF", "Nome", "DataNascimento", "Cidade", "Estado"})
 in
-    Buffer;
+    Table.Buffer(Reordenada);
 
 shared fatoVendas = let
     // Obtém os dados normalizados.
@@ -3735,96 +3540,31 @@ shared srcSGBD = let
 
 in
     Fonte;
-
 shared parTabelaParametrosFormatosArquivos = "tbParametrosFormatosArquivos" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
-
 shared parTabelaParametrosTratamentos = "tbParametrosTratamentos" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
-
 shared parTabelaParametrosValidacoes = "tbParametrosValidacoes" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
-
 shared parTabelaParametrosSeveridades = "tbParametrosSeveridades" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
-
 shared parTabelaSchema = "tbSchema" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
-
 shared parTabelaClientes = "tbClientes" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
-
 shared parTabelaProdutos = "tbProdutos" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
-
 shared parTabelaVendas = "tbVendas" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
-
 shared parTabelaDadosGenericos = "tbDadosGenericos" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
 
 shared nrmProdutos = let
-
-    // Obtém os dados preparados na camada Stage.
-    Fonte =
-        stgProdutos,
-
-    Normalizacao =
-        fxNrmAplicar(
-            Fonte,
-            "tbProdutos"
-        ),
-
-    // Mantém apenas um registro para cada código de produto.
-    RegistrosUnicos =
-        Table.Distinct(
-            Normalizacao,
-            {"Código"}
-        )
-
+    Fonte = qaProdutos,
+    Valida = fxQaFiltrarPorStatus(Fonte, "OK"),
+    Normalizada = fxNrmAplicar(Valida, parTabelaProdutos),
+    RegistrosUnicos = Table.Distinct(Normalizada, {"Código"})
 in
-
     RegistrosUnicos;
 
 shared nrmVendas = let
-
-    Fonte =
-        stgVendas,
-
-    Normalizacao =
-        fxNrmAplicar(
-            Fonte,
-            "tbVendas"
-        ),
-
-    Clientes =
-        List.Buffer(
-            nrmClientes[CPF]
-        ),
-
-    Produtos =
-        List.Buffer(
-            nrmProdutos[Código]
-        ),
-
-    RegistrosRelacionados =
-        Table.SelectRows(
-            Normalizacao,
-            each
-                List.Contains(
-                    Clientes,
-                    [CPF]
-                )
-                and
-                List.Contains(
-                    Produtos,
-                    [CódigoProduto]
-                )
-        ),
-
-    Atributos =
-        Table.AddColumn(
-            RegistrosRelacionados,
-            "ValorTotal",
-            each
-                [Quantidade] * [ValorUnitário],
-            type number
-        )
-
+    Fonte = qaVendas,
+    Valida = fxQaFiltrarPorStatus(Fonte, "OK"),
+    Normalizada = fxNrmAplicar(Valida, parTabelaVendas),
+    ValorTotal = Table.AddColumn(Normalizada, "ValorTotal", each [Quantidade] * [ValorUnitário], type number)
 in
-
-    Atributos;
+    ValorTotal;
 
 shared nrmDados = let
     Fonte = stgDados
@@ -3832,65 +3572,12 @@ in
     Fonte;
 
 shared dimProdutos = let
-    // Obtém a entidade normalizada.
-    Fonte =
-        nrmProdutos,
-
-    // Seleciona apenas os atributos da dimensão.
-    Atributos =
-        Table.SelectColumns(
-            Fonte,
-            {
-                "Código",
-                "Descrição",
-                "Categoria",
-                "PreçoLista"
-            }
-        ),
-
-    // Remove registros duplicados.
-    RegistrosUnicos =
-        Table.Distinct(
-            Atributos,
-            {"Código"}
-        ),
-
-    // Ordena os registros para garantir estabilidade da chave substituta.
-    RegistrosOrdenados =
-        Table.Sort(
-            RegistrosUnicos,
-            {
-                {"Código", Order.Ascending}
-            }
-        ),
-
-    // Gera a chave substituta da dimensão.
-    Chaves =
-        Table.AddIndexColumn(
-            RegistrosOrdenados,
-            "IDProduto",
-            1,
-            1,
-            Int64.Type
-        ),
-
-    // Reorganiza as colunas da dimensão.
-    ColunasReordenadas =
-        Table.ReorderColumns(
-            Chaves,
-            {
-                "IDProduto",
-                "Código",
-                "Descrição",
-                "Categoria",
-                "PreçoLista"
-            }
-        ),
-    
-    Buffer = Table.Buffer(ColunasReordenadas)
-
+    Fonte = nrmProdutos,
+    Chaves = Table.AddIndexColumn(Fonte, "IDProduto", 1, 1, Int64.Type),
+    Reordenada = Table.ReorderColumns(Chaves, 
+        {"IDProduto", "Código", "Descrição", "Categoria", "PreçoLista"})
 in
-    Buffer;
+    Table.Buffer(Reordenada);
 
 shared fxCalendarioBase = (
     DataInicial as date,
@@ -4127,235 +3814,45 @@ let
 
 in
     Resultado;
-
-shared fxTratamentoTrim = (
-    valor as any,
-    optional parametros as nullable any
-)
-as any =>
-
-let
-
-    Resultado =
-        if valor = null then
-            null
-        else
-            Text.Trim(
-                Text.From(valor)
-            )
-
-in
-
-    Resultado;
-
-shared fxTratamentoUpper = (
-    valor as any,
-    optional parametros as nullable any
-)
-as any =>
-
-let
-
-    Resultado =
-        if valor = null then
-            null
-        else
-            Text.Upper(
-                Text.From(valor)
-            )
-
-in
-
-    Resultado;
-
-shared fxTratamentoLower = (
-    valor as any,
-    optional parametros as nullable any
-)
-as any =>
-
-let
-
-    Resultado =
-        if valor = null then
-            null
-        else
-            Text.Lower(
-                Text.From(valor)
-            )
-
-in
-
-    Resultado;
-
-shared fxTratamentoProper = (
-    valor as any,
-    optional parametros as nullable any
-)
-as any =>
-
-let
-
-    Resultado =
-        if valor = null then
-            null
-        else
-            Text.Proper(
-                Text.From(valor)
-            )
-
-in
-
-    Resultado
-;
-
-shared fxTratamentoClean = (
-    valor as any,
-    optional parametros as nullable any
-)
-as any =>
-
-let
-
-    Resultado =
-        if valor = null then
-            null
-        else
-            Text.Clean(
-                Text.From(valor)
-            )
-
-in
-
-    Resultado
-;
-
-shared fxTratamentoEmptyToNull = (
-    valor as any,
-    optional parametros as nullable any
-)
-as any =>
-
-let
-    Resultado =
-        if valor = "" then
-            null
-        else
-            valor
-in
-    Resultado;
-
-shared fxTratamentoNullToEmpty = (
-    valor as any,
-    optional parametros as nullable any
-)
-as any =>
-
-let
-    Resultado =
-        if valor = null then
-            ""
-        else
-            valor
-in
-    Resultado;
-
-shared fxTratamentoSingleSpace = (
-    valor as any,
-    optional parametros as nullable any
-)
-as any =>
-
-let
-
-    Resultado =
-        if valor = null then
-            null
-        else
-            Text.Combine(
-                List.Select(
-                    Text.SplitAny(
-                        Text.Trim(
-                            Text.From(valor)
-                        ),
-                        " "
-                    ),
-                    each _ <> ""
+shared fxTratamentoTrim = (valor as any, optional parametros as nullable any) as any =>
+    if valor = null then null else Text.Trim(Text.From(valor));
+shared fxTratamentoUpper = (valor as any, optional parametros as nullable any) as any =>
+    if valor = null then null else Text.Upper(Text.From(valor));
+shared fxTratamentoLower = (valor as any, optional parametros as nullable any) as any =>
+    if valor = null then null else Text.Lower(Text.From(valor));
+shared fxTratamentoProper = (valor as any, optional parametros as nullable any) as any =>
+    if valor = null then null else Text.Proper(Text.From(valor));
+shared fxTratamentoClean = (valor as any, optional parametros as nullable any) as any =>
+    if valor = null then null else Text.Clean(Text.From(valor));
+shared fxTratamentoEmptyToNull = (valor as any, optional parametros as nullable any) as any =>
+    if valor = "" then null else valor;
+shared fxTratamentoNullToEmpty = (valor as any, optional parametros as nullable any) as any =>
+    if valor = null then "" else valor;
+shared fxTratamentoSingleSpace = (valor as any, optional parametros as nullable any) as any =>
+    if valor = null then null
+    else
+        Text.Combine(
+            List.Select(
+                Text.SplitAny(
+                    Text.Trim(Text.From(valor)),
+                    " "
                 ),
-                " "
-            )
-in
-    Resultado;
-
-shared fxTratamentoDigits = (
-    valor as any,
-    optional parametros as nullable any
-)
-as any =>
-
-let
-    Resultado =
-        if valor = null then
-            null
-        else
-            Text.Select(
-                Text.From(valor),
-                {"0".."9"}
-            )
-in
-    Resultado;
-
-shared fxTratamentoAlphaNumeric = (
-    valor as any,
-    optional parametros as nullable any
-)
-as any =>
-
-let
-    Resultado =
-        if valor = null then
-            null
-        else
-            Text.Select(
-                Text.From(valor),
-                {"A".."Z","a".."z","0".."9"}
-            )
-in
-    Resultado;
-
-shared fxTratamentoAbs = (
-    valor as any,
-    optional parametros as nullable any
-)
-as any =>
-
-let
-    Resultado =
-        if valor = null then
-            null
-        else
-            Number.Abs(
-                Number.From(valor)
-            )
-in
-    Resultado;
-
-shared fxTratamentoRound = (
-    valor as any,
-    optional parametros as nullable any
-)
-as any =>
-
-let
-    Resultado =
-        if valor = null then
-            null
-        else
-            Number.Round(
-                Number.From(valor)
-            )
-in
-    Resultado;
+                each _ <> ""
+            ),
+            " "
+        );
+shared fxTratamentoDigits = (valor as any, optional parametros as nullable any) as any =>
+    if valor = null then null 
+    else Text.Select(Text.From(valor), {"0".."9"});
+shared fxTratamentoAlphaNumeric = (valor as any, optional parametros as nullable any) as any =>
+    if valor = null then null 
+    else Text.Select(Text.From(valor), {"A".."Z","a".."z","0".."9"});
+shared fxTratamentoAbs = (valor as any, optional parametros as nullable any) as any =>
+    if valor = null then null 
+    else Number.Abs(Number.From(valor));
+shared fxTratamentoRound = (valor as any, optional parametros as nullable any) as any =>
+    if valor = null then null 
+    else Number.Round(Number.From(valor));
 
 shared fxSchemaOcorrencia = (
     codigo as text,
@@ -4368,62 +3865,28 @@ shared fxSchemaOcorrencia = (
 as record =>
 
 let
-
     Operador =
-
-        Record.FieldOrDefault(
-            contexto,
-            "Operador",
-            []
-        ),
+        Record.FieldOrDefault(contexto, "Operador", []),
 
     Resultado =
-
         [
-
-            Codigo =
-                codigo,
-
-            Severidade =
-                Record.FieldOrDefault(
-                    Operador,
-                    "Severidade"
-                ),
-
-            Coluna =
-                Record.FieldOrDefault(
-                    contexto,
-                    "Coluna"
-                ),
-
-            Valor =
-                valor,
-
-            Tipo =
-
-                Record.FieldOrDefault(
-                    contexto,
-                    "Tipo"
-                ),
-
-            Parametros =
-                Record.FieldOrDefault(
-                    Operador,
-                    "Parâmetros"
-                ),
-
-            Mensagem =
-                descricao,
-
-            Detalhes =
-                detalhes
-
+            Codigo = codigo,
+            Severidade = Record.FieldOrDefault(Operador, "Severidade"),
+            Coluna = Record.FieldOrDefault(contexto, "Coluna"),
+            Valor = valor,
+            Tipo = Record.FieldOrDefault(contexto, "Tipo"),
+            Parametros = Record.FieldOrDefault(Operador, "Parâmetros"),
+            Mensagem = descricao,
+            Detalhes = detalhes
         ]
 
 in
-
     Resultado;
 
+//==============================================================================
+// TRATAMENTOS - Treatment Functions
+// Documentação completa em: https://github.com/seu-usuario/seu-framework
+//==============================================================================
 shared fxValidacaoList = (
     valor as any,
     optional parametros as nullable list,
@@ -4432,68 +3895,28 @@ shared fxValidacaoList = (
 as record =>
 
 let
-
-    Lista =
-        if parametros = null then
-            {}
-        else
-            parametros,
+    Lista = if parametros = null then {} else parametros,
 
     Valido =
-
-        if valor = null then
-
-            true
-
-        else
-
-            List.Contains(
-                Lista,
-                Text.From(valor)
-            ),
+        if valor = null then true
+        else List.Contains(Lista, Text.From(valor)),
 
     Ocorrencias =
-
-        if Valido then
-
-            null
-
+        if Valido then null
         else
-
             {
-
                 fxSchemaOcorrencia(
-
                     "LIST",
-
                     contexto,
-
                     valor,
-
                     valor,
-
                     "Valor não pertence à lista permitida.",
-
-                    [
-
-                        Permitidos = Lista
-
-                    ]
-
+                    [Permitidos = Lista]
                 )
-
             }
 
 in
-
-    [
-
-        Valor = valor,
-
-        Ocorrencias = Ocorrencias
-
-    ];
-
+    [Valor = valor, Ocorrencias = Ocorrencias];
 shared fxValidacaoDomain = (
     valor as any,
     optional parametros as nullable list,
@@ -4502,69 +3925,37 @@ shared fxValidacaoDomain = (
 as record =>
 
 let
-
     Dominio =
-        if parametros = null then
-            {}
-        else
-            List.Transform(
-                parametros,
-                each Text.Upper(Text.From(_))
-            ),
+        if parametros = null then {}
+        else List.Transform(
+            parametros,
+            each Text.Upper(Text.From(_))
+        ),
 
     Valor =
-
-        if valor = null then
-            null
-        else
-            Text.Upper(
-                Text.From(valor)
-            ),
+        if valor = null then null
+        else Text.Upper(Text.From(valor)),
 
     Valido =
-
-        if valor = null then
-            true
-        else
-            List.Contains(
-                Dominio,
-                Valor
-            ),
+        if valor = null then true
+        else List.Contains(Dominio, Valor),
 
     Ocorrencias =
-
-        if Valido then
-            null
+        if Valido then null
         else
             {
                 fxSchemaOcorrencia(
-
                     "DOMAIN",
-
                     contexto,
-
                     valor,
-
                     valor,
-
                     "Valor fora do domínio permitido.",
-
-                    [
-
-                        Permitidos = parametros
-
-                    ]
-
+                    [Permitidos = parametros]
                 )
             }
 
 in
-
-    [
-        Valor = valor,
-        Ocorrencias = Ocorrencias
-    ];
-
+    [Valor = valor, Ocorrencias = Ocorrencias];
 shared fxValidacaoSize = (
     valor as any,
     optional parametros as nullable list,
@@ -4573,72 +3964,35 @@ shared fxValidacaoSize = (
 as record =>
 
 let
-
     TamanhoEsperado =
-
-        if parametros = null or List.IsEmpty(parametros) then
-            null
-        else
-            Number.From(parametros{0}),
+        if parametros = null or List.IsEmpty(parametros) then null
+        else Number.From(parametros{0}),
 
     TamanhoAtual =
-
-        if valor = null then
-            null
-        else
-            Text.Length(
-                Text.From(valor)
-            ),
+        if valor = null then null
+        else Text.Length(Text.From(valor)),
 
     Valido =
-
         valor = null
         or TamanhoEsperado = null
         or TamanhoAtual = TamanhoEsperado,
 
     Ocorrencias =
-
-        if Valido then
-
-            null
-
+        if Valido then null
         else
-
             {
-
                 fxSchemaOcorrencia(
-
                     "SIZE",
-
                     contexto,
-
                     valor,
-
                     valor,
-
                     "Tamanho inválido.",
-
-                    [
-
-                        Esperado = TamanhoEsperado,
-                        Atual = TamanhoAtual
-
-                    ]
-
+                    [Esperado = TamanhoEsperado, Atual = TamanhoAtual]
                 )
-
             }
 
 in
-
-    [
-
-        Valor = valor,
-
-        Ocorrencias = Ocorrencias
-
-    ];
-
+    [Valor = valor, Ocorrencias = Ocorrencias];
 shared fxValidacaoMin = (
     valor as any,
     optional parametros as nullable list,
@@ -4647,80 +4001,34 @@ shared fxValidacaoMin = (
 as record =>
 
 let
-
     Minimo =
-
-        if
-            parametros = null
-            or List.IsEmpty(parametros)
-            or parametros{0} = null
-        then
-            null
-        else
-            try Number.From(parametros{0}) otherwise null,
+        if parametros = null or List.IsEmpty(parametros) or parametros{0} = null then null
+        else try Number.From(parametros{0}) otherwise null,
 
     Valor =
-
-        if valor = null then
-            null
-        else
-            try Number.From(valor) otherwise null,
+        if valor = null then null
+        else try Number.From(valor) otherwise null,
 
     Valido =
-
-        if valor = null then
-
-            true
-
-        else
-
-            Minimo <> null
-            and Valor <> null
-            and Valor >= Minimo,
+        if valor = null then true
+        else Minimo <> null and Valor <> null and Valor >= Minimo,
 
     Ocorrencias =
-
-        if Valido then
-
-            null
-
+        if Valido then null
         else
-
             {
-
                 fxSchemaOcorrencia(
-
                     "MIN",
-
                     contexto,
-
                     valor,
-
                     valor,
-
                     "Valor inferior ao mínimo permitido.",
-
-                    [
-
-                        Minimo = Minimo,
-                        Valor = Valor
-
-                    ]
-
+                    [Minimo = Minimo, Valor = Valor]
                 )
-
             }
 
 in
-
-    [
-
-        Valor = valor,
-
-        Ocorrencias = Ocorrencias
-
-    ];
-
+    [Valor = valor, Ocorrencias = Ocorrencias];
 shared fxValidacaoMax = (
     valor as any,
     optional parametros as nullable list,
@@ -4729,98 +4037,36 @@ shared fxValidacaoMax = (
 as record =>
 
 let
-
     Maximo =
-
-        if
-            parametros = null
-            or List.IsEmpty(parametros)
-            or parametros{0} = null
-        then
-
-            null
-
-        else
-
-            try
-                Number.From(parametros{0})
-            otherwise
-                null,
+        if parametros = null or List.IsEmpty(parametros) or parametros{0} = null then null
+        else try Number.From(parametros{0}) otherwise null,
 
     Valor =
-
-        if valor = null then
-
-            null
-
-        else
-
-            try
-                Number.From(valor)
-            otherwise
-                null,
+        if valor = null then null
+        else try Number.From(valor) otherwise null,
 
     Valido =
-
-        if valor = null then
-
-            true
-
-        else if Maximo = null then
-
-            true
-
-        else if Valor = null then
-
-            false
-
-        else
-
-            Valor <= Maximo,
+        if valor = null then true
+        else if Maximo = null then true
+        else if Valor = null then false
+        else Valor <= Maximo,
 
     Ocorrencias =
-
-        if Valido then
-
-            null
-
+        if Valido then null
         else
-
             {
-
                 fxSchemaOcorrencia(
-
                     "MAX",
-
                     contexto,
-
                     valor,
-
                     valor,
-
                     "Valor superior ao máximo permitido.",
-
-                    [
-
-                        Maximo = Maximo,
-                        Valor = Valor
-
-                    ]
-
+                    [Maximo = Maximo, Valor = Valor]
                 )
-
             }
 
 in
-
-    [
-
-        Valor = valor,
-
-        Ocorrencias = Ocorrencias
-
-    ];
-
+    [Valor = valor, Ocorrencias = Ocorrencias];
 shared fxValidacaoInterval = (
     valor as any,
     optional parametros as nullable list,
@@ -4829,96 +4075,43 @@ shared fxValidacaoInterval = (
 as record =>
 
 let
-
     Minimo =
-
-        if parametros = null
-            or List.Count(parametros) < 1
-            or parametros{0} = null then
-
-            null
-
-        else
-
-            Number.From(parametros{0}),
+        if parametros = null or List.Count(parametros) < 1 or parametros{0} = null 
+        then null 
+        else Number.From(parametros{0}),
 
     Maximo =
-
-        if parametros = null
-            or List.Count(parametros) < 2
-            or parametros{1} = null then
-
-            null
-
-        else
-
-            Number.From(parametros{1}),
+        if parametros = null or List.Count(parametros) < 2 or parametros{1} = null 
+        then null 
+        else Number.From(parametros{1}),
 
     Valor =
-
-        if valor = null then
-
-            null
-
-        else
-
-            Number.From(valor),
+        if valor = null then null 
+        else Number.From(valor),
 
     Valido =
-
-        if Valor = null then
-
-            true
-
+        if Valor = null then true
         else
-
             (Minimo = null or Valor >= Minimo)
             and
             (Maximo = null or Valor <= Maximo),
 
     Ocorrencias =
-
-        if Valido then
-
-            null
-
+        if Valido then null
         else
-
             {
-
                 fxSchemaOcorrencia(
-
                     "INTERVAL",
-
                     contexto,
-
                     valor,
-
                     valor,
-
                     "Valor fora do intervalo permitido.",
-
-                    [
-
-                        Minimo = Minimo,
-                        Maximo = Maximo,
-                        Valor = Valor
-
-                    ]
-
+                    [Minimo = Minimo, Maximo = Maximo, Valor = Valor]
                 )
-
             }
 
 in
-
-    [
-
-        Valor = valor,
-        Ocorrencias = Ocorrencias
-
-    ];
-
+    [Valor = valor, Ocorrencias = Ocorrencias];
 shared fxValidacaoEmail = (
     valor as any,
     optional parametros as nullable list,
@@ -4927,28 +4120,13 @@ shared fxValidacaoEmail = (
 as record =>
 
 let
-
     Valido =
-
-        if valor = null then
-
-            true
-
+        if valor = null then true
         else
-
             let
-
-                Texto =
-                    Text.From(valor),
-
-                Partes =
-                    Text.Split(
-                        Texto,
-                        "@"
-                    )
-
+                Texto = Text.From(valor),
+                Partes = Text.Split(Texto, "@")
             in
-
                 List.Count(Partes) = 2
                 and Text.Length(Partes{0}) > 0
                 and Text.Contains(Partes{1}, ".")
@@ -4956,43 +4134,21 @@ let
                 and Text.PositionOf(Partes{1}, ".") < Text.Length(Partes{1}) - 1,
 
     Ocorrencias =
-
-        if Valido then
-
-            null
-
+        if Valido then null
         else
-
             {
-
                 fxSchemaOcorrencia(
-
                     "EMAIL",
-
                     contexto,
-
                     valor,
-
                     valor,
-
                     "E-mail inválido.",
-
                     []
-
                 )
-
             }
 
 in
-
-    [
-
-        Valor = valor,
-
-        Ocorrencias = Ocorrencias
-
-    ];
-
+    [Valor = valor, Ocorrencias = Ocorrencias];
 shared fxValidacaoURL = (
     valor as any,
     optional parametros as nullable list,
@@ -5001,106 +4157,46 @@ shared fxValidacaoURL = (
 as record =>
 
 let
-
     URL =
-
-        if valor = null then
-
-            null
-
-        else
-
-            Text.Trim(
-                Text.From(valor)
-            ),
+        if valor = null then null
+        else Text.Trim(Text.From(valor)),
 
     Protocolo =
-
-        if URL = null then
-
-            null
-
-        else if Text.StartsWith(URL, "http://") then
-
-            "http://"
-
-        else if Text.StartsWith(URL, "https://") then
-
-            "https://"
-
-        else
-
-            null,
+        if URL = null then null
+        else if Text.StartsWith(URL, "http://") then "http://"
+        else if Text.StartsWith(URL, "https://") then "https://"
+        else null,
 
     Dominio =
-
-        if Protocolo = null then
-
-            ""
-
-        else
-
-            Text.AfterDelimiter(
-                URL,
-                Protocolo
-            ),
+        if Protocolo = null then ""
+        else Text.AfterDelimiter(URL, Protocolo),
 
     Valido =
-
         URL = null
-
         or
-
         (
-
             Protocolo <> null
-
             and Text.Contains(Dominio, ".")
-
             and Text.PositionOf(Dominio, ".") > 0
-
             and Text.PositionOf(Dominio, ".") < Text.Length(Dominio) - 1
-
         ),
 
     Ocorrencias =
-
-        if Valido then
-
-            null
-
+        if Valido then null
         else
-
             {
-
                 fxSchemaOcorrencia(
-
                     "URL",
-
                     contexto,
-
                     valor,
-
                     valor,
-
                     "Endereço URL inválido.",
-
                     []
-
                 )
-
             }
 
 in
-
-    [
-
-        Valor = valor,
-
-        Ocorrencias = Ocorrencias
-
-    ];
-
+    [Valor = valor, Ocorrencias = Ocorrencias];
 shared fxValidacaoCEP = (
     valor as any,
     optional parametros as nullable list,
@@ -5109,83 +4205,36 @@ shared fxValidacaoCEP = (
 as record =>
 
 let
-
     Ocorrencias =
-
-        if valor = null then
-
-            null
-
+        if valor = null then null
         else
-
             let
-
-                CEP =
-                    Text.Trim(
-                        Text.From(valor)
-                    ),
-
-                Digitos =
-                    Text.Select(
-                        CEP,
-                        {"0".."9"}
-                    ),
-
+                CEP = Text.Trim(Text.From(valor)),
+                Digitos = Text.Select(CEP, {"0".."9"}),
                 FormatoSemMascara =
                     Text.Length(CEP) = 8
-                    and
-                    Text.Length(Digitos) = 8,
-
+                    and Text.Length(Digitos) = 8,
                 FormatoComMascara =
                     Text.Length(CEP) = 9
-                    and
-                    Text.Length(Digitos) = 8
-                    and
-                    Text.Middle(CEP, 5, 1) = "-",
-
-                Valido =
-                    FormatoSemMascara
-                    or
-                    FormatoComMascara
-
+                    and Text.Length(Digitos) = 8
+                    and Text.Middle(CEP, 5, 1) = "-",
+                Valido = FormatoSemMascara or FormatoComMascara
             in
-
-                if Valido then
-
-                    null
-
+                if Valido then null
                 else
-
                     {
-
                         fxSchemaOcorrencia(
-
                             "CEP",
-
                             contexto,
-
                             valor,
-
                             valor,
-
                             "CEP inválido.",
-
                             []
-
                         )
-
                     }
 
 in
-
-    [
-
-        Valor = valor,
-
-        Ocorrencias = Ocorrencias
-
-    ];
-
+    [Valor = valor, Ocorrencias = Ocorrencias];
 shared fxValidacaoCPF = (
     valor as any,
     optional parametros as nullable list,
@@ -5194,154 +4243,78 @@ shared fxValidacaoCPF = (
 as record =>
 
 let
-
-    CPF =
-        if valor = null then
-            null
-        else
-            Text.From(valor),
-
-    PodeValidar =
-        CPF <> null
-        and
-        Text.Length(CPF) = 11,
+    CPF = if valor = null then null else Text.From(valor),
+    PodeValidar = CPF <> null and Text.Length(CPF) = 11,
 
     Digitos =
         if PodeValidar then
-            List.Transform(
-                Text.ToList(CPF),
-                each Number.FromText(_)
-            )
+            List.Transform(Text.ToList(CPF), each Number.FromText(_))
         else
             {},
 
     NaoRepetido =
-        PodeValidar
-        and
-        List.Count(
-            List.Distinct(Digitos)
-        ) > 1,
+        PodeValidar and List.Count(List.Distinct(Digitos)) > 1,
 
     SomaDV1 =
         if NaoRepetido then
-
             List.Sum(
-
                 List.Transform(
                     {0..8},
                     each Digitos{_} * (10 - _)
                 )
-
             )
-
         else
-
             null,
 
     RestoDV1 =
-        if NaoRepetido then
-            Number.Mod(SomaDV1 * 10, 11)
-        else
-            null,
+        if NaoRepetido then Number.Mod(SomaDV1 * 10, 11) else null,
 
-    DV1 =
-        if RestoDV1 = 10 then
-            0
-        else
-            RestoDV1,
+    DV1 = if RestoDV1 = 10 then 0 else RestoDV1,
 
     SomaDV2 =
         if NaoRepetido then
-
             List.Sum(
-
                 List.Transform(
-
                     {0..9},
-
                     each
-                        (
-                            if _ = 9 then
-                                DV1
-                            else
-                                Digitos{_}
-                        )
+                        (if _ = 9 then DV1 else Digitos{_})
                         *
                         (11 - _)
-
                 )
-
             )
-
         else
-
             null,
 
     RestoDV2 =
-        if NaoRepetido then
-            Number.Mod(SomaDV2 * 10, 11)
-        else
-            null,
+        if NaoRepetido then Number.Mod(SomaDV2 * 10, 11) else null,
 
-    DV2 =
-        if RestoDV2 = 10 then
-            0
-        else
-            RestoDV2,
+    DV2 = if RestoDV2 = 10 then 0 else RestoDV2,
 
     Valido =
-
-        if valor = null then
-
-            true
-
-        else if not PodeValidar then
-
-            false
-
-        else if not NaoRepetido then
-
-            false
-
+        if valor = null then true
+        else if not PodeValidar then false
+        else if not NaoRepetido then false
         else
-
             DV1 = Digitos{9}
             and
             DV2 = Digitos{10},
 
     Ocorrencias =
-
-        if Valido then
-
-            null
-
+        if Valido then null
         else
-
             {
                 fxSchemaOcorrencia(
-
                     "CPF",
-
                     contexto,
-
                     valor,
-
                     valor,
-
                     "CPF inválido.",
-
                     []
-
                 )
             }
 
 in
-
-    [
-        Valor = valor,
-        Ocorrencias = Ocorrencias
-    ];
-
+    [Valor = valor, Ocorrencias = Ocorrencias];
 shared fxValidacaoCNPJ = (
     valor as any,
     optional parametros as nullable list,
@@ -5350,145 +4323,67 @@ shared fxValidacaoCNPJ = (
 as record =>
 
 let
-
-    ValorNulo =
-        valor = null,
+    ValorNulo = valor = null,
 
     CNPJ =
-        if ValorNulo then
-            null
-        else
-            Text.Select(
-                Text.From(valor),
-                {"0".."9"}
-            ),
+        if ValorNulo then null
+        else Text.Select(Text.From(valor), {"0".."9"}),
 
     Digitos =
-        if ValorNulo then
-            {}
-        else
-            List.Transform(
-                Text.ToList(CNPJ),
-                each Number.FromText(_)
-            ),
+        if ValorNulo then {}
+        else List.Transform(Text.ToList(CNPJ), each Number.FromText(_)),
 
-    TamanhoValido =
-        List.Count(Digitos) = 14,
-
+    TamanhoValido = List.Count(Digitos) = 14,
     NaoRepetido =
-        TamanhoValido
-        and
-        List.Count(
-            List.Distinct(Digitos)
-        ) > 1,
+        TamanhoValido and List.Count(List.Distinct(Digitos)) > 1,
 
-    PesosDV1 =
-        {5,4,3,2,9,8,7,6,5,4,3,2},
+    PesosDV1 = {5,4,3,2,9,8,7,6,5,4,3,2},
 
     SomaDV1 =
         if NaoRepetido then
-
             List.Sum(
-
-                List.Transform(
-
-                    {0..11},
-
-                    each
-                        Digitos{_} *
-                        PesosDV1{_}
-
-                )
-
+                List.Transform({0..11}, each Digitos{_} * PesosDV1{_})
             )
-
         else
-
             null,
 
     RestoDV1 =
-        if NaoRepetido then
-            Number.Mod(
-                SomaDV1,
-                11
-            )
-        else
-            null,
+        if NaoRepetido then Number.Mod(SomaDV1, 11) else null,
 
     DV1 =
         if NaoRepetido then
-
-            if RestoDV1 < 2 then
-                0
-            else
-                11 - RestoDV1
-
+            if RestoDV1 < 2 then 0 else 11 - RestoDV1
         else
-
             null,
 
-    PesosDV2 =
-        {6,5,4,3,2,9,8,7,6,5,4,3,2},
+    PesosDV2 = {6,5,4,3,2,9,8,7,6,5,4,3,2},
 
     SomaDV2 =
         if NaoRepetido then
-
             List.Sum(
-
                 List.Transform(
-
                     {0..12},
-
                     each
-
-                        (
-                            if _ = 12 then
-                                DV1
-                            else
-                                Digitos{_}
-                        )
-
+                        (if _ = 12 then DV1 else Digitos{_})
                         *
-
                         PesosDV2{_}
-
                 )
-
             )
-
         else
-
             null,
 
     RestoDV2 =
-        if NaoRepetido then
-            Number.Mod(
-                SomaDV2,
-                11
-            )
-        else
-            null,
+        if NaoRepetido then Number.Mod(SomaDV2, 11) else null,
 
     DV2 =
         if NaoRepetido then
-
-            if RestoDV2 < 2 then
-                0
-            else
-                11 - RestoDV2
-
+            if RestoDV2 < 2 then 0 else 11 - RestoDV2
         else
-
             null,
 
     Valido =
-
-        if ValorNulo then
-
-            true
-
+        if ValorNulo then true
         else
-
             NaoRepetido
             and
             DV1 = Digitos{12}
@@ -5496,61 +4391,21 @@ let
             DV2 = Digitos{13},
 
     Ocorrencias =
-
-        if Valido then
-
-            null
-
+        if Valido then null
         else
-
             {
-
                 fxSchemaOcorrencia(
-
                     "CNPJ",
-
                     contexto,
-
                     valor,
-
                     valor,
-
                     "CNPJ inválido.",
-
                     []
-
                 )
-
             }
 
 in
-
-    [
-
-        Valor = valor,
-
-        Ocorrencias = Ocorrencias
-
-    ];
-
-shared tststgPreparar = let
-
-    Fonte = srcClientes,
-
-    Resultado =
-        fxStgPreparar(
-            Fonte
-        )
-in
-    Resultado;
-
-shared tstGeral = let
-
-Fonte = srcClientes,
-    #"Linhas em Branco Removidas" = Table.SelectRows(Fonte, each not List.IsEmpty(List.RemoveMatchingItems(Record.FieldValues(_), {"", null})))
-
-in
-#"Linhas em Branco Removidas";
+    [Valor = valor, Ocorrencias = Ocorrencias];
 
 shared fxCalendarioIntervaloData = (
     tabela as table,
@@ -5584,7 +4439,6 @@ in
             DataFinal = List.Max(Datas)
         ]
 ;
-
 shared fxValidacaoREQUIRED = (
     valor as any,
     optional parametros as nullable list,
@@ -5593,449 +4447,85 @@ shared fxValidacaoREQUIRED = (
 as record =>
 
 let
-
     Vazio =
-
-        if valor = null then
-
-            true
-
-        else if valor is text then
-
-            Text.Trim(valor) = ""
-
-        else
-
-            false,
+        if valor = null then true
+        else if valor is text then Text.Trim(valor) = ""
+        else false,
 
     Ocorrencias =
-
         if Vazio then
-
             {
-
                 fxSchemaOcorrencia(
-
                     "REQUIRED",
-
                     contexto,
-
                     valor,
-
                     valor,
-
                     "Campo obrigatório não informado.",
-
                     []
-
                 )
-
             }
-
         else
-
             null
 
 in
-
     [
-
-        Valor =
-            valor,
-
-        Ocorrencias =
-            Ocorrencias
-
+        Valor = valor,
+        Ocorrencias = Ocorrencias
     ];
+shared fxNrmAplicar = /*
+Entrada: Dados válidos (qaClientes → filtro OK)
+   ↓
+Processamento:
+  1. Filtragem apenas de registros válidos
+  2. Deduplicação por chave de negócio
+  3. Resolução de relacionamentos
+  4. Aplicação de regras complexas
+  5. Enriquecimento com dados externos
+   ↓
+Saída: nrmClientes (dados normalizados)
 
-shared fxNrmAplicarTratamentos = 
+Funções:
+  - fxNrmAplicar() → Normalização completa
+*/
+
 (
-    tabela as table,
-    pipeline as record
-)
-as table =>
-
-let
-
-//--------------------------------------------------------------------------
-// Tratamentos por coluna
-//--------------------------------------------------------------------------
-
-    TratamentosPorColuna =
-        Record.FieldOrDefault(
-            pipeline,
-            "TratamentosPorColuna",
-            []
-        ),
-
-    TiposPorColuna =
-        Record.FieldOrDefault(
-            pipeline,
-            "TiposPorColuna",
-            []
-        ),
-
-    Transformacoes =
-        List.RemoveNulls(
-            List.Transform(
-                Table.ColumnNames(tabela),
-                each
-                    let
-                        Coluna = _,
-                        Operadores =
-                            Record.FieldOrDefault(
-                                TratamentosPorColuna,
-                                Coluna,
-                                null
-                            ),
-                        TipoPipeline =
-                            Record.FieldOrDefault(
-                                TiposPorColuna,
-                                Coluna,
-                                null
-                            ),
-                        TipoAtual =
-                            try Type.TableColumn(Value.Type(tabela), Coluna) otherwise null,
-                        TipoFinal =
-                            if TipoPipeline = null or TipoPipeline = type any then
-                                TipoAtual
-                            else
-                                TipoPipeline,
-                        TratadorCompilado =
-                            fxNrmCompilarTratamentosPorColuna(
-                                Operadores
-                            ),
-                        TransformadorFinal =
-                            if TipoFinal = null then
-                                TratadorCompilado
-                            else
-                                (valor) =>
-                                    let
-                                        ResultadoTratamento = TratadorCompilado(valor)
-                                    in
-                                        if ResultadoTratamento = null then
-                                            null
-                                        else if Value.Is(ResultadoTratamento, TipoFinal) then
-                                            ResultadoTratamento
-                                        else
-                                            try fxConversor(ResultadoTratamento, TipoFinal) otherwise ResultadoTratamento
-                    in
-                        if Operadores = null or List.IsEmpty(Operadores) then
-                            null
-                        else if TipoFinal = null then
-                            {
-                                Coluna,
-                                TransformadorFinal
-                            }
-                        else
-                            {
-                                Coluna,
-                                TransformadorFinal,
-                                TipoFinal
-                            }
-            )
-        ),
-
-    Resultado =
-        if List.IsEmpty(Transformacoes) then
-            tabela
-        else
-            Table.TransformColumns(
-                tabela,
-                Transformacoes,
-                null,
-                MissingField.Ignore
-            )
-
-in
-
-    Resultado;
-
-shared fxNrmExecutarValidacoes = 
-(
-    Tabela as table,
-    Pipeline as record
-)
-as table =>
-
-let
-
-//--------------------------------------------------------------------------
-// Validações
-//--------------------------------------------------------------------------
-
-    ValidacoesPorColuna =
-        Record.FieldOrDefault(
-            Pipeline,
-            "ValidacoesPorColuna",
-            []
-        ),
-
-    TiposPorColuna =
-        Record.FieldOrDefault(
-            Pipeline,
-            "TiposPorColuna",
-            []
-        ),
-
-    ColunasValidacao =
-        Record.FieldNames(ValidacoesPorColuna),
-
-//--------------------------------------------------------------------------
-// Resultado
-//--------------------------------------------------------------------------
-
-    Resultado =
-
-        if List.IsEmpty(ColunasValidacao) then
-
-            Table.AddColumn(
-                Tabela,
-                "Ocorrencias",
-                each null,
-                type nullable list
-            )
-
-        else
-
-            let
-
-                ColunasValidacao =
-                    List.Buffer(
-                        Record.FieldNames(ValidacoesPorColuna)
-                    ),
-
-                ValidadoresPorColuna =
-                    Record.FromList(
-                        List.Transform(
-                            ColunasValidacao,
-                            (Coluna) =>
-                                fxNrmCompilarValidacoesPorColuna(
-                                    Record.Field(
-                                        ValidacoesPorColuna,
-                                        Coluna
-                                    ),
-                                    Record.FieldOrDefault(
-                                        TiposPorColuna,
-                                        Coluna,
-                                        type any
-                                    ),
-                                    Coluna
-                                )
-                        ),
-                        ColunasValidacao
-                    ),
-
-                Resultado =
-                    Table.AddColumn(
-                        Tabela,
-                        "Ocorrencias",
-                        each
-                            let
-                                Linha = _,
-                                Ocorrencias =
-                                    List.Combine(
-                                        List.RemoveNulls(
-                                            List.Transform(
-                                                ColunasValidacao,
-                                                (Coluna) =>
-                                                    let
-                                                        Validador =
-                                                            Record.Field(
-                                                                ValidadoresPorColuna,
-                                                                Coluna
-                                                            ),
-                                                        Valor =
-                                                            Record.FieldOrDefault(
-                                                                Linha,
-                                                                Coluna,
-                                                                null
-                                                            )
-                                                    in
-                                                        Validador(Valor)
-                                            )
-                                        )
-                                    )
-                            in
-                                if List.IsEmpty(Ocorrencias) then
-                                    null
-                                else
-                                    Ocorrencias,
-                        type nullable list
-                    )
-
-            in
-
-                Resultado
-
-in
-
-    Resultado;
-
-shared fxNrmRemoverRegistrosBloqueantes = (
-    tabela as table
-)
-as table =>
-
-let
-
-    TemOcorrencias =
-        Table.HasColumns(
-            tabela,
-            "Ocorrencias"
-        ),
-
-    TabelaFiltrada =
-
-        if
-            not TemOcorrencias
-        then
-
-            tabela
-
-        else
-
-            Table.SelectRows(
-
-                tabela,
-
-                each
-
-                    let
-
-                        Ocorrencias =
-
-                            if [Ocorrencias] = null then
-                                {}
-                            else
-                                [Ocorrencias]
-
-                    in
-
-                        not List.MatchesAny(
-
-                            Ocorrencias,
-
-                            (Ocorrencia) =>
-
-                                Record.FieldOrDefault(
-
-                                    Record.FieldOrDefault(
-
-                                        cfgParametrosSeveridades,
-
-                                        Ocorrencia[Severidade],
-
-                                        []
-
-                                    ),
-
-                                    "Bloqueia",
-
-                                    false
-
-                                )
-
-                        )
-
-            ),
-
-    Resultado =
-        Table.RemoveColumns(
-            TabelaFiltrada,
-            "Ocorrencias",
-            MissingField.Ignore
-        )
-
-in
-
-    Resultado;
-
-shared fxNrmAplicar = (
     Tabela as table,
     Schema as text
-)
-as table =>
+) as table =>
 
 let
-
-//--------------------------------------------------------------------------
-// Pipeline
-//--------------------------------------------------------------------------
-
-    Pipeline =
-
-        Record.Field(
-            cfgPipeline,
-            Schema
-        ),
-
-//--------------------------------------------------------------------------
-// Configuração
-//--------------------------------------------------------------------------
-
-    ProcessarTratamentos =
-        fxParametro(
-            "Processar_Tratamentos"
-        ),
-
-    ProcessarValidacoes =
-        fxParametro(
-            "Processar_Validacoes"
-        ),
+    // RESPONSABILIDADE: Normalização de dados
+    // (após STG + TRN + QA)
     
-    RemoverRegistrosBloqueantes =
-        fxParametro(
-            "Remover_Registros_Bloqueantes"
-        ),
+    // 1. Remover duplicatas por domínio
+    RegistrosUnicos = 
+        Table.Distinct(Tabela),
 
-//--------------------------------------------------------------------------
-// Pipeline
-//--------------------------------------------------------------------------
+    // 2. Resolver relacionamentos (se aplicável)
+    ComRelacionamentos = 
+        RegistrosUnicos,
 
-    Tratada =
+    // 3. Enriquecimento com dados externos (customização por schema)
+    Enriquecida = 
+        ComRelacionamentos,
 
-        if ProcessarTratamentos then
-
-            fxNrmAplicarTratamentos(
-                Tabela,
-                Pipeline
-            )
-
-        else
-
-            Tabela,
-
-    Validada =
-
-        if ProcessarValidacoes then
-
-            fxNrmExecutarValidacoes(
-                Tratada,
-                Pipeline
-            )
-
-        else
-
-            Tratada,
-
-    Resultado =
-
-        if RemoverRegistrosBloqueantes then
-            fxNrmRemoverRegistrosBloqueantes(
-                Validada
-            )
-        
-        else
-            
-            Validada
+    // 4. Aplicar regras complexas de negócio
+    Resultado = 
+        Enriquecida
 
 in
-
     Resultado;
+
+//==============================================================================
+// FUNÇÕES UTILITÁRIAS - Utility Functions
+//==============================================================================
 
 shared parTabelaCategoriasConsultasPQ = "tbSobreCategoriasConsultasPQ" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
 
+//==============================================================================
+// STAGING - STAGE (ETL Layer 1)
+// Responsabilidade: Apenas estruturação e normalização básica
+//==============================================================================
 shared fxStgPreparar = 
 (
     tabela as table,
@@ -6044,35 +4534,20 @@ shared fxStgPreparar =
 as table =>
 
 let
+    // Configuração
+    ColunasIgnoradas = ignorarColunas ?? {},
+    ColunasTabela = Table.ColumnNames(tabela),
+    ColunasEfetivas = List.Difference(ColunasTabela, ColunasIgnoradas),
 
-    ColunasIgnoradas =
-        if ignorarColunas = null then
-            {}
-        else
-            ignorarColunas,
-
-    // Obtém os nomes atuais das colunas.
-    ColunasTabela =
-        Table.ColumnNames(
-            tabela
-        ),
-
-    // Garante que exista pelo menos uma coluna.
-    _ErroSemColunas =
+    // Validação
+    _ErroSemColunas = 
         if List.IsEmpty(ColunasTabela) then
             error "A tabela não possui colunas."
         else
             null,
 
-    // Remove das colunas da tabela aquelas que não devem participar da preparação.
-    ColunasEfetivas =
-        List.Difference(
-            ColunasTabela,
-            ColunasIgnoradas
-        ),
-
-    // Remove linhas completamente vazias considerando apenas as colunas efetivas.
-    TabelaSemLinhasVazias =
+    // 1. Remover linhas completamente vazias
+    TabelaSemLinhasVazias = 
         if List.IsEmpty(ColunasEfetivas) then
             tabela
         else
@@ -6093,8 +4568,8 @@ let
                     )
             ),
 
-    // Normaliza apenas os nomes das colunas efetivas.
-    ColunasNormalizadas =
+    // 2. Normalizar nomes de colunas (trim, sem transformações)
+    ColunasNormalizadas = 
         List.ReplaceMatchingItems(
             ColunasTabela,
             List.Transform(
@@ -6103,8 +4578,8 @@ let
             )
         ),
 
-    // Verifica nomes vazios após a normalização.
-    TemNomeInvalido =
+    // Validações de nomes
+    TemNomeInvalido = 
         List.AnyTrue(
             List.Transform(
                 ColunasNormalizadas,
@@ -6112,528 +4587,149 @@ let
             )
         ),
 
-    _ErroNomeInvalido =
+    _ErroNomeInvalido = 
         if TemNomeInvalido then
             error "A tabela possui colunas com nome vazio."
         else
             null,
 
-    // Verifica duplicidade após a normalização.
-    TemDuplicidade =
-        List.Count(ColunasNormalizadas)
-            <>
-        List.Count(
-            List.Distinct(
-                ColunasNormalizadas
-            )
-        ),
+    TemDuplicidade = 
+        List.Count(ColunasNormalizadas) <>
+        List.Count(List.Distinct(ColunasNormalizadas)),
 
-    _ErroDuplicidade =
+    _ErroDuplicidade = 
         if TemDuplicidade then
             error "A tabela possui nomes de colunas duplicados."
         else
             null,
 
-    // Aplica a normalização dos nomes das colunas.
-    Resultado =
+    // 3. Aplicar renomeação
+    Resultado = 
         Table.RenameColumns(
             TabelaSemLinhasVazias,
-            List.Zip(
-                {
-                    ColunasTabela,
-                    ColunasNormalizadas
-                }
-            ),
+            List.Zip({ColunasTabela, ColunasNormalizadas}),
             MissingField.Ignore
         )
 
 in
-
     Resultado;
+shared fxStgAplicar = /*
+Entrada: Dados brutos (srcClientes)
+   ↓
+Processamento:
+  1. Remoção de linhas completamente vazias
+  2. Normalização de nomes de colunas (trim, validação)
+  3. Aplicação de tipos básicos
+  4. Reordenação de colunas
+   ↓
+Saída: stgClientes (estruturado, tipado, ordenado)
 
-shared fxStgGarantirColunas = 
+Funções:
+  - fxStgPreparar() → Preparação
+  - fxStgAplicar() → Aplicação completa
+*/
+
 (
-    Tabela as table,
-    Pipeline as record
-)
-as table =>
-
-let
-
-//--------------------------------------------------------------------------
-// Colunas
-//--------------------------------------------------------------------------
-
-    ColunasPipeline =
-        Pipeline[Colunas],
-
-    ColunasExistentes =
-        Table.ColumnNames(
-            Tabela
-        ),
-
-    ColunasFaltantes =
-        List.Difference(
-            ColunasPipeline,
-            ColunasExistentes
-        ),
-
-//--------------------------------------------------------------------------
-// Resultado
-//--------------------------------------------------------------------------
-
-    Resultado =
-
-        List.Accumulate(
-
-            ColunasFaltantes,
-
-            Tabela,
-
-            (
-                Estado,
-                Coluna
-            ) =>
-
-                Table.AddColumn(
-
-                    Estado,
-
-                    Coluna,
-
-                    each null
-
-                )
-
-        )
-
-in
-
-    Resultado;
-
-shared fxStgRemoverColunas = 
-(
-    Tabela as table,
-    Pipeline as record
-)
-as table =>
-
-let
-
-//--------------------------------------------------------------------------
-// Colunas
-//--------------------------------------------------------------------------
-
-    Colunas =
-        Pipeline[Colunas],
-
-//--------------------------------------------------------------------------
-// Resultado
-//--------------------------------------------------------------------------
-
-    Resultado =
-
-        if List.IsEmpty(Colunas) then
-
-            #table({}, {})
-
-        else
-
-            Table.SelectColumns(
-
-                Tabela,
-
-                Colunas,
-
-                MissingField.Ignore
-
-            )
-
-in
-
-    Resultado;
-
-shared fxStgAplicarTipos = (
-    Tabela as table,
-    Pipeline as record,
-    optional Identificar_Tipos as nullable logical,
-    optional Amostra as nullable number
-)
-as table =>
-
-let
-
-//--------------------------------------------------------------------------
-// Configuração
-//--------------------------------------------------------------------------
-
-    IdentificarTipos =
-        if Identificar_Tipos = null then
-            true
-        else
-            Identificar_Tipos,
-
-//--------------------------------------------------------------------------
-// Tipos
-//--------------------------------------------------------------------------
-
-    Tipos =
-        Pipeline[Tipos],
-
-//--------------------------------------------------------------------------
-// Tipos efetivos
-//--------------------------------------------------------------------------
-
-    TiposEfetivos =
-
-        if
-            List.IsEmpty(Tipos)
-            or not IdentificarTipos
-        then
-
-            []
-
-        else
-
-            fxStgIdentificarTiposColunas(
-
-                Tabela,
-
-                List.Transform(
-
-                    Tipos,
-
-                    each [Coluna]
-
-                ),
-
-                Amostra
-
-            ),
-
-//--------------------------------------------------------------------------
-// Resultado
-//--------------------------------------------------------------------------
-
-    Resultado =
-
-        if List.IsEmpty(Tipos) then
-
-            Tabela
-
-        else
-
-            let
-
-                Transformacoes =
-
-                    List.Transform(
-
-                        Tipos,
-
-                        (Definicao) =>
-
-                            let
-
-                                Coluna =
-                                    Definicao[Coluna],
-
-                                TipoConfigurado =
-                                    Definicao[Tipo],
-
-                                TipoFinal =
-
-                                    if
-                                        TipoConfigurado <> type any
-                                        or not IdentificarTipos
-                                    then
-
-                                        TipoConfigurado
-
-                                    else
-
-                                        Record.Field(
-                                            TiposEfetivos,
-                                            Coluna
-                                        )
-
-                            in
-
-                                {
-
-                                    Coluna,
-
-                                    (Valor) =>
-
-                                        if Valor = null then
-
-                                            null
-
-                                        else if Value.Is(
-                                            Valor,
-                                            TipoFinal
-                                        ) then
-
-                                            Valor
-
-                                        else
-
-                                            try
-                                                fxConversor(
-                                                    Valor,
-                                                    TipoFinal
-                                                )
-                                            otherwise
-                                                null,
-
-                                    TipoFinal
-
-                                }
-
-                    )
-
-            in
-
-                Table.TransformColumns(
-
-                    Tabela,
-
-                    Transformacoes,
-
-                    null,
-
-                    MissingField.Ignore
-
-                )
-
-in
-
-    Resultado;
-
-shared fxStgOrdenarColunas = (
-    Tabela as table,
-    Pipeline as record
-)
-as table =>
-
-let
-
-//--------------------------------------------------------------------------
-// Ordem
-//--------------------------------------------------------------------------
-
-    Ordem =
-        Pipeline[Ordem],
-
-    OrdemAtual =
-        Table.ColumnNames(
-            Tabela
-        ),
-
-    Reordenar =
-        OrdemAtual <> Ordem,
-
-//--------------------------------------------------------------------------
-// Resultado
-//--------------------------------------------------------------------------
-
-    Resultado =
-
-        if Reordenar then
-
-            Table.ReorderColumns(
-
-                Tabela,
-
-                Ordem,
-
-                MissingField.Ignore
-
-            )
-
-        else
-
-            Tabela
-
-in
-
-    Resultado;
-
-shared fxStgAplicar = (
     Tabela as table,
     optional Schema as nullable text
 )
 as table =>
 
 let
+    // Preparação estrutural
+    Preparada = fxStgPreparar(Tabela),
 
-//--------------------------------------------------------------------------
-// Pipeline
-//--------------------------------------------------------------------------
+    Pipeline = 
+        if Schema = null then null 
+        else try Record.Field(cfgPipeline, Schema) otherwise null,
 
-    Pipeline =
+    TemPipeline = Pipeline <> null,
 
-        if Schema = null then
-
-            null
-
+    Resultado = 
+        if not TemPipeline then
+            Preparada
         else
-
-            Record.Field(
-                cfgPipeline,
-                Schema
-            ),
-
-    TemPipeline =
-        Pipeline <> null,
-
-//--------------------------------------------------------------------------
-// Configuração
-//--------------------------------------------------------------------------
-
-    IdentificarTiposColunasAny =
-        fxParametro(
-            "Identificar_Tipos_Colunas"
-        ),
-
-
-//--------------------------------------------------------------------------
-// Preparação
-//--------------------------------------------------------------------------
-
-    Preparada =
-
-        fxStgPreparar(
-            Tabela
-        ),
-
-//--------------------------------------------------------------------------
-// Pipeline
-//--------------------------------------------------------------------------
-
-    ColunasGarantidas =
-
-        if TemPipeline then
-
-            fxStgGarantirColunas(
-                Preparada,
-                Pipeline
-            )
-
-        else
-
-            Preparada,
-
-    ColunasRemovidas =
-
-        if TemPipeline then
-
-            fxStgRemoverColunas(
-                ColunasGarantidas,
-                Pipeline
-            )
-
-        else
-
-            ColunasGarantidas,
-
-    Tipada =
-
-        if TemPipeline then
-
-            fxStgAplicarTipos(
-                ColunasRemovidas,
-                Pipeline,
-                IdentificarTiposColunasAny
-            )
-
-        else
-
-            ColunasRemovidas,
-
-    Resultado =
-
-        if TemPipeline then
-
-            fxStgOrdenarColunas(
-                Tipada,
-                Pipeline
-            )
-
-        else
-
-            Tipada
-
-in
-
-    Resultado;
-
-shared fxTratamentoNormalizeBasic = 
-(
-    valor as any,
-    optional parametros as nullable any
-)
-as any =>
-
-let
-
-    Resultado =
-
-        if valor = null then
-
-            null
-
-        else
-
             let
+                // Tipos do pipeline
+                Tipos = Pipeline[Tipos],
+                Ordem = Pipeline[Ordem],
 
-                Texto =
-
-                    Text.From(
-                        valor
+                // Transformações apenas de tipos básicos
+                TransformacoesBasicas = 
+                    List.RemoveNulls(
+                        List.Transform(
+                            Tipos,
+                            (Def) =>
+                                let
+                                    Coluna = Def[Coluna],
+                                    TipoDestino = Def[Tipo]
+                                in
+                                    if TipoDestino = type any then
+                                        null
+                                    else
+                                        {
+                                            Coluna,
+                                            (v) => 
+                                                if v = null then null
+                                                else try fxConversor(v, TipoDestino) 
+                                                     otherwise null,
+                                            TipoDestino
+                                        }
+                        )
                     ),
 
-                Limpo =
-
-                    Text.Clean(
-                        Texto
-                    ),
-
-                Aparado =
-
-                    Text.Trim(
-                        Limpo
-                    ),
-
-                Normalizado =
-
-                    Text.Combine(
-
-                        List.Select(
-
-                            Text.SplitAny(
-                                Aparado,
-                                " "
-                            ),
-
-                            each _ <> ""
-
+                // Aplicar tipos
+                ComTipos = 
+                    if List.IsEmpty(TransformacoesBasicas) then
+                        Preparada
+                    else
+                        Table.TransformColumns(
+                            Preparada,
+                            TransformacoesBasicas,
+                            null,
+                            MissingField.Ignore
                         ),
 
-                        " "
-
+                // Reordenar colunas
+                Final = 
+                    Table.ReorderColumns(
+                        ComTipos,
+                        Ordem,
+                        MissingField.Ignore
                     )
-
             in
+                Final
+in
+    Resultado;
 
-                if Normalizado = "" then
-                    null
-                else
-                    Normalizado
+//==============================================================================
+// TRATAMENTOS - TRANSFORM (ETL Layer 2)
+// Responsabilidade: Tratamentos e limpeza de dados
+//==============================================================================
+shared fxTratamentoNormalizeBasic = (valor as any, optional parametros as nullable any) as any =>
+
+let
+    Resultado =
+        if valor = null then null
+        else
+            let
+                Texto = Text.From(valor),
+                Limpo = Text.Clean(Texto),
+                Aparado = Text.Trim(Limpo),
+                Normalizado =
+                    Text.Combine(
+                        List.Select(
+                            Text.SplitAny(Aparado, " "),
+                            each _ <> ""
+                        ),
+                        " "
+                    )
+            in
+                if Normalizado = "" then null else Normalizado
 
 in
-
     Resultado;
+
 
 shared fxObjetoIdentificarTipo = 
 (
@@ -6960,319 +5056,18 @@ let
 in
 
     Resultado;
-
-shared fxNrmCompilarTratamentosPorColuna = (
-    Operadores as list
-)
-as function =>
+shared fxTratamentoNormalizeType = (valor as any, optional parametros as nullable any) as any =>
 
 let
-    OperadoresBuffer =
-        List.Buffer(
-            Operadores ?? {}
-        )
-
-in
-    if List.IsEmpty(OperadoresBuffer) then
-        (valor) => valor
-    else
-        (valor) =>
-            List.Accumulate(
-                OperadoresBuffer,
-                valor,
-                (Estado, Operador) =>
-                    Operador[Função](
-                        Estado,
-                        Record.FieldOrDefault(
-                            Operador,
-                            "Parâmetros",
-                            null
-                        )
-                    )
-            );
-
-shared fxNrmCompilarValidacoesPorColuna = (
-    Operadores as list,
-    Tipo as type,
-    Coluna as text
-)
-as function =>
-
-let
-    OperadoresBuffer =
-        List.Buffer(
-            Operadores ?? {}
-        )
-
-in
-    if List.IsEmpty(OperadoresBuffer) then
-        (valor) => null
-    else
-        (valor) =>
-            let
-                Ocorrencias =
-                    List.Accumulate(
-                        OperadoresBuffer,
-                        {},
-                        (Estado, Operador) =>
-                            let
-                                Resultado =
-                                    Operador[Função](
-                                        valor,
-                                        Record.FieldOrDefault(
-                                            Operador,
-                                            "Parâmetros",
-                                            null
-                                        ),
-                                        [
-                                            Coluna = Coluna,
-                                            Tipo = Tipo,
-                                            Operador = Operador
-                                        ]
-                                    ),
-                                NovasOcorrencias =
-                                    Resultado[Ocorrencias] ?? {}
-                            in
-                                Estado & NovasOcorrencias
-                    )
-            in
-                if List.IsEmpty(Ocorrencias) then
-                    null
-                else
-                    Ocorrencias;
-
-shared fxStgIdentificarTiposColunas = (
-    tabela as table,
-    colunas as list,
-    optional amostra as nullable number
-)
-as record =>
-
-let
-
-//--------------------------------------------------------------------------
-// Configuração
-//--------------------------------------------------------------------------
-
-    QuantidadeAmostra =
-        if amostra = null then
-            20
-        else
-            Number.RoundDown(amostra),
-
-    TipoTabela =
-        Value.Type(tabela),
-
-//--------------------------------------------------------------------------
-// Tipos declarados
-//--------------------------------------------------------------------------
-
-    TiposDeclarados =
-
-        Record.FromList(
-
-            List.Transform(
-
-                colunas,
-
-                each
-                    Type.TableColumn(
-                        TipoTabela,
-                        _
-                    )
-
-            ),
-
-            colunas
-
-        ),
-
-//--------------------------------------------------------------------------
-// Colunas que precisam ser inferidas
-//--------------------------------------------------------------------------
-
-    ColunasAny =
-
-        List.Select(
-
-            colunas,
-
-            each Record.Field(
-                TiposDeclarados,
-                _
-            ) = type any
-
-        ),
-
-//--------------------------------------------------------------------------
-// Inferência
-//--------------------------------------------------------------------------
-
-    TiposInferidos =
-
-        if List.IsEmpty(ColunasAny) then
-
-            []
-
-        else
-
-            let
-
-                Listas =
-
-                    Table.ToColumns(
-
-                        Table.SelectColumns(
-
-                            tabela,
-                            ColunasAny,
-                            MissingField.Ignore
-
-                        )
-
-                    )
-
-            in
-
-                Record.FromList(
-
-                    List.Transform(
-
-                        Listas,
-
-                        (Lista) =>
-
-                            let
-
-                                Valores =
-
-                                    List.FirstN(
-
-                                        List.RemoveNulls(
-                                            Lista
-                                        ),
-
-                                        QuantidadeAmostra
-
-                                    ),
-
-                                Tipos =
-
-                                    List.Distinct(
-
-                                        List.Transform(
-
-                                            Valores,
-
-                                            Value.Type
-
-                                        )
-
-                                    )
-
-                            in
-
-                                if List.Count(Tipos) = 1 then
-                                    Tipos{0}
-                                else
-                                    type any
-
-                    ),
-
-                    ColunasAny
-
-                ),
-
-//--------------------------------------------------------------------------
-// Resultado
-//--------------------------------------------------------------------------
-
-    Resultado =
-
-        Record.Combine({
-
-            TiposDeclarados,
-            TiposInferidos
-
-        })
-
-in
-
-    Resultado;
-
-shared tstPadronizar = let
-
-    Fonte = srcClientes,
-
-    Pipeline =
-            fxPipeline("tbClientes"),
-
-    Resultado =
-        fxNrmAplicarTratamentos(
-            Fonte,
-            Pipeline
-        )
-in
-    Resultado;
-
-shared tstAplicarTipos = let
-
-    Fonte =
-        srcVendas,
-
-    Pipeline =
-        fxPipeline("tbVendas"),
-
-    Resultado =
-        fxStgAplicarTipos(
-            Fonte,
-            Pipeline
-        )
-
-in
-
-    Resultado;
-
-shared tstStgAplicar = let
-
-    Fonte = srcClientes,
-
-    Schema = "tbClientes",
-
-    Resultado =
-        fxStgAplicar(
-            Fonte,
-            Schema
-        )
-in
-    Resultado;
-
-shared fxTratamentoNormalizeType = (
-    valor as any,
-    optional parametros as nullable any
-)
-as any =>
-
-let
-
     Parametro =
-
-        if parametros = null then
-
-            null
-
+        if parametros = null then null
         else if parametros is list and not List.IsEmpty(parametros) then
-
             parametros{0}
-
         else
-
             parametros,
 
     Tipo =
-
-        if Parametro = null then
-            null
+        if Parametro = null then null
         else
             Record.FieldOrDefault(
                 cfgTiposDados,
@@ -7281,58 +5076,26 @@ let
             ),
 
     Resultado =
-
-        if valor = null then
-
-            null
-
-        else if Tipo = null then
-
-            valor
-
-        else if Tipo = type text then
-
-            try Text.From(valor) otherwise null
-
-        else if Tipo = type number then
-
-            try Number.From(valor) otherwise null
-
-        else if Tipo = type logical then
-
-            try Logical.From(valor) otherwise null
-
-        else if Tipo = type date then
-
-            try Date.From(valor) otherwise null
-
-        else if Tipo = type datetime then
-
-            try DateTime.From(valor) otherwise null
-
-        else if Tipo = type datetimezone then
-
-            try DateTimeZone.From(valor) otherwise null
-
-        else if Tipo = type time then
-
-            try Time.From(valor) otherwise null
-
-        else if Tipo = type duration then
-
-            try Duration.From(valor) otherwise null
-
-        else if Tipo = type binary then
-
-            try Binary.From(valor) otherwise null
-
-        else
-
-            valor
+        if valor = null then null
+        else if Tipo = null then valor
+        else if Tipo = type text then try Text.From(valor) otherwise null
+        else if Tipo = type number then try Number.From(valor) otherwise null
+        else if Tipo = type logical then try Logical.From(valor) otherwise null
+        else if Tipo = type date then try Date.From(valor) otherwise null
+        else if Tipo = type datetime then try DateTime.From(valor) otherwise null
+        else if Tipo = type datetimezone then try DateTimeZone.From(valor) otherwise null
+        else if Tipo = type time then try Time.From(valor) otherwise null
+        else if Tipo = type duration then try Duration.From(valor) otherwise null
+        else if Tipo = type binary then try Binary.From(valor) otherwise null
+        else valor
 
 in
-
     Resultado;
+
+//==============================================================================
+// VALIDAÇÕES - Validation Functions
+//==============================================================================
+
 
 shared fxParametrosLerParametroPQ = let
 
@@ -8092,55 +5855,6 @@ let
             )
 in
     Resultado;
-
-shared tstPipeline = let
-    Fonte = fxPipeline("tbClientes")
-in
-    Fonte;
-
-shared tstCompilarPipeline = let
-    Fonte = fxPìpelineCompilar(fxSchema("tbClientes")),
-    Tratamentos = Fonte[Tratamentos],
-    Tratamentos1 = Tratamentos{0},
-    Operadores = Tratamentos1[Operadores],
-    Operadores1 = Operadores{0}
-in
-    Operadores1;
-
-shared tstnrmAplicarTratamentos = let
-
-    Fonte = srcVendas,
-
-    Pipeline = fxPipeline("tbVendas"),
-
-    Resultado =
-        fxNrmAplicarTratamentos(
-            Fonte,
-            Pipeline
-        )
-in
-    Resultado;
-
-shared tstNrmExecutarValidacoes = let
-
-    Fonte = srcClientes,
-
-    Pipeline = fxPipeline("tbClientes"),
-
-    Tratamentos =
-        fxNrmAplicarTratamentos(
-            Fonte,
-            Pipeline
-        ),
-
-    Validacoes =
-        fxNrmExecutarValidacoes(
-            Tratamentos,
-            Pipeline
-        )
-in
-    Validacoes;
-
 shared srcRESTHeaders = /*
 Headers REST
 Define os cabeçalhos HTTP utilizados nas requisições a serviços que retornam dados
@@ -8154,3 +5868,483 @@ conteúdo e demais parâmetros exigidos pela API.
         #"User-Agent" = "Power Query",
         #"Content-Type" = "application/json"
 ];
+
+shared fxTrnAplicar = /*
+Entrada: Dados estruturados (stgClientes)
+   ↓
+Processamento:
+  1. Compilação de operadores do schema
+  2. Aplicação de tratamentos (TRIM, UPPER, etc.)
+  3. Conversão refinada de tipos
+  4. Execução otimizada (única passagem)
+   ↓
+Saída: trnClientes (dados tratados)
+
+Operadores Disponíveis (20+):
+  Texto: TRIM, UPPER, LOWER, PROPER, CLEAN, SINGLESPACE, DIGITS, ALPHANUMERIC
+  Numérico: ABS, ROUND
+  Normalização: NORMALIZEBASIC, NORMALIZETYPE
+  Docs: CPF, CNPJ, CEP
+
+Funções:
+  - fxTrnAplicar() → Aplicação de transformações
+  - fxTrnCompilarTratamentosPorColuna() → Compilação otimizada
+*/
+
+(
+    Tabela as table,
+    Schema as text
+) as table =>
+
+let
+    // Obter pipeline compilado
+    Pipeline = try Record.Field(cfgPipeline, Schema) otherwise 
+        error Error.Record(
+            "Schema não encontrado",
+            Text.Format("O schema '#{0}' não está configurado.", {Schema})
+        ),
+
+    TratamentosPorColuna = Pipeline[TratamentosPorColuna],
+    TiposPorColuna = Pipeline[TiposPorColuna],
+
+    // Compilar transformações
+    Transformacoes = 
+        List.RemoveNulls(
+            List.Transform(
+                Record.FieldNames(TratamentosPorColuna),
+                (Coluna) =>
+                    let
+                        Operadores = Record.Field(TratamentosPorColuna, Coluna),
+                        TipoPipeline = Record.FieldOrDefault(
+                            TiposPorColuna, 
+                            Coluna, 
+                            type any
+                        )
+                    in
+                        if List.IsEmpty(Operadores) then
+                            null
+                        else
+                            let
+                                // Compilar operadores em pipeline
+                                TratadorCompilado = 
+                                    fxTrnCompilarTratamentosPorColuna(Operadores),
+                                
+                                // Transformador final com conversão de tipo
+                                TransformadorFinal = 
+                                    (valor) =>
+                                        let
+                                            ResultadoTratamento = 
+                                                TratadorCompilado(valor)
+                                        in
+                                            if ResultadoTratamento = null then
+                                                null
+                                            else if Value.Is(ResultadoTratamento, TipoPipeline) then
+                                                ResultadoTratamento
+                                            else
+                                                try fxConversor(
+                                                    ResultadoTratamento, 
+                                                    TipoPipeline
+                                                ) otherwise ResultadoTratamento
+                            in
+                                if TipoPipeline = type any then
+                                    {Coluna, TransformadorFinal}
+                                else
+                                    {Coluna, TransformadorFinal, TipoPipeline}
+            )
+        ),
+
+    // Aplicar transformações
+    Resultado =
+        if List.IsEmpty(Transformacoes) then
+            Tabela
+        else
+            Table.TransformColumns(
+                Tabela,
+                Transformacoes,
+                null,
+                MissingField.Ignore
+            )
+
+in
+    Resultado;
+
+shared fxTrnCompilarTratamentosPorColuna = (
+    Operadores as list
+)
+as function =>
+
+let
+    OperadoresBuffer =
+        List.Buffer(
+            Operadores ?? {}
+        )
+
+in
+    if List.IsEmpty(OperadoresBuffer) then
+        (valor) => valor
+    else
+        (valor) =>
+            List.Accumulate(
+                OperadoresBuffer,
+                valor,
+                (Estado, Operador) =>
+                    Operador[Função](
+                        Estado,
+                        Record.FieldOrDefault(
+                            Operador,
+                            "Parâmetros",
+                            null
+                        )
+                    )
+            );
+
+//==============================================================================
+// VALIDAÇÕES - QUALITY ASSURANCE (ETL Layer 3)
+// Responsabilidade: Validações estruturais, semânticas e de negócio
+//==============================================================================
+
+
+
+shared fxQaValidar = /*
+Entrada: Dados transformados (trnClientes)
+   ↓
+Processamento:
+  1. Compilação de validadores do schema
+  2. Execução de validações (não deleta, apenas marca)
+  3. Acúmulo de ocorrências de erro
+  4. Adição de status (_QA_Status: OK, AVISO, ERRO)
+   ↓
+Saída: qaClientes (com _QA_Status e _QA_Ocorrencias)
+
+Validadores Disponíveis (15+):
+  Obrigatoriedade: REQUIRED
+  Documentos: CPFVAL, CNPJVAL, CEPVAL
+  Internet: EMAIL, URL, DOMAIN
+  Intervalo: MIN, MAX, INTERVAL
+  Listas: LIST, SIZE
+  
+Funções:
+  - fxQaValidar() → Validação completa
+  - fxQaFiltrarPorStatus() → Filtro por status
+  - fxQaExtrairProblemas() → Extração para auditoria
+  - fxQaCompilarValidacoesPorColuna() → Compilação otimizada
+*/
+
+(
+    Tabela as table,
+    Schema as text
+) as table =>
+
+let
+    // Obter pipeline
+    Pipeline = try Record.Field(cfgPipeline, Schema) otherwise 
+        error Error.Record(
+            "Schema não encontrado",
+            Text.Format("O schema '#{0}' não está configurado.", {Schema})
+        ),
+
+    ValidacoesPorColuna = Pipeline[ValidacoesPorColuna],
+    TiposPorColuna = Pipeline[TiposPorColuna],
+    ColunasValidacao = Record.FieldNames(ValidacoesPorColuna),
+
+    // Se não há validações, retornar com status OK
+    Resultado = 
+        if List.IsEmpty(ColunasValidacao) then
+            Table.AddColumn(
+                Tabela,
+                "_QA_Status",
+                each "OK",
+                type text
+            )
+        else
+            let
+                // Compilar validadores
+                ValidadoresPorColuna = 
+                    Record.FromList(
+                        List.Transform(
+                            ColunasValidacao,
+                            (Coluna) =>
+                                fxQaCompilarValidacoesPorColuna(
+                                    Record.Field(ValidacoesPorColuna, Coluna),
+                                    Record.FieldOrDefault(
+                                        TiposPorColuna,
+                                        Coluna,
+                                        type any
+                                    ),
+                                    Coluna
+                                )
+                        ),
+                        ColunasValidacao
+                    ),
+
+                // Adicionar ocorrências
+                ComOcorrencias = 
+                    Table.AddColumn(
+                        Tabela,
+                        "_QA_Ocorrencias",
+                        each
+                            let
+                                Linha = _,
+                                Ocorrencias = 
+                                    List.Combine(
+                                        List.RemoveNulls(
+                                            List.Transform(
+                                                ColunasValidacao,
+                                                (Coluna) =>
+                                                    let
+                                                        Validador = Record.Field(
+                                                            ValidadoresPorColuna,
+                                                            Coluna
+                                                        ),
+                                                        Valor = Record.FieldOrDefault(
+                                                            Linha,
+                                                            Coluna,
+                                                            null
+                                                        )
+                                                    in
+                                                        Validador(Valor)
+                                            )
+                                        )
+                                    )
+                            in
+                                if List.IsEmpty(Ocorrencias) then null 
+                                else Ocorrencias,
+                        type nullable list
+                    ),
+
+                // Adicionar status
+                ComStatus = 
+                    Table.AddColumn(
+                        ComOcorrencias,
+                        "_QA_Status",
+                        each
+                            if [_QA_Ocorrencias] = null then
+                                "OK"
+                            else
+                                let
+                                    TemErro = 
+                                        List.MatchesAny(
+                                            [_QA_Ocorrencias],
+                                            (o) => 
+                                                Record.FieldOrDefault(
+                                                    Record.FieldOrDefault(
+                                                        cfgParametrosSeveridades,
+                                                        o[Severidade],
+                                                        []
+                                                    ),
+                                                    "Bloqueia",
+                                                    false
+                                                )
+                                        )
+                                in
+                                    if TemErro then "ERRO" else "AVISO",
+                        type text
+                    )
+            in
+                ComStatus
+in
+    Resultado;
+
+// Função auxiliar para filtrar por status QA
+
+
+shared fxQaFiltrarPorStatus = (
+    Tabela as table,
+    optional Status as nullable text
+) as table =>
+
+let
+    FiltroStatus = Status ?? "OK",
+    
+    // Filtrar por status
+    Filtrada = 
+        Table.SelectRows(
+            Tabela,
+            each [_QA_Status] = FiltroStatus
+        ),
+
+    // Remover colunas de controle QA
+    Resultado = 
+        Table.RemoveColumns(
+            Filtrada,
+            {"_QA_Status", "_QA_Ocorrencias"},
+            MissingField.Ignore
+        )
+in
+    Resultado;
+
+// Função para extrair registros com problemas
+
+
+shared fxQaExtrairProblemas = (
+    Tabela as table
+) as table =>
+
+let
+    // Filtrar apenas registros com problemas
+    ComProblemas = 
+        Table.SelectRows(
+            Tabela,
+            each [_QA_Status] <> "OK"
+        )
+in
+    ComProblemas;
+
+shared fxQaCompilarValidacoesPorColuna = (
+    Operadores as list,
+    Tipo as type,
+    Coluna as text
+)
+as function =>
+
+let
+    OperadoresBuffer =
+        List.Buffer(
+            Operadores ?? {}
+        )
+
+in
+    if List.IsEmpty(OperadoresBuffer) then
+        (valor) => null
+    else
+        (valor) =>
+            let
+                Ocorrencias =
+                    List.Accumulate(
+                        OperadoresBuffer,
+                        {},
+                        (Estado, Operador) =>
+                            let
+                                Resultado =
+                                    Operador[Função](
+                                        valor,
+                                        Record.FieldOrDefault(
+                                            Operador,
+                                            "Parâmetros",
+                                            null
+                                        ),
+                                        [
+                                            Coluna = Coluna,
+                                            Tipo = Tipo,
+                                            Operador = Operador
+                                        ]
+                                    ),
+                                NovasOcorrencias =
+                                    Resultado[Ocorrencias] ?? {}
+                            in
+                                Estado & NovasOcorrencias
+                    )
+            in
+                if List.IsEmpty(Ocorrencias) then
+                    null
+                else
+                    Ocorrencias;
+
+//==============================================================================
+// NORMALIZAÇÃO - NORMALIZE (ETL Layer 4)
+// Responsabilidade: Estrutura de dados, deduplicação, enriquecimento
+//==============================================================================
+
+shared trnClientes = let
+    Fonte = stgClientes,
+    Resultado = fxTrnAplicar(Fonte, parTabelaClientes)
+in
+    Resultado;
+
+shared qaClientes = let
+    Fonte = trnClientes,
+    qa = fxQaValidar(Fonte, parTabelaClientes)
+in
+    qa;
+
+shared trnProdutos = let
+    Fonte = stgProdutos,
+    Resultado = fxTrnAplicar(Fonte, parTabelaProdutos)
+in
+    Resultado;
+
+shared qaProdutos = let
+    Fonte = trnProdutos,
+    qa = fxQaValidar(Fonte, parTabelaProdutos)
+
+    // Usar apenas dados válidos
+    // Validos = fxQaFiltrarPorStatus(qa, "OK"),
+
+    // Extrair problemas para auditoria
+    // Problemas = fxQaExtrairProblemas(qa)
+
+in
+    qa;
+
+shared trnVendas = let
+    Fonte = stgVendas,
+    Resultado = fxTrnAplicar(Fonte, parTabelaVendas)
+in
+    Resultado;
+
+shared qaVendas = let
+    Fonte = trnVendas,
+    qa = fxQaValidar(Fonte, parTabelaVendas)
+
+    // Usar apenas dados válidos
+    // Validos = fxQaFiltrarPorStatus(qa, "OK"),
+
+    // Extrair problemas para auditoria
+    // Problemas = fxQaExtrairProblemas(qa)
+
+in
+    qa;
+
+shared tstTesteSTG = // Antes
+let Resultado = fxStgAplicar(srcClientes, "tbClientes") in Resultado
+
+// Esperado: Dados estruturados, tipos básicos, sem vazios
+;
+
+shared tstTesteTRN = let 
+    STG = tstTesteSTG,
+    Resultado = fxTrnAplicar(STG, "tbClientes")
+in 
+    Resultado
+
+// Esperado: Dados tratados (TRIM, UPPER, etc. aplicados)
+;
+
+shared tstTesteQA = // Novo
+let 
+    STG = tstTesteSTG,
+    TRN = tstTesteTRN,
+    Resultado = fxQaValidar(TRN, "tbClientes")
+in 
+    Resultado
+
+// Esperado: Colunas _QA_Status e _QA_Ocorrencias adicionadas
+;
+
+shared tstTesteNRM = let 
+    STG = tstTesteSTG,
+    TRN = tstTesteTRN,
+    QA = tstTesteQA,
+    Valido = fxQaFiltrarPorStatus(QA, "OK"),
+    Resultado = fxNrmAplicar(Valido, "tbClientes")
+in 
+    Resultado
+
+// Esperado: Dados deduplicated, enriquecidos, sem problemas
+;
+
+shared tstTesteAntesDepois = // Comparar registros antes/depois
+let
+    Antes = tstTesteSTG,
+    Depois = tstTesteNRM,
+    Diferenca = Table.NestedJoin(Antes, {"CPF"}, Depois, {"CPF"}, "x", JoinKind.FullOuter)
+in
+    Diferenca;
+
+shared tstTesteProblemasEncontrados = // Extrair problemas encontrados
+let
+    ProblemasDetectados = fxQaExtrairProblemas(qaClientes),
+    _QA_OcorrenciasExpandido = Table.ExpandListColumn(ProblemasDetectados, "_QA_Ocorrencias"),
+    _QA_OcorrenciasComMensagem = Table.ExpandRecordColumn(_QA_OcorrenciasExpandido, "_QA_Ocorrencias", {"Coluna", "Mensagem"}, {"Coluna", "Mensagem"})
+in
+    _QA_OcorrenciasComMensagem;

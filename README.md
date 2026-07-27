@@ -1,252 +1,526 @@
-# Excel Power Query Framework
+# Excel Data Framework DBB - Documentação Técnica
 
-Framework para preparação, validação, normalização e integração de dados utilizando Microsoft Excel e Power Query.
+## 📋 Sumário Executivo
 
-## Visão Geral
-
-O Excel Power Query Framework fornece uma arquitetura padronizada para construção de processos ETL (Extract, Transform and Load) utilizando exclusivamente recursos nativos do Excel e do Power Query.
-
-O framework organiza todo o fluxo de processamento em camadas independentes, permitindo importar dados de diferentes fontes, aplicar tratamentos, validar informações, normalizar entidades e produzir tabelas dimensionais para análise.
-
-## Principais Características
-
-- Arquitetura em camadas (SRC → STG → NRM → DIM/FATO)
-- Configuração orientada por parâmetros
-- Schema declarativo
-- Tratamentos configuráveis por coluna
-- Validações configuráveis por coluna
-- Registro de ocorrências
-- Controle de severidades
-- Suporte a múltiplas fontes de dados
-- Construção automática de dimensões e fatos
-- Estrutura preparada para reutilização entre projetos
+Este documento descreve o Excel Data Framework DBB, com separação clara de responsabilidades em 5 camadas distintas.
 
 ---
 
-# Arquitetura
+## 🏗️ Arquitetura da Solução
 
-```text
-                Excel / Banco / API / Arquivos
-                           │
-                           ▼
-                     SRC (Origem)
-                           │
-                           ▼
-                    STG (Stage)
-         • Aplicação do Schema
-         • Garantia de colunas
-         • Tratamentos
-         • Validações
-         • Registro de ocorrências
-                           │
-                           ▼
-                 NRM (Normalização)
-         • Regras de negócio
-         • Consistência entre entidades
-         • Descarte de registros bloqueantes
-                           │
-                 ┌─────────┴─────────┐
-                 ▼                   ▼
-           DIMENSÕES             TABELAS FATO
+### Fluxo Completo de Dados
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  SRC (Source/Extração)                                  │
+│  └─ srcClientes, srcProdutos, srcVendas, etc.           │
+│  └─ Dados brutos do Excel/BD/APIs                       │
+└──────────────────────┬──────────────────────────────────┘
+                       ↓
+┌─────────────────────────────────────────────────────────┐
+│  STG (Staging/Estruturação)                             │
+│  └─ stgClientes, stgProdutos, stgVendas                 │
+│  └─ Preparação: remoção linhas vazias, normalização     │
+│  └─ Aplicação de tipos básicos                          │
+└──────────────────────┬──────────────────────────────────┘
+                       ↓
+┌─────────────────────────────────────────────────────────┐
+│  TRN (Transform/Transformação)                          │
+│  └─ trnClientes, trnProdutos, trnVendas                 │
+│  └─ Tratamentos: TRIM, UPPER, LOWER, etc.               │
+│  └─ Limpeza de dados e formatação                       │
+└──────────────────────┬──────────────────────────────────┘
+                       ↓
+┌─────────────────────────────────────────────────────────┐
+│  QA (Quality Assurance/Validação)                       │
+│  └─ qaClientes, qaProdutos, qaVendas                    │
+│  └─ Validações: REQUIRED, EMAIL, CPF, CNPJ, etc.        │
+│  └─ Flagging de registros com erros/avisos              │
+└──────────────────────┬──────────────────────────────────┘
+                       ↓
+┌─────────────────────────────────────────────────────────┐
+│  NRM (Normalize/Normalização)                           │
+│  └─ nrmClientes, nrmProdutos, nrmVendas                 │
+│  └─ Deduplicação, relacionamentos, enriquecimento       │
+│  └─ Regras de negócio complexas                         │
+└──────────────────────┬──────────────────────────────────┘
+                       ↓
+┌─────────────────────────────────────────────────────────┐
+│  DIM/FATO (Dimensional Model)                           │
+│  └─ dimClientes, dimProdutos, dimCalendario             │
+│  └─ fatoVendas                                          │
+│  └─ Modelo pronto para análise                          │
+└─────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-# Estrutura do Projeto
+## 🎯 Responsabilidades por Camada
 
-```
-par     Parâmetros
-src     Fontes de dados
-stg     Preparação dos dados
-nrm     Normalização
-dim     Dimensões
-fato    Tabelas fato
-cfg     Configurações materializadas
-fx      Funções reutilizáveis
-diag    Diagnósticos
-bench   Benchmarks
-tst     Testes
-```
+### 1️⃣ STAGING (STG)
 
----
+**Função:** Preparação estrutural e normalização básica
 
-# Pipeline de Processamento
+**Funções Principais:**
+- `fxStgPreparar()` - Limpeza inicial
+  - Remove linhas completamente vazias
+  - Normaliza nomes de colunas (trim, remover duplicatas)
+  - Valida estrutura (sem nomes vazios, sem duplicidade)
+  
+- `fxStgAplicar()` - Aplicação completa do estágio
+  - Chama `fxStgPreparar()`
+  - Aplica tipos básicos conforme schema
+  - Reordena colunas conforme pipeline
 
-## 1. Origem (SRC)
-
-Responsável pela conexão com as fontes de dados.
-
-Exemplos:
-
-- Excel
-- CSV
-- JSON
-- XML
-- PDF
-- REST
-- OData
-- SOAP
-- SQL Server
-- Oracle
-- PostgreSQL
-- MySQL
-- SharePoint
-
----
-
-## 2. Stage (STG)
-
-Responsável pela preparação física dos dados.
-
-Nesta etapa o framework:
-
-- remove linhas vazias
-- garante a existência das colunas
-- aplica o schema
-- converte tipos
-- executa tratamentos
-- executa validações
-- registra ocorrências
-
----
-
-## 3. Normalização (NRM)
-
-Responsável pelas regras de negócio.
-
-Nesta etapa são executadas operações como:
-
-- descarte de registros bloqueantes
-- validações entre entidades
-- resolução de relacionamentos
-- cálculos derivados
-- consolidação de informações
-
----
-
-## 4. Dimensões
-
-Construção das dimensões do modelo analítico.
-
-Exemplos:
-
-- Cliente
-- Produto
-- Calendário
-
----
-
-## 5. Fatos
-
-Construção das tabelas fato utilizadas pelo modelo dimensional.
-
----
-
-# Configuração
-
-Todo o comportamento do framework é controlado por tabelas de parâmetros no Excel.
-
-Entre elas:
-
-- Parâmetros da Pasta de Trabalho
-- Schema de Dados
-- Tratamentos
-- Validações
-- Severidades
-- Valores Lógicos
-- Tipos de Dados
-- Formatos de Arquivo
-- Headers REST
-
----
-
-# Schema Declarativo
-
-Cada coluna pode definir:
-
-- Tipo de dado
-- Obrigatoriedade
-- Ordem
-- Tratamentos
-- Validações
-
-Exemplo:
-
-| Coluna | Tipo | Tratamentos | Validações |
-|--------|------|-------------|------------|
-| CPF | Text | DIGITS | CPF |
-| Nome | Text | TRIM;PROPER | REQUIRED |
-| Idade | Int64 | | MIN(18) |
-
-As validações podem receber parâmetros utilizando a sintaxe:
-
-```
-VALIDACAO(param1,param2,...)
+**Exemplo de Uso:**
+```powerquery
+stgClientes = let
+    Fonte = srcClientes,
+    Preparada = fxStgAplicar(Fonte, "tbClientes"),
+    Resultado = Table.Distinct(Preparada)
+in
+    Resultado;
 ```
 
-Exemplos:
+**Dados de Saída:**
+- Tabela estruturada e normalizada
+- Colunas no tipo correto (quando aplicável)
+- Sem linhas completamente vazias
 
+---
+
+### 2️⃣ TRANSFORMAÇÃO (TRN)
+
+**Função:** Aplicação de tratamentos e transformações de dados
+
+**Funções Principais:**
+- `fxTrnAplicar()` - Executa pipeline de transformações
+  - Compila operadores de tratamento do schema
+  - Aplica TRIM, UPPER, LOWER, PROPER, CLEAN, etc.
+  - Converte tipos com tratamento de erros
+  - Executa em uma única passagem (otimizado)
+
+**Operadores Disponíveis:**
 ```
-MIN(0)
-MAX(100)
-INTERVAL(1,10)
-LIST(SP,RJ,MG)
+Texto:
+  - TRIM, UPPER, LOWER, PROPER, CLEAN
+  - SINGLESPACE, DIGITS, ALPHANUMERIC
+  - NORMALIZEBASIC, NORMALIZETYPE
+
+Numérico:
+  - ABS, ROUND
+
+Conversão:
+  - Conversão automática entre tipos
+  - CPF, CNPJ, CEP (extração de dígitos)
+```
+
+**Exemplo de Uso:**
+```powerquery
+trnClientes = let
+    Fonte = stgClientes,
+    Resultado = fxTrnAplicar(Fonte, "tbClientes")
+in
+    Resultado;
+```
+
+**Dados de Saída:**
+- Dados tratados e transformados
+- Colunas com tipos refinados
+- Pronto para validação
+
+---
+
+### 3️⃣ QUALIDADE (QA)
+
+**Função:** Validação estrutural, semântica e de negócio
+
+**Funções Principais:**
+- `fxQaValidar()` - Executa validações
+  - Compila operadores de validação
+  - Adiciona coluna `_QA_Ocorrencias` com detalhes de erro
+  - Adiciona coluna `_QA_Status` (OK, AVISO, ERRO)
+  - Não remove dados, apenas marca
+
+- `fxQaFiltrarPorStatus()` - Filtra registros por status
+  - OK, AVISO ou ERRO
+  - Remove colunas de controle QA
+
+- `fxQaExtrairProblemas()` - Extrai registros com problemas
+  - Útil para auditoria e correção
+
+**Validadores Disponíveis:**
+```
+Obrigatoriedade:
+  - REQUIRED
+
+Documentos (Brasil):
+  - CPFVAL, CNPJVAL, CEPVAL
+
+Internet:
+  - EMAIL, URL, DOMAIN
+
+Intervalo:
+  - MIN, MAX, INTERVAL
+
+Listas:
+  - LIST, SIZE
+
+Personalizadas:
+  - Criar via schema
+```
+
+**Exemplo de Uso:**
+```powerquery
+qaClientes = let
+    Fonte = trnClientes,
+    Resultado = fxQaValidar(Fonte, "tbClientes")
+in
+    Resultado;
+
+// Usar apenas dados válidos
+ClientesValidos = fxQaFiltrarPorStatus(qaClientes, "OK");
+
+// Extrair problemas para auditoria
+ProblemasCliente = fxQaExtrairProblemas(qaClientes);
+```
+
+**Dados de Saída:**
+- Tabela com colunas de controle QA
+- `_QA_Status`: OK, AVISO ou ERRO
+- `_QA_Ocorrencias`: Lista de problemas encontrados
+- Todas as colunas originais mantidas
+
+---
+
+### 4️⃣ NORMALIZAÇÃO (NRM)
+
+**Função:** Normalização de dados, deduplicação, enriquecimento
+
+**Funções Principais:**
+- `fxNrmAplicar()` - Aplicação completa da normalização
+  - Filtra registros válidos (OK da QA)
+  - Remove duplicatas por domínio
+  - Resolve relacionamentos
+  - Aplica enriquecimento (customizável por schema)
+  - Aplica regras complexas de negócio
+
+**Exemplo de Uso:**
+```powerquery
+nrmClientes = let
+    Fonte = qaClientes,
+    Valida = fxQaFiltrarPorStatus(Fonte, "OK"),
+    Normalizada = fxNrmAplicar(Valida, "tbClientes"),
+    RegistrosUnicos = Table.Distinct(Normalizada, {"CPF"})
+in
+    RegistrosUnicos;
+```
+
+**Dados de Saída:**
+- Dados estruturados e verificados
+- Sem duplicatas (por chave de negócio)
+- Relacionamentos resolvidos
+- Enriquecido com dados externos
+- Pronto para modelo dimensional
+
+---
+
+### 5️⃣ MODELO DIMENSIONAL (DIM/FATO)
+
+**Função:** Preparação final para análise
+
+**Construções:**
+- **Dimensões** (dimClientes, dimProdutos, dimCalendario)
+  - Chaves substitutas (surrogate keys)
+  - Deduplicadas
+  - Ordenadas para estabilidade
+  - Bufferizadas para performance
+  
+- **Tabelas Fato** (fatoVendas)
+  - Relacionamentos com dimensões
+  - Métricas e medidas
+  - Otimizadas para BI
+
+**Exemplo de Uso:**
+```powerquery
+dimClientes = let
+    Fonte = nrmClientes,
+    Chaves = Table.AddIndexColumn(Fonte, "IDCliente", 1, 1, Int64.Type),
+    Reordenada = Table.ReorderColumns(Chaves, 
+        {"IDCliente", "CPF", "Nome", "DataNascimento", "Cidade", "Estado"})
+in
+    Table.Buffer(Reordenada);
+
+fatoVendas = let
+    // Merge com dimensões
+    ComCliente = Table.NestedJoin(nrmVendas, {"CPF"}, dimClientes, {"CPF"}, ...)
+    // ... relacionar com outras dimensões ...
+in
+    // Resultado otimizado para análise
+    Resultado;
 ```
 
 ---
 
-# Sistema de Ocorrências
+## 🔧 Compiladores de Operadores
 
-Cada validação pode gerar ocorrências contendo informações como:
+### Compilação de Tratamentos
 
-- Código
-- Severidade
-- Etapa
-- Tabela
-- Coluna
-- Valor original
-- Valor processado
-- Mensagem
-- Detalhes
+```powerquery
+shared fxNrmCompilarTratamentosPorColuna = (Operadores as list) as function =>
+    let
+        OperadoresBuffer = List.Buffer(Operadores ?? {})
+    in
+        if List.IsEmpty(OperadoresBuffer) then
+            (valor) => valor
+        else
+            (valor) =>
+                List.Accumulate(
+                    OperadoresBuffer,
+                    valor,
+                    (Estado, Operador) =>
+                        Operador[Função](
+                            Estado,
+                            Record.FieldOrDefault(Operador, "Parâmetros", null)
+                        )
+                )
+```
 
-As severidades determinam se uma ocorrência é apenas informativa ou bloqueante.
+**Resultado:** Pipeline compilado, executado uma única vez
 
----
+### Compilação de Validações
 
-# Performance
-
-O framework foi desenvolvido priorizando processamento vetorizado do Power Query.
-
-As principais estratégias adotadas incluem:
-
-- Record lookup O(1)
-- Table.Buffer apenas quando necessário
-- List.Buffer para reutilização
-- Processamento por coluna
-- Materialização de configurações
-- Minimização de reconstruções de tabela
-
----
-
-# Diagnóstico
-
-O framework possui consultas de diagnóstico para facilitar manutenção e evolução:
-
-- Consultas existentes
-- Tabelas do Excel
-- Estrutura do projeto
-- Benchmarks
-- Métricas de processamento
+```powerquery
+shared fxQaCompilarValidacoesPorColuna = (Operadores as list, Tipo as type, Coluna as text) =>
+    // Retorna função que valida um valor
+    // Acumula todas as ocorrências de erro
+    // Retorna lista de problemas encontrados
+```
 
 ---
 
-# Tecnologias
+## 📊 Schema e Pipeline
 
-- Microsoft Excel
-- Power Query (Linguagem M)
+### Estrutura do Schema
+
+```powerquery
+// tbSchema (Excel)
+Tabela      | Coluna           | Tipo    | Obrigatório | Tratamentos        | Validações
+tbClientes  | CPF              | TEXT    | SIM         | TRIM;UPPER;DIGITS  | REQUIRED;CPFVAL
+tbClientes  | Nome             | TEXT    | SIM         | TRIM;PROPER        | REQUIRED;SIZE(100)
+tbClientes  | DataNascimento   | DATE    | NÃO         |                    |
+tbClientes  | Cidade           | TEXT    | NÃO         | TRIM;PROPER        |
+tbClientes  | Estado           | TEXT    | NÃO         | TRIM;UPPER         |
+```
+
+### Pipeline Compilado
+
+```powerquery
+cfgPipeline = Record.TransformFields(
+    cfgSchema,
+    List.Transform(
+        Record.FieldNames(cfgSchema),
+        each { _, fxPipelineCompilar }
+    )
+)
+```
+
+**Resultado:**
+```
+cfgPipeline[tbClientes][TratamentosPorColuna]
+{
+    "CPF": [Operador1, Operador2, Operador3],
+    "Nome": [Operador1, Operador2],
+    ...
+}
+
+cfgPipeline[tbClientes][ValidacoesPorColuna]
+{
+    "CPF": [Validador1, Validador2],
+    "Nome": [Validador1],
+    ...
+}
+```
 
 ---
 
-# Licença
+## 🚀 Otimizações Implementadas
 
-Defina a licença de utilização conforme a necessidade do projeto.
+### 1. Processamento de tabelas otimizado
+
+**Depois (Otimizado):**
+```
+STG (prepare) → STG (tipos) → TRN (transformações) → 
+QA (validações) → NRM (normalização)
+// Cada camada é uma passagem, não há reconstrução desnecessária
+```
+
+### 2. Compilação de Operadores
+
+- Pipelines compilados uma única vez (`cfgPipeline`)
+- Execução sequencial dentro de uma célula (não múltiplos passes)
+- Acúmulo eficiente de transformações
+
+### 3. Bufferização Estratégica
+
+```powerquery
+// Buffer apenas onde necessário
+Table.Buffer(Table.Distinct(...))  // Dedup + Cache
+List.Buffer(...)                   // Listas de operadores
+```
+
+### 4. Lazy Evaluation
+
+- Operações aplicadas apenas a colunas que precisam
+- Sem recálculos desnecessários
+- Validação condicional (tipo any)
+
+---
+
+## ✅ Checklist de Implementação
+
+### Fase 1: Configuração
+- [ ] Criar tabelas no Excel: tbParametros, tbSchema, etc.
+- [ ] Definir schema (Tratamentos, Validações)
+- [ ] Carregar fonte de dados (srcClientes, etc.)
+
+### Fase 2: Testes Unitários
+- [ ] Testar fxStgAplicar (STG)
+- [ ] Testar fxTrnAplicar (TRN)
+- [ ] Testar fxQaValidar (QA)
+- [ ] Testar fxNrmAplicar (NRM)
+
+### Fase 3: Pipeline Completo
+- [ ] Validar stgClientes → trnClientes → qaClientes → nrmClientes
+- [ ] Validar dimClientes → fatoVendas
+- [ ] Testar com volume de dados real
+
+### Fase 4: Monitoramento
+- [ ] Extrair relatório de problemas (fxQaExtrairProblemas)
+- [ ] Monitorar performance
+- [ ] Validar qualidade dos dados dimensional
+
+---
+
+## 🔐 Boas Práticas Implementadas
+
+1. **Separação de Responsabilidades**
+   - Cada camada faz UMA coisa bem
+   - Fácil manutenção e debugging
+
+2. **Tratamento de Erros**
+   - Try-catch em conversões de tipo
+   - Validação de schema
+   - Erros informativos
+
+3. **Rastreabilidade**
+   - Colunas de controle QA (_QA_Status, _QA_Ocorrencias)
+   - Audible trail de transformações
+   - Possibilidade de rejeição seletiva
+
+4. **Reutilização**
+   - Funções genéricas e parametrizadas
+   - Schema-driven architecture
+   - Aplicável a qualquer tabela
+
+5. **Documentação**
+   - Comentários claros nas seções
+   - Nomes descritivos de funções
+   - Schema centralizado
+
+---
+
+## 📚 Referências
+
+### ETL/ELT Best Practices
+- Separation of Concerns
+- Single Responsibility Principle
+- DRY (Don't Repeat Yourself)
+- KISS (Keep It Simple, Stupid)
+
+### Power Query Otimizações
+- Table.Buffer() com propósito
+- Lazy evaluation
+- Compilação de pipelines
+- Operações de "fold" (accumulate)
+
+### Data Quality Frameworks
+- Great Expectations
+- DAMA Data Management Framework
+- Six Sigma DMAIC (Define-Measure-Analyze-Improve-Control)
+
+---
+
+## 🎓 Exemplos de Uso
+
+### Exemplo 1: Pipeline Completo para Clientes
+
+```powerquery
+// Extração
+stgClientes = fxStgAplicar(srcClientes, "tbClientes");
+
+// Transformação
+trnClientes = fxTrnAplicar(stgClientes, "tbClientes");
+
+// Validação
+qaClientes = fxQaValidar(trnClientes, "tbClientes");
+
+// Normalização (apenas dados válidos)
+ClientesValidos = fxQaFiltrarPorStatus(qaClientes, "OK");
+nrmClientes = fxNrmAplicar(ClientesValidos, "tbClientes");
+
+// Dimensão
+dimClientes = Table.AddIndexColumn(
+    Table.Sort(Table.Distinct(nrmClientes), {"CPF"}),
+    "IDCliente", 1, 1, Int64.Type
+);
+```
+
+### Exemplo 2: Auditoria de Problemas
+
+```powerquery
+// Extrair registros com erros
+ProblemasDetectados = fxQaExtrairProblemas(qaClientes);
+
+// Ver detalhes dos problemas
+ProblemasComDetalhes = Table.ExpandRecordColumn(
+    ProblemasDetectados,
+    "_QA_Ocorrencias",
+    {"Coluna", "Mensagem", "Detalhes"}
+);
+```
+
+### Exemplo 3: Modelo Dimensional Completo
+
+```powerquery
+// Fato com relacionamentos
+fatoVendas = let
+    Vendas = nrmVendas,
+    ComCliente = Table.NestedJoin(Vendas, {"CPF"}, dimClientes, {"CPF"}, "_C", JoinKind.Inner),
+    ComProduto = Table.NestedJoin(ComCliente, {"CódigoProduto"}, dimProdutos, {"Código"}, "_P", JoinKind.Inner),
+    Expandida = Table.ExpandTableColumn(
+        Table.ExpandTableColumn(ComProduto, "_C", {"IDCliente"}),
+        "_P",
+        {"IDProduto"}
+    )
+in
+    Table.SelectColumns(Expandida, {"Data", "IDCliente", "IDProduto", "Quantidade", "Valor"})
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### Problema: Erro na Compilação do Schema
+**Solução:** Verifique se o operador está cadastrado em tbParametrosTratamentos ou tbParametrosValidacoes
+
+### Problema: Muitos registros com status AVISO
+**Solução:** Usar fxQaExtrairProblemas para auditar, ajustar validações se necessário
+
+### Problema: Performance ruim
+**Solução:** Verificar se há múltiplos Table.Buffer desnecessários, consolidar operações
+
+### Problema: Dados perdidos na normalização
+**Solução:** Usar fxQaFiltrarPorStatus para passar apenas "OK", ou ajustar validações para AVISO
+
+
