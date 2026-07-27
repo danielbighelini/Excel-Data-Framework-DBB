@@ -5,3 +5,6 @@ Roteiros/
 *.xls
 .agents/
 .vscode/
+TODO.md
+PROMPTS.md
+*backup*
