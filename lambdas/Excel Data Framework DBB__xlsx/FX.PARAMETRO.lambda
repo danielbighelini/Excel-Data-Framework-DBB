@@ -6,10 +6,10 @@ Description: Retorna o valor de um parÃ¢metro da tabela tbParametros a partir 
 
 
 Formula:
-=LAMBDA(parametro,padrao,LET(_Posicao, XMATCH(parametro, tbParametros[Parâmetro], 0), IFERROR(INDEX(tbParametros[Valor], _Posicao), IF(ISOMITTED(padrao), NA(), padrao))))
+=LAMBDA(parametro,padrao,LET(_Posicao, XMATCH(parametro, FX.CFG.PARAMETROS.NOMES(), 0), IFERROR(INDEX(FX.CFG.PARAMETROS.VALORES(), _Posicao), IF(ISOMITTED(padrao), NA(), padrao))))
 
 Localized Formula (pt-BR) - Preview Only:
-=LAMBDA(parametro,padrao,LET(_Posicao, CORRESPX(parametro, tbParametros[Parâmetro], 0), SEERRO(ÍNDICE(tbParametros[Valor], _Posicao), SE(ISOMITTED(padrao), NÃO.DISP(), padrao))))
+=LAMBDA(parametro,padrao,LET(_Posicao, CORRESPX(parametro, FX.CFG.PARAMETROS.NOMES(), 0), SEERRO(ÍNDICE(FX.CFG.PARAMETROS.VALORES(), _Posicao), SE(ISOMITTED(padrao), NÃO.DISP(), padrao))))
 
 Raw Formula Snapshot (en-US) - Preview Only:
-=_xlfn.LAMBDA(_xlpm.parametro,_xlop.padrao,_xlfn.LET(_xlpm._Posicao, _xlfn.XMATCH(_xlpm.parametro, tbParametros[Parâmetro], 0), IFERROR(INDEX(tbParametros[Valor], _xlpm._Posicao), IF(_xlfn.ISOMITTED(_xlpm.padrao), NA(), _xlpm.padrao))))
+=_xlfn.LAMBDA(_xlpm.parametro,_xlop.padrao,_xlfn.LET(_xlpm._Posicao, _xlfn.XMATCH(_xlpm.parametro, FX.CFG.PARAMETROS.NOMES(), 0), IFERROR(INDEX(FX.CFG.PARAMETROS.VALORES(), _xlpm._Posicao), IF(_xlfn.ISOMITTED(_xlpm.padrao), NA(), _xlpm.padrao))))

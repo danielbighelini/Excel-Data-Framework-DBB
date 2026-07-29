@@ -6,10 +6,10 @@ Description: Converte uma representaÃ§Ã£o textual de valor lÃ³gico em VERD
 
 
 Formula:
-=LAMBDA(valor,LET(_valor, UPPER(TRIM(TEXT(valor, "@"))), IFERROR(XLOOKUP(_valor, UPPER(tbParametrosBooleanos[Descrição]), tbParametrosBooleanos[Código], NA()), NA())))
+=LAMBDA(valor,LET(_valor, UPPER(TRIM(TEXT(valor, "@"))), IFERROR(XLOOKUP(_valor, UPPER(FX.CFG.BOOLEANOS.DESCRICOES()), FX.CFG.BOOLEANOS.CODIGOS(), NA()), NA())))
 
 Localized Formula (pt-BR) - Preview Only:
-=LAMBDA(valor,LET(_valor, MAIÚSCULA(ARRUMAR(TEXTO(valor, "@"))), SEERRO(PROCX(_valor, MAIÚSCULA(tbParametrosBooleanos[Descrição]), tbParametrosBooleanos[Código], NÃO.DISP()), NÃO.DISP())))
+=LAMBDA(valor,LET(_valor, MAIÚSCULA(ARRUMAR(TEXTO(valor, "@"))), SEERRO(PROCX(_valor, MAIÚSCULA(FX.CFG.BOOLEANOS.DESCRICOES()), FX.CFG.BOOLEANOS.CODIGOS(), NÃO.DISP()), NÃO.DISP())))
 
 Raw Formula Snapshot (en-US) - Preview Only:
-=_xlfn.LAMBDA(_xlpm.valor,_xlfn.LET(_xlpm._valor, UPPER(TRIM(TEXT(_xlpm.valor, "@"))), IFERROR(_xlfn.XLOOKUP(_xlpm._valor, UPPER(tbParametrosBooleanos[Descrição]), tbParametrosBooleanos[Código], NA()), NA())))
+=_xlfn.LAMBDA(_xlpm.valor,_xlfn.LET(_xlpm._valor, UPPER(TRIM(TEXT(_xlpm.valor, "@"))), IFERROR(_xlfn.XLOOKUP(_xlpm._valor, UPPER(FX.CFG.BOOLEANOS.DESCRICOES()), FX.CFG.BOOLEANOS.CODIGOS(), NA()), NA())))

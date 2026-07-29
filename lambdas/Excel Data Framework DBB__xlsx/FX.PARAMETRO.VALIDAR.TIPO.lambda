@@ -6,10 +6,10 @@ Description: Valida a coluna Tipo. Verifica se o tipo foi informado quando a lin
 
 
 Formula:
-=LAMBDA(parametro,tipo,obrigatorio,valor,permitidos,LET(_Tipo, TRIM(tipo & ""), IF(NOT(FX.PARAMETRO.DEFINIDO(parametro, tipo, obrigatorio, valor, permitidos)), "", IF(_Tipo = "", "✖ Tipo não informado.", IF(ISNUMBER(XMATCH(UPPER(_Tipo), UPPER(tbParametrosTipos[Descrição]), 0)), "", "✖ Tipo inválido.")))))
+=LAMBDA(parametro,tipo,obrigatorio,valor,permitidos,LET(_Tipo, TRIM(tipo & ""), IF(NOT(FX.PARAMETRO.DEFINIDO(parametro, tipo, obrigatorio, valor, permitidos)), "", IF(_Tipo = "", "✖ Tipo não informado.", IF(ISNUMBER(XMATCH(UPPER(_Tipo), UPPER(FX.CFG.TIPOS.DESCRICOES()), 0)), "", "✖ Tipo inválido.")))))
 
 Localized Formula (pt-BR) - Preview Only:
-=LAMBDA(parametro,tipo,obrigatorio,valor,permitidos,LET(_Tipo, ARRUMAR(tipo & ""), SE(NÃO(FX.PARAMETRO.DEFINIDO(parametro, tipo, obrigatorio, valor, permitidos)), "", SE(_Tipo = "", "✖ Tipo não informado.", SE(ÉNÚM(CORRESPX(MAIÚSCULA(_Tipo), MAIÚSCULA(tbParametrosTipos[Descrição]), 0)), "", "✖ Tipo inválido.")))))
+=LAMBDA(parametro,tipo,obrigatorio,valor,permitidos,LET(_Tipo, ARRUMAR(tipo & ""), SE(NÃO(FX.PARAMETRO.DEFINIDO(parametro, tipo, obrigatorio, valor, permitidos)), "", SE(_Tipo = "", "✖ Tipo não informado.", SE(ÉNÚM(CORRESPX(MAIÚSCULA(_Tipo), MAIÚSCULA(FX.CFG.TIPOS.DESCRICOES()), 0)), "", "✖ Tipo inválido.")))))
 
 Raw Formula Snapshot (en-US) - Preview Only:
-=_xlfn.LAMBDA(_xlpm.parametro,_xlpm.tipo,_xlpm.obrigatorio,_xlpm.valor,_xlpm.permitidos,_xlfn.LET(_xlpm._Tipo, TRIM(_xlpm.tipo & ""), IF(NOT(FX.PARAMETRO.DEFINIDO(_xlpm.parametro, _xlpm.tipo, _xlpm.obrigatorio, _xlpm.valor, _xlpm.permitidos)), "", IF(_xlpm._Tipo = "", "✖ Tipo não informado.", IF(ISNUMBER(_xlfn.XMATCH(UPPER(_xlpm._Tipo), UPPER(tbParametrosTipos[Descrição]), 0)), "", "✖ Tipo inválido.")))))
+=_xlfn.LAMBDA(_xlpm.parametro,_xlpm.tipo,_xlpm.obrigatorio,_xlpm.valor,_xlpm.permitidos,_xlfn.LET(_xlpm._Tipo, TRIM(_xlpm.tipo & ""), IF(NOT(FX.PARAMETRO.DEFINIDO(_xlpm.parametro, _xlpm.tipo, _xlpm.obrigatorio, _xlpm.valor, _xlpm.permitidos)), "", IF(_xlpm._Tipo = "", "✖ Tipo não informado.", IF(ISNUMBER(_xlfn.XMATCH(UPPER(_xlpm._Tipo), UPPER(FX.CFG.TIPOS.DESCRICOES()), 0)), "", "✖ Tipo inválido.")))))

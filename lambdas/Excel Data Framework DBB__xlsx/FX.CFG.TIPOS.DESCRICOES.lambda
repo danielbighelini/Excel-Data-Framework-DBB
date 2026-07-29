@@ -1,0 +1,15 @@
+Name: FX.CFG.TIPOS.DESCRICOES
+Scope: Workbook
+Source Workbook: Excel Data Framework DBB.xlsx
+Source Workbook Folder: Excel Data Framework DBB__xlsx
+Description: Retorna a coluna de descriÃ§Ãµes da configuraÃ§Ã£o de tipos de dados.
+
+
+Formula:
+=LAMBDA(DROP(FX.CFG.COLUNA(FX.CFG.TIPOS(), "Descrição"), 1))
+
+Localized Formula (pt-BR) - Preview Only:
+=LAMBDA(DESCARTAR(FX.CFG.COLUNA(FX.CFG.TIPOS(), "Descrição"), 1))
+
+Raw Formula Snapshot (en-US) - Preview Only:
+=_xlfn.LAMBDA(_xlfn.DROP(FX.CFG.COLUNA(FX.CFG.TIPOS(), "Descrição"), 1))
