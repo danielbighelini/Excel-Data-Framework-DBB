@@ -1,6 +1,6 @@
 // Power Query from: Excel Data Framework DBB.xlsx
 // Pathname: c:\Users\daniel-bighelini\OneDrive\Documentos\Planilhas\Excel Data Framework DBB\Excel Data Framework DBB.xlsx
-// Extracted: 2026-07-29T19:37:43.388Z
+// Extracted: 2026-08-04T16:07:42.711Z
 
 section Section1;
 
@@ -90,60 +90,62 @@ shared srcOperadores = let
             Código = text,
             Descrição = text,
             Função = function,
+            Contexto = nullable record,
             TipoEntrada = type,
             TipoSaida = type,
             Padrão = logical,
             Ativo = logical,
             Categoria = text,
             Severidade = text,
-            Parâmetros = text
+            Parâmetros = nullable record
         ],
         {
             // Tratamentos
-            {"TRIM", "Remove espaços em branco do início e do final do texto", fxTratamentoTrim, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"UPPER", "Converte todo o texto para letras maiúsculas", fxTratamentoUpper, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"LOWER", "Converte todo o texto para letras minúsculas", fxTratamentoLower, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"PROPER", "Converte a primeira letra de cada palavra para maiúscula", fxTratamentoProper, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"CLEAN", "Remove caracteres não imprimíveis do texto", fxTratamentoClean, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"EMPTYTONULL", "Converte valores vazios ou em branco para null", fxTratamentoEmptyToNull, type any, type any, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"NULLTOEMPTY", "Converte valores nulos (null) em textos vazios", fxTratamentoNullToEmpty, type any, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"SINGLESPACE", "Substitui múltiplos espaços consecutivos por apenas um espaço", fxTratamentoSingleSpace, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"DIGITS", "Mantém apenas os dígitos numéricos do texto", fxTratamentoDigits, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"ALPHANUMERIC", "Mantém apenas letras e números, removendo símbolos e pontuações", fxTratamentoAlphaNumeric, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"ABS", "Retorna o valor absoluto (positivo) de um número", fxTratamentoAbs, type number, type number, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"ROUND", "Arredonda um número decimal para a quantidade de casas especificadas", fxTratamentoRound, type number, type number, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"CPF", "Formata ou extrai apenas os números para o padrão de CPF", fxTratamentoDigits, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"CNPJ", "Formata ou extrai apenas os números para o padrão de CNPJ", fxTratamentoDigits, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"CEP", "Formata ou extrai apenas os números para o padrão de CEP", fxTratamentoDigits, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"NORMALIZEBASIC", "Realiza a normalização básica de textos", fxTratamentoNormalizeBasic, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"REPLACE", "Substitui todas as ocorrências de um texto por outro.", fxTratamentoReplace, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"LEFT", "Mantém os N primeiros caracteres do texto.", fxTratamentoLeft, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"RIGHT", "Mantém os N últimos caracteres do texto.", fxTratamentoRight, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"MID", "Extrai uma quantidade de caracteres a partir de uma posição específica.", fxTratamentoMid, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"BEFORE", "Extrai o texto localizado antes de um delimitador informado.", fxTratamentoBefore, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"AFTER", "Extrai o texto localizado após um delimitador informado.", fxTratamentoAfter, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"PREFIX", "Adiciona um prefixo ao início do texto.", fxTratamentoPrefix, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"SUFFIX", "Adiciona um sufixo ao final do texto.", fxTratamentoSuffix, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"PADLEFT", "Completa o texto à esquerda até atingir o comprimento especificado.", fxTratamentoPadLeft, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"PADRIGHT", "Completa o texto à direita até atingir o comprimento especificado.", fxTratamentoPadRight, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"REMOVECHARS", "Remove todos os caracteres pertencentes a uma lista informada.", fxTratamentoRemoveChars, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"KEEPCHARS", "Mantém apenas os caracteres pertencentes a uma lista informada.", fxTratamentoKeepChars, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"REMOVEACCENTS", "Remove acentos e caracteres diacríticos do texto.", fxTratamentoRemoveAccents, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"PUNCTUATION", "Remove todos os sinais de pontuação do texto.", fxTratamentoPunctuation, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"TRIM", "Remove espaços em branco do início e do final do texto", fxTratamentoTrim, null, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"UPPER", "Converte todo o texto para letras maiúsculas", fxTratamentoUpper, null, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"LOWER", "Converte todo o texto para letras minúsculas", fxTratamentoLower, null, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"PROPER", "Converte a primeira letra de cada palavra para maiúscula", fxTratamentoProper, null, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"CLEAN", "Remove caracteres não imprimíveis do texto", fxTratamentoClean, null, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"EMPTYTONULL", "Converte valores vazios ou em branco para null", fxTratamentoEmptyToNull, null, type any, type any, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"NULLTOEMPTY", "Converte valores nulos (null) em textos vazios", fxTratamentoNullToEmpty, null, type any, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"SINGLESPACE", "Substitui múltiplos espaços consecutivos por apenas um espaço", fxTratamentoSingleSpace, null, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"DIGITS", "Mantém apenas os dígitos numéricos do texto", fxTratamentoDigits, null, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"ALPHANUMERIC", "Mantém apenas letras e números, removendo símbolos e pontuações", fxTratamentoAlphaNumeric, null, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"ABS", "Retorna o valor absoluto (positivo) de um número", fxTratamentoAbs, null, type number, type number, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"ROUND", "Arredonda um número decimal para a quantidade de casas especificadas", fxTratamentoRound, null, type number, type number, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"CPF", "Formata ou extrai apenas os números para o padrão de CPF", fxTratamentoDigits, null, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"CNPJ", "Formata ou extrai apenas os números para o padrão de CNPJ", fxTratamentoDigits, null, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"CEP", "Formata ou extrai apenas os números para o padrão de CEP", fxTratamentoDigits, null, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"NORMALIZEBASIC", "Remove caracteres de controle, elimina espaços excedentes no início, fim e entre palavras, retornando um texto normalizado ou nulo quando vazio.", fxTratamentoNormalizeBasic, null, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"REPLACE", "Substitui todas as ocorrências de um texto por outro.", fxTratamentoReplace, null, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"LEFT", "Mantém os N primeiros caracteres do texto.", fxTratamentoLeft, null, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"RIGHT", "Mantém os N últimos caracteres do texto.", fxTratamentoRight, null, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"MID", "Extrai uma quantidade de caracteres a partir de uma posição específica.", fxTratamentoMid, null, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"BEFORE", "Extrai o texto localizado antes de um delimitador informado.", fxTratamentoBefore, null, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"AFTER", "Extrai o texto localizado após um delimitador informado.", fxTratamentoAfter, null, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"PREFIX", "Adiciona um prefixo ao início do texto.", fxTratamentoPrefix, null, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"SUFFIX", "Adiciona um sufixo ao final do texto.", fxTratamentoSuffix, null, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"PADLEFT", "Completa o texto à esquerda até atingir o comprimento especificado.", fxTratamentoPadLeft, null, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"PADRIGHT", "Completa o texto à direita até atingir o comprimento especificado.", fxTratamentoPadRight, null, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"REMOVECHARS", "Remove todos os caracteres pertencentes a uma lista informada.", fxTratamentoRemoveChars, null, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"KEEPCHARS", "Mantém apenas os caracteres pertencentes a uma lista informada.", fxTratamentoKeepChars, null, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"REMOVEACCENTS", "Remove acentos e caracteres diacríticos do texto.", fxTratamentoRemoveAccents, null, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"PUNCTUATION", "Remove todos os sinais de pontuação do texto.", fxTratamentoPunctuation, null, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"NUMBER", "Converte textos contendo valores numéricos em um número, reconhecendo automaticamente sinais, moeda e separadores decimal e de milhar.", fxTratamentoNumber, null, type text, type number, false, true, CategoriaTratamento, SeveridadeAviso, null},
 
             // Validações
-            {"REQUIRED", "Valida se um campo obrigatório foi preenchido", fxValidacaoREQUIRED, type any, type any, true, true, CategoriaValidacao, SeveridadeErro, null},
-            {"CPFVAL", "Valida se o número de CPF informado é matematicamente válido", fxValidacaoCPF, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"CNPJVAL", "Valida se o número de CNPJ informado é matematicamente válido", fxValidacaoCNPJ, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"CEPVAL", "Valida se o formato do CEP informado está correto", fxValidacaoCEP, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"EMAIL", "Valida se a estrutura do endereço de e-mail está correta", fxValidacaoEmail, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"URL", "Valida se a estrutura do endereço web (URL) está correta", fxValidacaoURL, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"LIST", "Valida se o valor pertence a uma lista de opções permitidas", fxValidacaoList, type any, type any, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"DOMAIN", "Valida se o domínio de rede ou e-mail é válido", fxValidacaoDomain, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"SIZE", "Valida se o tamanho ou comprimento do dado está dentro do limite", fxValidacaoSize, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"MIN", "Valida se o valor é maior ou igual ao limite mínimo permitido", fxValidacaoMin, type any, type any, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"MAX", "Valida se o valor é menor ou igual ao limite máximo permitido", fxValidacaoMax, type any, type any, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"INTERVAL", "Valida se o valor está dentro de um intervalo numérico ou temporal específico", fxValidacaoInterval, type any, type any, false, true, CategoriaValidacao, SeveridadeErro, null}
+            {"REQUIRED", "Valida se um campo obrigatório foi preenchido", fxValidacaoREQUIRED, null, type any, type any, true, true, CategoriaValidacao, SeveridadeErro, null},
+            {"CPFVAL", "Valida se o número de CPF informado é matematicamente válido", fxValidacaoCPF, null, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"CNPJVAL", "Valida se o número de CNPJ informado é matematicamente válido", fxValidacaoCNPJ, null, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"CEPVAL", "Valida se o formato do CEP informado está correto", fxValidacaoCEP, null, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"EMAIL", "Valida se a estrutura do endereço de e-mail está correta", fxValidacaoEmail, null, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"URL", "Valida se a estrutura do endereço web (URL) está correta", fxValidacaoURL, null, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"LIST", "Valida se o valor pertence a uma lista de opções permitidas", fxValidacaoList, null, type any, type any, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"DOMAIN", "Valida se o domínio de rede ou e-mail é válido", fxValidacaoDomain, null, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"SIZE", "Valida se o tamanho ou comprimento do dado está dentro do limite", fxValidacaoSize, null, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"MIN", "Valida se o valor é maior ou igual ao limite mínimo permitido", fxValidacaoMin, null, type any, type any, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"MAX", "Valida se o valor é menor ou igual ao limite máximo permitido", fxValidacaoMax, null, type any, type any, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"INTERVAL", "Valida se o valor está dentro de um intervalo numérico ou temporal específico", fxValidacaoInterval, null, type any, type any, false, true, CategoriaValidacao, SeveridadeErro, null}
         }
     )
 in
@@ -242,8 +244,10 @@ shared cfgPrefixosPowerQuery = List.Buffer(
 
 shared fxParametro = (
     parametro as text,
-    optional valorPadrao as nullable any
-) as any =>
+    optional valorPadrao as nullable any,
+    optional locale as nullable text
+)
+as any =>
 
 let
     Parametros = cfgParametros,
@@ -254,46 +258,41 @@ let
             parametro
         ),
 
+    ExisteParametro =
+        Parametro <> null,
+
     Tipo =
-        if Parametro = null then
-            type any
+        if ExisteParametro then
+            Record.FieldOrDefault(Parametro, "Tipo", type any)
         else
-            Record.FieldOrDefault(
-                Parametro,
-                "Tipo",
-                type any
-            ),
+            type any,
 
     Obrigatorio =
-        if Parametro = null then
-            true
+        if ExisteParametro then
+            Record.FieldOrDefault(Parametro, "Obrigatório", true)
         else
-            Record.FieldOrDefault(
-                Parametro,
-                "Obrigatório",
-                true
-            ),
+            true,
 
     Permitidos =
-        if Parametro = null then
-            null
+        if ExisteParametro then
+            Record.FieldOrDefault(Parametro, "Permitidos")
         else
-            Record.FieldOrDefault(
-                Parametro,
-                "Permitidos"
-            ),
-
-    Local =
-        "pt-BR",
+            null,
 
     Valor =
-        if Parametro = null then
-            valorPadrao
+        if ExisteParametro then
+            let
+                v = Record.FieldOrDefault(Parametro, "Valor")
+            in
+                if v = null then
+                    valorPadrao
+                else
+                    v
         else
-            Parametro[Valor],
+            valorPadrao,
 
     Resultado =
-        if Parametro = null and Obrigatorio and valorPadrao = null then
+        if not ExisteParametro and Obrigatorio and valorPadrao = null then
 
             error Error.Record(
                 "Parâmetro inexistente",
@@ -325,9 +324,10 @@ let
                         fxConversor(
                             Valor,
                             Tipo,
-                            Local
+                            locale ?? "pt-BR"
                         )
             in
+
                 if Conversao[HasError] then
 
                     error Error.Record(
@@ -346,43 +346,33 @@ let
                         ]
                     )
 
+                else if
+                    Permitidos <> null
+                    and not List.Contains(
+                        Permitidos,
+                        Conversao[Value]
+                    )
+                then
+
+                    error Error.Record(
+                        "Valor inválido",
+                        Text.Format(
+                            "O valor '#{0}' não é permitido para o parâmetro '#{1}'.",
+                            {
+                                Conversao[Value],
+                                parametro
+                            }
+                        ),
+                        [
+                            Parametro = parametro,
+                            Valor = Conversao[Value],
+                            Permitidos = Permitidos
+                        ]
+                    )
+
                 else
 
-                    let
-                        ValorConvertido =
-                            Conversao[Value],
-
-                        ValorPermitido =
-                            if Permitidos = null then
-                                true
-                            else
-                                List.Contains(
-                                    Permitidos,
-                                    ValorConvertido
-                                )
-
-                    in
-                        if not ValorPermitido then
-
-                            error Error.Record(
-                                "Valor inválido",
-                                Text.Format(
-                                    "O valor '#{0}' não é permitido para o parâmetro '#{1}'.",
-                                    {
-                                        ValorConvertido,
-                                        parametro
-                                    }
-                                ),
-                                [
-                                    Parametro = parametro,
-                                    Valor = ValorConvertido,
-                                    Permitidos = Permitidos
-                                ]
-                            )
-
-                        else
-
-                            ValorConvertido
+                    Conversao[Value]
 
 in
     Resultado;
@@ -733,6 +723,8 @@ Fonte =
                     Metadados =
 
                         /*
+                        // O codigo abaixo foi desabilitado pelo fato de gerar consultas ciclicas
+                        // e nao estar sendo necessario no framework
                         if Value.Is(Tabela, type table) then
 
                             [
@@ -2191,9 +2183,9 @@ let
 in
     Resultado;
 
-shared fxConversor = (valor as any, tipo as nullable type, optional local as nullable text) as any =>
+shared fxConversor = (valor as any, tipo as nullable type, optional locale as nullable text) as any =>
 let
-    Local = if local = null then "pt-BR" else local,
+    Locale = if locale = null then "pt-BR" else locale,
     TipoDestino = if tipo = null then type any else tipo,
 
     Chave =
@@ -2215,7 +2207,7 @@ let
         ),
 
     Conversor = Record.Field(cfgConversores, Chave),
-    Resultado = Conversor(valor, Local)
+    Resultado = Conversor(valor, Locale)
 in
     Resultado;
 
@@ -2508,12 +2500,37 @@ in
     RegistrosUnicos;
 
 shared dimClientes = let
-    Fonte = nrmClientes,
-    Chaves = Table.AddIndexColumn(Fonte, "IDCliente", 1, 1, Int64.Type),
-    Reordenada = Table.ReorderColumns(Chaves, 
-        {"IDCliente", "CPF", "Nome", "DataNascimento", "Cidade", "Estado"})
+    Fonte =
+        nrmClientes,
+
+    Chaves =
+        Table.AddIndexColumn(
+            Fonte,
+            "IDCliente",
+            1,
+            1,
+            Int64.Type
+        ),
+
+    Reordenada =
+        Table.ReorderColumns(
+            Chaves,
+            {
+                "IDCliente",
+                "CPF",
+                "Nome",
+                "DataNascimento",
+                "Cidade",
+                "Estado"
+            }
+        ),
+
+    Buffer =
+        Table.Buffer(
+            Reordenada
+        )
 in
-    Table.Buffer(Reordenada);
+    Buffer;
 
 shared fatoVendas = let
     // Obtém os dados normalizados.
@@ -3155,6 +3172,7 @@ let
         if Value.Is(
             Conteudo,
             Binary.Type
+        
         ) then
 
             let
@@ -3204,21 +3222,28 @@ in
 
 shared cfgRESTHeaders = srcRESTHeaders;
 
-shared fxLeitorCSV = (Content as binary) as table =>
+shared fxLeitorCSV = (
+    Content as binary,
+    optional pDelimiter as nullable text,
+    optional pEncoding as nullable number,
+    optional pQuoteStyle as nullable number,
+    optional pPromoteHeaders as nullable logical
+)
+as table =>
 
 let
     Fonte =
         Csv.Document(
             Content,
             [
-                Delimiter = ";",
-                Encoding = 65001,
-                QuoteStyle = QuoteStyle.Csv
+                Delimiter = pDelimiter ?? ";",
+                Encoding = pEncoding ?? 65001,
+                QuoteStyle = pQuoteStyle ?? QuoteStyle.Csv
             ]
         ),
 
     Cabecalhos =
-        if Table.IsEmpty(Fonte) then
+        if (pPromoteHeaders ?? true) = false or Table.IsEmpty(Fonte) then
             Fonte
         else
             Table.PromoteHeaders(
@@ -3243,86 +3268,125 @@ let
 in
     SemLinhasVazias;
 
-shared fxLeitorExcel = (Content as binary) as table =>
+shared fxLeitorExcel = (
+    Content as binary,
+    optional pUseHeaders as nullable any,
+    optional pDelayTypes as nullable logical
+)
+as table =>
 
 let
     Resultado =
         Excel.Workbook(
             Content,
-            null,
-            true
+            pUseHeaders,
+            pDelayTypes ?? true
         )
 
 in
     Resultado;
 
-shared fxLeitorJSON = (Content as binary) as any =>
+shared fxLeitorJSON = (
+    Content as binary,
+    optional pEncoding as nullable number
+)
+as any =>
 
 let
     Resultado =
         Json.Document(
-            Content
+            Content,
+            pEncoding ?? TextEncoding.Utf8
         )
 
 in
     Resultado;
 
-shared fxLeitorXML = (Content as binary) as table =>
+shared fxLeitorXML = (
+    Content as binary,
+    optional pOptions as nullable record,
+    optional pEncoding as nullable number
+)
+as table =>
 
 let
     Resultado =
         Xml.Tables(
-            Content
+            Content,
+            pOptions,
+            pEncoding
         )
 
 in
     Resultado;
 
-shared fxLeitorPDF = (Content as binary) as table =>
+shared fxLeitorPDF = (
+    Content as binary,
+    optional pOptions as nullable record
+)
+as table =>
 
 let
     Resultado =
         Pdf.Tables(
-            Content
+            Content,
+            pOptions
         )
 
 in
     Resultado;
 
-shared fxLeitorArquivo = (Content as binary) as any =>
+shared fxLeitorArquivo = (
+    Content as binary,
+    optional pFormatoArquivo as nullable text,
+    optional pDelimitadorArquivo as nullable text,
+    optional pCodificadorArquivo as nullable number
+)
+as any =>
 
 let
-    Formato =
+    FormatoArquivo =
         Text.Upper(
-            fxParametro("Formato_Arquivo")
+            Text.From(
+                pFormatoArquivo
+                    ?? fxParametro("Formato_Arquivo")
+            )
         ),
 
+    DelimitadorArquivo = pDelimitadorArquivo ?? fxParametro("Delimitador_Arquivo", ";"),
+
+    CodificadorArquivo = pCodificadorArquivo ?? fxParametro("Codificador_Arquivo", 65001),
+
     Resultado =
-        if Formato = "CSV" then
+        if FormatoArquivo = "CSV" then
 
             fxLeitorCSV(
-                Content
+                Content,
+                DelimitadorArquivo,
+                CodificadorArquivo
             )
 
-        else if Formato = "EXCEL" then
+        else if FormatoArquivo = "EXCEL" then
 
             fxLeitorExcel(
                 Content
             )
 
-        else if Formato = "JSON" then
+        else if FormatoArquivo = "JSON" then
 
             fxLeitorJSON(
-                Content
+                Content,
+                CodificadorArquivo
             )
 
-        else if Formato = "XML" then
+        else if FormatoArquivo = "XML" then
 
             fxLeitorXML(
-                Content
+                Content,
+                CodificadorArquivo
             )
 
-        else if Formato = "PDF" then
+        else if FormatoArquivo = "PDF" then
 
             fxLeitorPDF(
                 Content
@@ -3335,11 +3399,11 @@ let
                 Text.Format(
                     "Não existe leitor implementado para o formato '#{0}'.",
                     {
-                        Formato
+                        FormatoArquivo
                     }
                 ),
                 [
-                    Formato = Formato
+                    Formato = FormatoArquivo
                 ]
             )
 
@@ -3360,20 +3424,23 @@ shared srcArquivos = let
         else
 
             let
-                Arquivos =
+                CaminhoArquivos =
                     fxOrigemArquivos(),
 
-                ArquivosFiltrados =
-                    fxFiltrarArquivos(
-                        Arquivos
+                FormatoArquivo =
+                    Text.Upper(
+                        Text.From(fxParametro("Formato_Arquivo", ""))
                     ),
+
+                ArquivosFiltrados =
+                    fxFiltrarArquivos(CaminhoArquivos, FormatoArquivo),
 
                 Dados =
                     Table.AddColumn(
                         ArquivosFiltrados,
                         "Dados",
                         each
-                            fxLeitorArquivo([Content]),
+                            fxLeitorArquivo([Content], FormatoArquivo),
                         type any
                     )
 
@@ -3857,12 +3924,16 @@ in
 
 ;
 
-shared fxFiltrarArquivos = (Tabela as table) as table =>
+shared fxFiltrarArquivos = (
+    Tabela as table,
+    FormatoArquivo as text
+)
+as table =>
 
 let
     Formato =
         Text.Upper(
-            fxParametro("Formato_Arquivo")
+            FormatoArquivo
         ),
 
     Extensoes =
@@ -3972,12 +4043,30 @@ in
     Fonte;
 
 shared dimProdutos = let
-    Fonte = nrmProdutos,
-    Chaves = Table.AddIndexColumn(Fonte, "IDProduto", 1, 1, Int64.Type),
-    Reordenada = Table.ReorderColumns(Chaves, 
-        {"IDProduto", "Código", "Descrição", "Categoria", "PreçoLista"})
+    Fonte =
+        nrmProdutos,
+
+    Chaves =
+        Table.AddIndexColumn(
+            Fonte,
+            "IDProduto",
+            1,
+            1,
+            Int64.Type
+        ),
+
+    Reordenada =
+        Table.ReorderColumns(
+            Chaves,
+            {"IDProduto", "Código", "Descrição", "Categoria", "PreçoLista"}
+        ),
+
+    Buffer =
+        Table.Buffer(
+            Reordenada
+        )
 in
-    Table.Buffer(Reordenada);
+    Buffer;
 
 shared fxCalendarioBase = (
     DataInicial as date,
@@ -4185,8 +4274,7 @@ shared fxTratamentoSingleSpace = (valor as any, optional parametros as nullable 
             " "
         );
 shared fxTratamentoDigits = (valor as any, optional parametros as nullable any) as any =>
-    if valor = null then null 
-    else Text.Select(Text.From(valor), {"0".."9"});
+    if valor = null then null else Text.Select(Text.From(valor), {"0".."9"});
 shared fxTratamentoAlphaNumeric = (valor as any, optional parametros as nullable any) as any =>
     if valor = null then null 
     else Text.Select(Text.From(valor), {"A".."Z","a".."z","0".."9"});
@@ -5501,8 +5589,130 @@ in
 
     Resultado;
 
-shared cfgSchema = 
-let
+shared cfgOperadoresTratamentoPadrao = let
+
+    Fonte =
+        Table.SelectRows(
+            stgOperadores,
+            each
+                [Ativo] and
+                [Padrão] and
+                [Categoria] = "Tratamento"
+        ),
+
+    OperadoresAny =
+        List.Buffer(
+            Table.SelectRows(
+                Fonte,
+                each Value.Equals([TipoEntrada], type any)
+            )[Código]
+        ),
+
+    TiposEspecificos =
+        Table.SelectRows(
+            Fonte,
+            each not Value.Equals([TipoEntrada], type any)
+        ),
+
+    Agrupar =
+        Table.Group(
+            TiposEspecificos,
+            {"TipoEntrada"},
+            {
+                {
+                    "Operadores",
+                    each
+                        List.Buffer(
+                            List.Combine(
+                                {
+                                    OperadoresAny,
+                                    [Código]
+                                }
+                            )
+                        ),
+                    type list
+                }
+            }
+        ),
+
+    Resultado =
+        List.Buffer(
+            Table.ToRecords(
+                Table.RenameColumns(
+                    Agrupar,
+                    {
+                        {"TipoEntrada", "Tipo"}
+                    }
+                )
+            )
+        )
+in
+    Resultado;
+
+shared cfgOperadoresValidacaoPadrao = let
+
+    Fonte =
+        Table.SelectRows(
+            stgOperadores,
+            each
+                [Ativo] and
+                [Padrão] and
+                [Categoria] = "Validação" and
+                [Código] <> "REQUIRED"
+        ),
+
+    OperadoresAny =
+        List.Buffer(
+            Table.SelectRows(
+                Fonte,
+                each Value.Equals([TipoEntrada], type any)
+            )[Código]
+        ),
+
+    TiposEspecificos =
+        Table.SelectRows(
+            Fonte,
+            each not Value.Equals([TipoEntrada], type any)
+        ),
+
+    Agrupar =
+        Table.Group(
+            TiposEspecificos,
+            {"TipoEntrada"},
+            {
+                {
+                    "Operadores",
+                    each
+                        List.Buffer(
+                            List.Combine(
+                                {
+                                    OperadoresAny,
+                                    [Código]
+                                }
+                            )
+                        ),
+                    type list
+                }
+            }
+        ),
+
+    Resultado =
+        List.Buffer(
+            Table.ToRecords(
+                Table.RenameColumns(
+                    Agrupar,
+                    {
+                        {"TipoEntrada", "Tipo"}
+                    }
+                )
+            )
+        )
+in
+    Resultado
+
+;
+
+shared cfgSchema = let
 
 //--------------------------------------------------------------------------
 // Fonte
@@ -5576,8 +5786,7 @@ let
 
         )
 in
-    Resultado
-;
+    Resultado;
 
 shared cfgPipeline = let
 
@@ -5828,7 +6037,128 @@ in
 
     Resultado;
 
-shared fxPipelineCompilarColuna = 
+shared fxPipelineCompilarColuna = (
+    Definicao as record
+)
+as record =>
+
+let
+
+//--------------------------------------------------------------------------
+// Operadores padrão
+//--------------------------------------------------------------------------
+
+    OperadoresPadrao =
+
+        fxOperadoresPadrao(
+            Definicao[Tipo]
+        ),
+
+//--------------------------------------------------------------------------
+// Tratamentos
+//--------------------------------------------------------------------------
+
+    Tratamentos =
+
+        List.Buffer(
+
+            fxPipelineCompilarOperadores(
+
+                List.Combine(
+                    {
+                        OperadoresPadrao[Tratamentos],
+                        Definicao[Tratamentos] ?? {}
+                    }
+                )
+
+            ) ?? {}
+
+        ),
+
+//--------------------------------------------------------------------------
+// Validações
+//--------------------------------------------------------------------------
+
+    Validacoes =
+
+        fxPipelineCompilarOperadores(
+
+            List.Combine(
+                {
+                    OperadoresPadrao[Validações],
+                    Definicao[Validações] ?? {}
+                }
+            )
+
+        ),
+
+//--------------------------------------------------------------------------
+// REQUIRED implícito
+//--------------------------------------------------------------------------
+
+    Required =
+
+        if Definicao[Obrigatório] then
+
+            {
+                Record.Combine(
+                    {
+                        cfgOperadores[REQUIRED],
+                        [
+                            Parâmetros = null
+                        ]
+                    }
+                )
+            }
+
+        else
+
+            {},
+
+//--------------------------------------------------------------------------
+// Pipeline de validações
+//--------------------------------------------------------------------------
+
+    PipelineValidacoes =
+
+        List.Buffer(
+
+            List.Combine(
+                {
+                    Required,
+                    Validacoes ?? {}
+                }
+            )
+
+        ),
+
+//--------------------------------------------------------------------------
+// Resultado
+//--------------------------------------------------------------------------
+
+    Resultado =
+
+        [
+
+            Tipo = Definicao[Tipo],
+
+            Obrigatório = Definicao[Obrigatório],
+
+            Ativo = Definicao[Ativo],
+
+            Tratamentos = Tratamentos,
+
+            Validações = PipelineValidacoes
+
+        ]
+
+in
+
+    Resultado
+
+
+
+/*
 (
     Definicao as record
 )
@@ -5936,7 +6266,8 @@ let
 
 in
 
-    Resultado;
+    Resultado
+*/;
 
 shared fxPipelineCompilar = 
 (
@@ -6702,271 +7033,6 @@ shared tstClientes1M = let
 in
     Normalize;
 
-shared fxConversaoParaTexto = (Valor as any, Contexto as record) as record =>
-    try
-        let
-            ValorTexto = Text.From(Valor),
-            Normalizado = fxNormalizarTextoBasico(ValorTexto)
-        in
-            [
-                Status = "OK",
-                Valor = Normalizado,
-                Tipo = "TEXT",
-                Contexto = Contexto
-            ]
-    otherwise
-        [
-            Status = "ERRO",
-            Valor = Valor,
-            Tipo = "TEXT",
-            Mensagem = "Falha ao converter para texto",
-            Contexto = Contexto
-        ];
-
-shared fxConversaoParaNumero = (Valor as any, Contexto as record) as record =>
-    try
-        let
-            // Se for texto, limpar caracteres especiais
-            ValorLimpo = if Value.Type(Valor) = "text" then
-                Text.Remove(Valor, {" ", ",", "$", "R$", "%"})
-            else
-                Valor,
-            
-            // Tentar conversão
-            ValorNumerico = Number.From(ValorLimpo)
-        in
-            [
-                Status = "OK",
-                Valor = ValorNumerico,
-                Tipo = "NUMBER",
-                Contexto = Contexto
-            ]
-    otherwise
-        [
-            Status = "ERRO",
-            Valor = Valor,
-            Tipo = "NUMBER",
-            Mensagem = "Falha ao converter para número",
-            Contexto = Contexto
-        ];
-
-shared fxConversaoParaBooleano = (Valor as any, Contexto as record) as record =>
-    try
-        let
-            // Normalizar entrada
-            ValorNormalizado = if Value.Type(Valor) = "text" then
-                Text.Upper(Text.Trim(Valor))
-            else if Value.Type(Valor) = "logical" then
-                Valor
-            else
-                Text.Upper(Text.From(Valor)),
-            
-            // Verificar valores verdadeiros
-            ValoresVerdadeiros = {"TRUE", "SIM", "YES", "1", "V", "VERDADEIRO", "ATIVO", "ON"},
-            ValoresFalsos = {"FALSE", "NAO", "NÃO", "NO", "0", "F", "FALSO", "INATIVO", "OFF"},
-            
-            ValorBooleano = if List.Contains(ValoresVerdadeiros, ValorNormalizado) then
-                true
-            else if List.Contains(ValoresFalsos, ValorNormalizado) then
-                false
-            else
-                error "Valor booleano inválido"
-        in
-            [
-                Status = "OK",
-                Valor = ValorBooleano,
-                Tipo = "LOGICAL",
-                Contexto = Contexto
-            ]
-    otherwise
-        [
-            Status = "ERRO",
-            Valor = Valor,
-            Tipo = "LOGICAL",
-            Mensagem = "Falha ao converter para booleano",
-            Contexto = Contexto
-        ];
-
-shared fxConversaoParaData = (Valor as any, Contexto as record) as record =>
-    try
-        let
-            ValorData = Date.From(Valor)
-        in
-            [
-                Status = "OK",
-                Valor = ValorData,
-                Tipo = "DATE",
-                Contexto = Contexto
-            ]
-    otherwise
-        [
-            Status = "ERRO",
-            Valor = Valor,
-            Tipo = "DATE",
-            Mensagem = "Falha ao converter para data",
-            Contexto = Contexto
-        ]
-;
-
-shared fxConversaoParaHora = (Valor as any, Contexto as record) as record =>
-    try
-        let
-            ValorHora = Time.From(Valor)
-        in
-            [
-                Status = "OK",
-                Valor = ValorHora,
-                Tipo = "TIME",
-                Contexto = Contexto
-            ]
-    otherwise
-        [
-            Status = "ERRO",
-            Valor = Valor,
-            Tipo = "TIME",
-            Mensagem = "Falha ao converter para hora",
-            Contexto = Contexto
-        ];
-
-shared fxConversaoParaDataHora = (Valor as any, Contexto as record) as record =>
-    try
-        let
-            ValorDataHora = DateTime.From(Valor)
-        in
-            [
-                Status = "OK",
-                Valor = ValorDataHora,
-                Tipo = "DATETIME",
-                Contexto = Contexto
-            ]
-    otherwise
-        [
-            Status = "ERRO",
-            Valor = Valor,
-            Tipo = "DATETIME",
-            Mensagem = "Falha ao converter para data/hora",
-            Contexto = Contexto
-        ]
-;
-
-shared fxConversaoParaMoeda = (Valor as any, Contexto as record) as record =>
-    try
-        let
-            // Limpar e converter
-            ValorLimpo = if Value.Type(Valor) = "text" then
-                Text.Remove(Valor, {" ", "R$", "%"})
-            else
-                Valor,
-            
-            ValorNumerico = Number.From(ValorLimpo)
-        in
-            [
-                Status = "OK",
-                Valor = ValorNumerico,
-                Tipo = "CURRENCY",
-                Formato = "R$",
-                Contexto = Contexto
-            ]
-    otherwise
-        [
-            Status = "ERRO",
-            Valor = Valor,
-            Tipo = "CURRENCY",
-            Mensagem = "Falha ao converter para moeda",
-            Contexto = Contexto
-        ]
-;
-
-shared fxConversaoParaPercentual = (Valor as any, Contexto as record) as record =>
-    try
-        let
-            // Limpar e converter
-            ValorLimpo = if Value.Type(Valor) = "text" then
-                Text.Remove(Valor, {" ", "%"})
-            else
-                Valor,
-            
-            ValorNumerico = Number.From(ValorLimpo),
-            // Se valor > 1, assume percentual (ex: 50 = 50%)
-            ValorPercentual = if ValorNumerico > 1 then
-                ValorNumerico / 100
-            else
-                ValorNumerico
-        in
-            [
-                Status = "OK",
-                Valor = ValorPercentual,
-                Tipo = "PERCENTAGE",
-                PercentualExibicao = ValorPercentual * 100,
-                Contexto = Contexto
-            ]
-    otherwise
-        [
-            Status = "ERRO",
-            Valor = Valor,
-            Tipo = "PERCENTAGE",
-            Mensagem = "Falha ao converter para percentual",
-            Contexto = Contexto
-        ]
-;
-
-shared fxNormalizarTextoBasico = (
-    Texto as text,
-    optional Opcoes as nullable record
-) as text =>
-    let
-        // Opções padrão
-        OpcoesPadrao = Opcoes ?? [
-            Trim = true,
-            Clean = true,
-            SingleSpace = true,
-            RemoveNullBytes = false,
-            RemoveLineBreaks = true
-        ],
-        
-        // 1. Remover null bytes se configurado
-        Passo1 = if OpcoesPadrao[RemoveNullBytes] then
-            Text.Remove(Texto, {Character.FromNumber(0)})
-        else
-            Texto,
-        
-        // 2. Remover quebras de linha se configurado
-        Passo2 = if OpcoesPadrao[RemoveLineBreaks] then
-            Text.Replace(
-                Text.Replace(Passo1, "#(lf)", " "),
-                "#(cr)",
-                " "
-            )
-        else
-            Passo1,
-        
-        // 3. Trim (remover espaços início/fim)
-        Passo3 = if OpcoesPadrao[Trim] then
-            Text.Trim(Passo2)
-        else
-            Passo2,
-        
-        // 4. Clean (remover caracteres de controle)
-        Passo4 = if OpcoesPadrao[Clean] then
-            Text.Clean(Passo3)
-        else
-            Passo3,
-        
-        // 5. Single space (remover espaços múltiplos)
-        Passo5 = if OpcoesPadrao[SingleSpace] then
-            Text.Combine(
-                List.Select(
-                    Text.SplitAny(Passo4, " "),
-                    each _ <> ""
-                ),
-                " "
-            )
-        else
-            Passo4
-    in
-        Passo5
-;
-
 shared fxTratamentoReplace = (valor as any, optional parametros as nullable any) as any =>
     //{"antigo","novo"}
     if valor = null then null else
@@ -7009,30 +7075,139 @@ shared fxTratamentoAfter = (valor as any, optional parametros as nullable any) a
         Text.AfterDelimiter(Text.From(valor), Text.From(parametros{0}));
 
 shared fxTratamentoPrefix = (valor as any, optional parametros as nullable any) as any =>
-    if valor = null then null else
-        Text.From(parametros{0}) & Text.From(valor);
+
+if valor = null then
+
+    null
+
+else
+
+    let
+
+        Prefixo =
+            Text.From(parametros{0}),
+
+        Texto =
+            Text.From(valor)
+
+    in
+
+        if Text.StartsWith(Texto, Prefixo) then
+
+            Texto
+
+        else
+
+            Prefixo & Texto;
 
 shared fxTratamentoSuffix = (valor as any, optional parametros as nullable any) as any =>
     if valor = null then null else
         Text.From(valor) & Text.From(parametros{0});
 
 shared fxTratamentoPadLeft = (valor as any, optional parametros as nullable any) as any =>
-    // {tamanho, caractere}
-    if valor = null then null else
-        Text.PadStart(
-            Text.From(valor),
-            Number.From(parametros{0}),
-            Text.From(parametros{1})
-        );
+    // {tamanho, caractere, prefixo}
+
+    if valor = null then
+
+        null
+
+    else
+
+        let
+
+            Texto =
+                Text.From(valor),
+
+            Tamanho =
+                Number.From(parametros{0}),
+
+            Caractere =
+                Text.From(parametros{1}),
+
+            Prefixo =
+                if List.Count(parametros) >= 3 then
+                    Text.From(parametros{2})
+                else
+                    null,
+
+            Resultado =
+
+                if Prefixo <> null and Text.StartsWith(Texto, Prefixo) then
+
+                    Prefixo &
+                    Text.PadStart(
+                        Text.AfterDelimiter(Texto, Prefixo),
+                        Tamanho,
+                        Caractere
+                    )
+
+                else
+
+                    Text.PadStart(
+                        Texto,
+                        Tamanho,
+                        Caractere
+                    )
+
+        in
+
+            Resultado;
 
 shared fxTratamentoPadRight = (valor as any, optional parametros as nullable any) as any =>
-    // {tamanho, caractere}
-    if valor = null then null else
-        Text.PadEnd(
+// {tamanho, caractere, sufixo}
+
+if valor = null then
+
+    null
+
+else
+
+    let
+
+        Texto =
             Text.From(valor),
+
+        Tamanho =
             Number.From(parametros{0}),
-            Text.From(parametros{1})
-        );
+
+        Caractere =
+            Text.From(parametros{1}),
+
+        Sufixo =
+            if List.Count(parametros) >= 3 then
+                Text.From(parametros{2})
+            else
+                null,
+
+        Resultado =
+
+            if
+                Sufixo <> null and
+                Text.EndsWith(Texto, Sufixo)
+            then
+
+                Text.PadEnd(
+                    Text.BeforeDelimiter(
+                        Texto,
+                        Sufixo,
+                        {0, RelativePosition.FromEnd}
+                    ),
+                    Tamanho,
+                    Caractere
+                ) &
+                Sufixo
+
+            else
+
+                Text.PadEnd(
+                    Texto,
+                    Tamanho,
+                    Caractere
+                )
+
+    in
+
+        Resultado;
 
 shared fxTratamentoRemoveChars = (valor as any, optional parametros as nullable any) as any =>
     if valor = null then null else
@@ -7081,3 +7256,272 @@ shared fxTratamentoRemoveAccents = (valor as any, optional parametros as nullabl
 shared fxTratamentoPunctuation = (valor as any, optional parametros as nullable any) as any =>
     if valor = null then null else
         Text.Remove(Text.From(valor), ".,;:!?()[]{}<>/\|-_""'");
+
+shared fxOperadoresPadrao = (
+    Tipo as type
+)
+as record =>
+
+let
+
+    Tratamentos =
+        List.First(
+            List.Select(
+                cfgOperadoresTratamentoPadrao,
+                each Value.Equals([Tipo], Tipo)
+            ),
+            [
+                Tipo = Tipo,
+                Operadores = {}
+            ]
+        )[Operadores],
+
+    Validações =
+        List.First(
+            List.Select(
+                cfgOperadoresValidacaoPadrao,
+                each Value.Equals([Tipo], Tipo)
+            ),
+            [
+                Tipo = Tipo,
+                Operadores = {}
+            ]
+        )[Operadores]
+
+in
+
+    [
+        Tratamentos = Tratamentos,
+        Validações = Validações
+    ];
+
+shared fxTratamentoNumber = (valor as any, optional parametros as nullable any) as any =>
+    fxConvertTextToNumber(valor, cfgCultura)
+
+/*
+if valor = null then
+
+    null
+
+else
+
+    let
+
+        SeparadorDecimal =
+            cfgCultura[SeparadorDecimal],
+
+        SeparadorMilhar =
+            cfgCultura[SeparadorMilhar],
+
+        NegativoParenteses =
+            cfgCultura[NegativoParenteses],
+
+        Texto =
+            Text.Trim(
+                Text.From(valor)
+            ),
+
+        Negativo =
+            Text.StartsWith(Texto, "-") or
+            (
+                NegativoParenteses and
+                Text.StartsWith(Texto, "(") and
+                Text.EndsWith(Texto, ")")
+            ),
+
+        Limpo =
+            Text.Select(
+                Texto,
+                {"0".."9", SeparadorDecimal, SeparadorMilhar}
+            ),
+
+        UltimoDecimal =
+            Text.PositionOf(
+                Limpo,
+                SeparadorDecimal,
+                Occurrence.Last
+            ),
+
+        NumeroTexto =
+
+            if UltimoDecimal >= 0 then
+
+                Text.Replace(
+                    Text.Replace(
+                        Limpo,
+                        SeparadorMilhar,
+                        ""
+                    ),
+                    SeparadorDecimal,
+                    "."
+                )
+
+            else
+
+                Text.Replace(
+                    Limpo,
+                    SeparadorMilhar,
+                    ""
+                ),
+
+        Numero =
+            try
+                Number.From(
+                    NumeroTexto,
+                    "en-US"
+                )
+            otherwise
+                null
+
+    in
+
+        if Numero = null then
+
+            null
+
+        else if Negativo then
+
+            -Number.Abs(Numero)
+
+        else
+
+            Number.Abs(Numero)
+*/;
+
+shared cfgCultura = let
+    Parametros =
+        cfgParametros,
+
+    Parametro =
+        (Nome as text, Padrao as any) as any =>
+            Record.FieldOrDefault(
+                Parametros,
+                Nome,
+                [Valor = Padrao]
+            )[Valor],
+
+    Cultura =
+        Parametro(
+            "Cultura_Padrao",
+            "pt-BR"
+        ),
+
+    TextoNumero =
+        try
+            Number.ToText(
+                1234.5,
+                "#,##0.0",
+                Cultura
+            )
+        otherwise
+            error "Cultura inválida.",
+
+    SeparadorMilhar =
+        Text.At(TextoNumero, 1),
+
+    SeparadorDecimal =
+        Text.At(
+            TextoNumero,
+            Text.Length(TextoNumero) - 2
+        ),
+
+    SimboloMoeda =
+        Parametro(
+            "Simbolo_Moeda",
+            "R$"
+        ),
+
+    SimboloPercentual =
+        Parametro(
+            "Simbolo_Percentual",
+            "%"
+        ),
+
+    NegativoParenteses =
+        fxParseBooleano(
+            Parametro(
+                "Negativo_Parenteses",
+                true
+            )
+        ),
+
+    CaracteresPermitidosNumero =
+        List.Buffer(
+            List.Combine(
+                {
+                    {"0".."9"},
+                    {SeparadorDecimal, SeparadorMilhar},
+                    {"-","+","(",")"}
+                }
+            )
+        ),
+
+    Resultado =
+        [
+            Cultura = Cultura,
+            SeparadorDecimal = SeparadorDecimal,
+            SeparadorMilhar = SeparadorMilhar,
+            SimboloMoeda = SimboloMoeda,
+            SimboloPercentual = SimboloPercentual,
+            NegativoParenteses = NegativoParenteses,
+            CaracteresPermitidosNumero = CaracteresPermitidosNumero
+        ]
+in
+    Resultado;
+
+shared fxConvertTextToNumber = (valor as any, cultura as record) as nullable number =>
+let
+    Resultado =
+        if valor = null then
+
+            null
+
+        else if Value.Is(valor, type number) then
+
+            valor
+
+        else if Value.Is(valor, type text) then
+
+            let
+                Texto =
+                    Text.Trim(valor),
+
+                Negativo =
+                    cultura[NegativoParenteses]
+                    and Text.StartsWith(Texto, "(")
+                    and Text.EndsWith(Texto, ")"),
+
+                TextoSemParenteses =
+                    if Negativo then
+                        Text.Middle(Texto, 1, Text.Length(Texto) - 2)
+                    else
+                        Texto,
+
+                TextoLimpo =
+                    Text.Select(
+                        TextoSemParenteses,
+                        cultura[CaracteresPermitidosNumero]
+                    ),
+
+                Numero =
+                    if TextoLimpo = "" then
+                        error "Valor numérico vazio."
+                    else
+                        try
+                            Number.FromText(
+                                TextoLimpo,
+                                cultura[Cultura]
+                            )
+                        otherwise
+                            error "Valor numérico inválido."
+            in
+                if Negativo then
+                    -Numero
+                else
+                    Numero
+
+        else
+
+            error "Tipo de entrada inválido. Esperado texto ou número."
+in
+    Resultado;
