@@ -268,7 +268,7 @@ in
 
 ---
 
-## 📂 Objetos de Dados Principais
+## 📂 Objetos de Dados de Exemplo
 
 - `srcClientes`, `srcProdutos`, `srcVendas` — fontes de dados.
 - `stgClientes`, `stgProdutos`, `stgVendas` — preparação de staging.
