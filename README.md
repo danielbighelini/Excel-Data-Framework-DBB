@@ -2,7 +2,7 @@
 
 ## 📋 Sumário Executivo
 
-Este documento descreve o Excel Data Framework DBB, com separação clara de responsabilidades em 5 camadas distintas.
+Este documento descreve o Excel Data Framework DBB, um framework Power Query organizado em camadas que padroniza extração, staging, transformação, validação e modelagem dimensional.
 
 ---
 
@@ -12,44 +12,44 @@ Este documento descreve o Excel Data Framework DBB, com separação clara de res
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  SRC (Source/Extração)                                  │
+│  SRC (Source / Extração)                                │
 │  └─ srcClientes, srcProdutos, srcVendas, etc.           │
-│  └─ Dados brutos do Excel/BD/APIs                       │
+│  └─ Dados brutos do Excel / Banco / API                 │
 └──────────────────────┬──────────────────────────────────┘
                        ↓
 ┌─────────────────────────────────────────────────────────┐
-│  STG (Staging/Estruturação)                             │
+│  STG (Staging / Estruturação)                           │
 │  └─ stgClientes, stgProdutos, stgVendas                 │
-│  └─ Preparação: remoção linhas vazias, normalização     │
-│  └─ Aplicação de tipos básicos                          │
+│  └─ Preparação: remoção de linhas vazias, normalização  │
+│  └─ Conversão inicial de tipos e reordenação de colunas │
 └──────────────────────┬──────────────────────────────────┘
                        ↓
 ┌─────────────────────────────────────────────────────────┐
-│  TRN (Transform/Transformação)                          │
+│  TRN (Transformação)                                    │
 │  └─ trnClientes, trnProdutos, trnVendas                 │
-│  └─ Tratamentos: TRIM, UPPER, LOWER, etc.               │
-│  └─ Limpeza de dados e formatação                       │
+│  └─ Tratamentos: TRIM, UPPER, LOWER, CLEAN, etc.        │
+│  └─ Aplicações de regras de formatação e limpeza        │
 └──────────────────────┬──────────────────────────────────┘
                        ↓
 ┌─────────────────────────────────────────────────────────┐
-│  QA (Quality Assurance/Validação)                       │
+│  QA (Quality Assurance / Validação)                     │
 │  └─ qaClientes, qaProdutos, qaVendas                    │
-│  └─ Validações: REQUIRED, EMAIL, CPFVAL, CNPJVAL, CEPVAL, etc.        │
-│  └─ Flagging de registros com erros/avisos              │
+│  └─ Validações de negócio e formato                     │
+│  └─ Marcação de registros via `_QA_Status` e `_QA_Ocorrencias` │
 └──────────────────────┬──────────────────────────────────┘
                        ↓
 ┌─────────────────────────────────────────────────────────┐
-│  NRM (Normalize/Normalização)                           │
+│  NRM (Normalização)                                     │
 │  └─ nrmClientes, nrmProdutos, nrmVendas                 │
-│  └─ Deduplicação, relacionamentos, enriquecimento       │
-│  └─ Regras de negócio complexas                         │
+│  └─ Deduplicação por chaves de negócio                  │
+│  └─ Preparação para dimensões e fatos                   │
 └──────────────────────┬──────────────────────────────────┘
                        ↓
 ┌─────────────────────────────────────────────────────────┐
-│  DIM/FATO (Dimensional Model)                           │
+│  DIM / FATO (Modelo Dimensional)                        │
 │  └─ dimClientes, dimProdutos, dimCalendario             │
 │  └─ fatoVendas                                          │
-│  └─ Modelo pronto para análise                          │
+│  └─ Tabelas prontas para análise e BI                   │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -59,154 +59,132 @@ Este documento descreve o Excel Data Framework DBB, com separação clara de res
 
 ### 1️⃣ STAGING (STG)
 
-**Função:** Preparação estrutural e normalização básica
+**Objetivo:** executar preparação estrutural e conversões iniciais de tipo.
 
-**Funções Principais:**
-- `fxStgPreparar(tabela, ignorarColunas)` - Limpeza inicial
-  - Remove linhas completamente vazias
-  - Normaliza nomes de colunas (trim)
-  - Valida estrutura (sem nomes vazios, sem duplicidade)
-  - Mantém a tabela como source para otimizar avaliação lazy
-  
-- `fxStgAplicar(Tabela, Schema, ignorarColunas)` - Aplicação completa do estágio
-  - Chama `fxStgPreparar()` para estrutura
-  - Obtém `Pipeline = fxPipeline(Schema)`
-  - Aplica tipos básicos via `Table.TransformColumns`
-  - Reordena colunas com `Table.ReorderColumns`
+**Principais funções:**
 
-**Exemplo de Uso:**
+- `fxStgPreparar(tabela, ignorarColunas)`
+  - Remove linhas completamente vazias.
+  - Normaliza nomes de colunas (trim).
+  - Valida estrutura de colunas (nenhum nome vazio ou duplicado).
+  - Preserva a tabela como fonte para maximizar avaliação lazy.
+
+- `fxStgAplicar(Tabela, Schema, ignorarColunas)`
+  - Chama `fxStgPreparar()`.
+  - Compila pipeline de schema via `fxPipeline(Schema)`.
+  - Aplica tipos básicos por coluna usando `Table.TransformColumns`.
+  - Reordena colunas conforme `Pipeline[Ordem]`.
+  - Registra ocorrências de tipo em `_STG_Ocorrencias` sem transformar valores inválidos em `null`.
+
+**Saída típica:**
+- Tabela normalizada e estruturada.
+- Conversão de tipos básicos aplicada.
+- `_STG_Ocorrencias` com falhas de tipo.
+- Colunas ordenadas.
+
+**Exemplo:**
 ```powerquery
 stgClientes = let
     Fonte = srcClientes,
-    Preparada = fxStgAplicar(Fonte, "tbClientes"),
-    Resultado = Table.Distinct(Preparada)
+    Preparada = fxStgAplicar(Fonte, "tbClientes")
 in
-    Resultado;
+    Preparada;
 ```
-
-**Dados de Saída:**
-- Tabela estruturada e validada
-- Tipos básicos aplicados conforme schema
-- Colunas ordenadas segundo o pipeline
-- Sem linhas completamente vazias
 
 ---
 
 ### 2️⃣ TRANSFORMAÇÃO (TRN)
 
-**Função:** Aplicação de tratamentos e transformações de dados
+**Objetivo:** aplicar tratamentos de dados e ajustes de formatação.
 
-**Funções Principais:**
-- `fxTrnAplicar()` - Executa pipeline de transformações
-  - Compila operadores de tratamento do schema
-  - Aplica TRIM, UPPER, LOWER, PROPER, CLEAN, etc.
-  - Converte tipos com tratamento de erros
-  - Executa em uma única passagem (otimizado)
+**Principais funções:**
 
-**Operadores Disponíveis:**
-```
-Texto:
-  - TRIM, UPPER, LOWER, PROPER, CLEAN
-  - SINGLESPACE, DIGITS, ALPHANUMERIC
-  - NORMALIZEBASIC, NORMALIZETYPE
+- `fxTrnAplicar(Tabela, Schema)`
+  - Compila operadores de tratamento definidos no schema.
+  - Executa transformações de texto, numéricas e de conversão.
+  - Permite encadear tratamentos em uma única passagem.
 
-Numérico:
-  - ABS, ROUND
+**Operadores comuns:**
+- Texto: `TRIM`, `UPPER`, `LOWER`, `PROPER`, `CLEAN`, `SINGLESPACE`, `DIGITS`, `ALPHANUMERIC`, `NORMALIZEBASIC`.
+- Numérico: `ABS`, `ROUND`.
+- Conversão/extração: `NUMBER`, `CPF`, `CNPJ`, `CEP`.
 
-Conversão:
-  - Conversão automática entre tipos
-  - CPF, CNPJ, CEP (extração de dígitos)
-```
+**Saída típica:**
+- Valores tratados e normalizados.
+- Formatos padronizados conforme o schema.
+- Tabela pronta para validação.
 
-**Exemplo de Uso:**
+**Exemplo:**
 ```powerquery
 trnClientes = let
     Fonte = stgClientes,
-    Resultado = fxTrnAplicar(Fonte, "tbClientes")
+    Transformada = fxTrnAplicar(Fonte, "tbClientes")
 in
-    Resultado;
+    Transformada;
 ```
-
-**Dados de Saída:**
-- Dados tratados e transformados
-- Colunas com tipos refinados
-- Pronto para validação
 
 ---
 
 ### 3️⃣ QUALIDADE (QA)
 
-**Função:** Validação estrutural, semântica e de negócio
+**Objetivo:** validar dados e marcar problemas sem excluir registros.
 
-**Funções Principais:**
-- `fxQaValidar()` - Executa validações
-  - Compila operadores de validação
-  - Adiciona coluna `_QA_Ocorrencias` com detalhes de erro
-  - Adiciona coluna `_QA_Status` (OK, AVISO, ERRO)
-  - Não remove dados, apenas marca
+**Principais funções:**
 
-- `fxQaFiltrarPorStatus()` - Filtra registros por status
-  - OK, AVISO ou ERRO
-  - Remove colunas de controle QA
+- `fxQaValidar(Tabela, Schema)`
+  - Compila operadores de validação por coluna.
+  - Adiciona `_QA_Ocorrencias` com lista de problemas.
+  - Define `_QA_Status` como `OK`, `AVISO` ou `ERRO`.
+  - Não remove registros — apenas marca.
 
-- `fxQaExtrairProblemas()` - Extrai registros com problemas
-  - Útil para auditoria e correção
+- `fxQaFiltrarPorStatus(Tabela, Status)`
+  - Filtra registros por status desejado.
+  - Remove colunas de controle QA quando necessário.
 
-**Validadores Disponíveis:**
-```
-Obrigatoriedade:
-  - REQUIRED
+- `fxQaExtrairProblemas(Tabela)`
+  - Retorna somente registros com problemas.
+  - Útil para auditoria, correção e reporte.
 
-Documentos (Brasil):
-  - CPFVAL, CNPJVAL, CEPVAL
+**Validadores disponíveis:**
+- `REQUIRED`
+- `CPFVAL`, `CNPJVAL`, `CEPVAL`
+- `EMAIL`, `URL`, `DOMAIN`
+- `LIST`, `MIN`, `MAX`, `INTERVAL`, `SIZE`
 
-Internet:
-  - EMAIL, URL, DOMAIN
+**Saída típica:**
+- Colunas `_QA_Status` e `_QA_Ocorrencias`.
+- Lista de ocorrências com código, severidade, coluna, tipo e descrição.
+- Registro original preservado.
 
-Intervalo:
-  - MIN, MAX, INTERVAL
-
-Listas:
-  - LIST, SIZE
-
-Personalizadas:
-  - Criar via schema
-```
-
-**Exemplo de Uso:**
+**Exemplo:**
 ```powerquery
 qaClientes = let
     Fonte = trnClientes,
-    Resultado = fxQaValidar(Fonte, "tbClientes")
+    qa = fxQaValidar(Fonte, "tbClientes")
 in
-    Resultado;
+    qa;
 
-// Usar apenas dados válidos
-ClientesValidos = fxQaFiltrarPorStatus(qaClientes, "OK");
-
-// Extrair problemas para auditoria
-ProblemasCliente = fxQaExtrairProblemas(qaClientes);
+ClientesValidos = fxQaFiltrarPorStatus(qa, "OK");
+ProblemasCliente = fxQaExtrairProblemas(qa);
 ```
-
-**Dados de Saída:**
-- Tabela com colunas de controle QA
-- `_QA_Status`: OK, AVISO ou ERRO
-- `_QA_Ocorrencias`: Lista de problemas encontrados
-- Todas as colunas originais mantidas
 
 ---
 
 ### 4️⃣ NORMALIZAÇÃO (NRM)
 
-**Função:** Normalização de dados e deduplicação por chave de negócio
+**Objetivo:** deduplicar dados e aplicar chaves de negócio.
 
-**Funções Principais:**
-- `fxNrmAplicar(tabela, Schema)` - Deduplica por chaves de negócio definidas no schema
-  - Filtra registros válidos (OK da QA)
-  - Mantém a tabela intacta se não houver chaves de negócio definidas
-  - Usa `Table.Distinct(tabela, Chaves)` para remover duplicatas de domínio
+**Principais funções:**
 
-**Exemplo de Uso:**
+- `fxNrmAplicar(Tabela, Schema)`
+  - Remove duplicatas com base em chaves de negócio definidas no schema.
+  - Garante que a tabela permaneça consistente para modelagem.
+
+**Saída típica:**
+- Dados deduplicados segundo o schema.
+- Tabela preparada para produção de dimensões e fatos.
+
+**Exemplo:**
 ```powerquery
 nrmClientes = let
     Fonte = qaClientes,
@@ -216,47 +194,88 @@ in
     Normalizada;
 ```
 
-**Dados de Saída:**
-- Dados deduplicados segundo o schema
-- Sem reconstrução extra além da deduplicação
-- Pronto para o modelo dimensional
-
 ---
 
-### 5️⃣ MODELO DIMENSIONAL (DIM/FATO)
+### 5️⃣ MODELO DIMENSIONAL (DIM / FATO)
 
-**Função:** Preparação final para análise
+**Objetivo:** construir tabelas analíticas finais.
 
-**Construções:**
-- **Dimensões** (dimClientes, dimProdutos, dimCalendario)
-  - Chaves substitutas (surrogate keys)
-  - Deduplicadas
-  - Ordenadas para estabilidade
-  - Bufferizadas para performance
-  
-- **Tabelas Fato** (fatoVendas)
-  - Relacionamentos com dimensões
-  - Métricas e medidas
-  - Otimizadas para BI
+**Componentes principais:**
+- Dimensões: `dimClientes`, `dimProdutos`, `dimCalendario`.
+- Fato: `fatoVendas`.
 
-**Exemplo de Uso:**
+**Características:**
+- Chaves substitutas adicionadas via `Table.AddIndexColumn`.
+- Reordenação de colunas para estabilidade.
+- Bufferização para performance em queries dependentes.
+- Relacionamentos realizados via `Table.NestedJoin`.
+
+**Exemplo:**
 ```powerquery
 dimClientes = let
     Fonte = nrmClientes,
     Chaves = Table.AddIndexColumn(Fonte, "IDCliente", 1, 1, Int64.Type),
-    Reordenada = Table.ReorderColumns(Chaves, 
+    Reordenada = Table.ReorderColumns(Chaves,
         {"IDCliente", "CPF", "Nome", "DataNascimento", "Cidade", "Estado"})
 in
     Table.Buffer(Reordenada);
-
-fatoVendas = let
-    // Merge com dimensões
-    ComCliente = Table.NestedJoin(nrmVendas, {"CPF"}, dimClientes, {"CPF"}, ...)
-    // ... relacionar com outras dimensões ...
-in
-    // Resultado otimizado para análise
-    Resultado;
 ```
+
+---
+
+## 🔧 Componentes de Configuração
+
+- `srcSchema` / `stgSchema`
+  - Schema ativo do projeto.
+  - Define tabelas, colunas, tipos, tratamentos, validações e chaves.
+
+- `fxPipeline(Schema)`
+  - Compila o schema em pipelines de tipos, tratamentos, validações e ordenação.
+
+- `cfgTiposDados`
+  - Mapeia nomes de tipo (`TEXTO`, `DATA`, `NÚMERO DECIMAL`, etc.) para tipos M.
+
+- `cfgTiposBooleanos`
+  - Converte valores lógicos como `TRUE/FALSE`, `SIM/NÃO`, `1/0`.
+
+- `cfgParametrosSeveridades`
+  - Controla se um problema é `AVISO` ou `ERRO`.
+
+---
+
+## ⚙️ Como o Pipeline Funciona
+
+1. `fxPipeline(Schema)` monta:
+   - `TiposPorColuna`
+   - `TratamentosPorColuna`
+   - `ValidaçõesPorColuna`
+   - `Ordem`
+   - `ChavesNegocio`
+
+2. `fxStgAplicar()` prepara a tabela e aplica tipos básicos.
+3. `fxTrnAplicar()` aplica transformações de tratamento.
+4. `fxQaValidar()` valida e marca ocorrências.
+5. `fxNrmAplicar()` deduplica antes da modelagem dimensional.
+
+---
+
+## 📌 Observações de Performance
+
+- O STG usa `Table.TransformColumns` para converter tipos por coluna.
+- A validação de tipo no STG registra falhas em `_STG_Ocorrencias` sem silenciar valores inválidos.
+- O QA agrega problemas em `_QA_Ocorrencias` e define `_QA_Status`.
+- A arquitetura evita passagens de dados desnecessárias, mantendo separação clara entre etapas.
+
+---
+
+## 📂 Objetos de Dados Principais
+
+- `srcClientes`, `srcProdutos`, `srcVendas` — fontes de dados.
+- `stgClientes`, `stgProdutos`, `stgVendas` — preparação de staging.
+- `trnClientes`, `trnProdutos`, `trnVendas` — transformações aplicadas.
+- `qaClientes`, `qaProdutos`, `qaVendas` — validação de qualidade.
+- `nrmClientes`, `nrmProdutos`, `nrmVendas` — normalização.
+- `dimClientes`, `dimProdutos`, `dimCalendario`, `fatoVendas` — modelo analítico final.
 
 ---
 

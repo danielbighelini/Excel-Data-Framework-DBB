@@ -1,6 +1,6 @@
 // Power Query from: Excel Data Framework DBB.xlsx
 // Pathname: c:\Users\daniel-bighelini\OneDrive\Documentos\Planilhas\Excel Data Framework DBB\Excel Data Framework DBB.xlsx
-// Extracted: 2026-08-05T17:01:11.143Z
+// Extracted: 2026-08-05T21:12:06.762Z
 
 section Section1;
 
@@ -205,9 +205,23 @@ in
     Fonte;
 shared parTabelaParametros = "tbParametros" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
 
-shared cfgVersao =
-// Versão do framework; incremente a cada alteração que quebre compatibilidade.
-"1.0.0";
+shared cfgVersaoInfo = // Versão do framework; incremente a cada alteração que quebre compatibilidade.
+let
+    Parametro =
+        (Nome as text, Padrao as any) as any =>
+            Record.FieldOrDefault(
+                cfgParametros,
+                Nome,
+                [Valor = Padrao]
+            )[Valor],
+
+    VersaoInfo =
+        [
+            VersaoFramework = Parametro("Framework_Versao", "1.0.0"),
+            DataAtualizacaoVersao = Parametro("Framework_Atualizacao", null)
+        ]
+in
+    VersaoInfo;
 
 shared cfgParametros =
 // Materializa a tabela consolidada em um Record para permitir
@@ -407,8 +421,7 @@ in
 
     TipoAlterado;
 
-shared stgObjetosExcel = 
-let
+shared stgObjetosExcel = let
 
 //--------------------------------------------------------------------------
 // Fonte
@@ -475,8 +488,7 @@ let
                 Kind = text,
                 Tipo = text,
                 Type = type,
-                Categoria = text,
-                IsStructured = logical
+                Categoria = text
             ]
 
         )
@@ -545,8 +557,7 @@ shared stgObjetosPowerQuery = let
                 Kind = nullable text,
                 Tipo = nullable text,
                 Type = nullable type,
-                Categoria = nullable text,
-                IsStructured = nullable logical
+                Categoria = nullable text
             ]
         )
 in
@@ -749,7 +760,6 @@ Fonte =
                 Tipo = text,
                 Type = type,
                 Categoria = text,
-                IsStructured = logical,
                 Columns = list,
                 ColumnCount = number
             ]            
@@ -1113,149 +1123,130 @@ shared cfgTiposDados = srcTiposDados;
 shared cfgTiposObjetos = srcTiposObjetos;
 // Mapa Kind → metadados de tipo M (Nome, Type, Categoria, IsStructured).
 shared srcTiposObjetos = [
-
         Table = [
             Kind = "Table",
             Nome = "Tabela",
             Type = type table,
-            Categoria = "Estruturado",
-            IsStructured = true
+            Categoria = "Estruturado"
         ],
 
         Record = [
             Kind = "Record",
             Nome = "Registro",
             Type = type record,
-            Categoria = "Estruturado",
-            IsStructured = true
+            Categoria = "Estruturado"
         ],
 
         List = [
             Kind = "List",
             Nome = "Lista",
             Type = type list,
-            Categoria = "Estruturado",
-            IsStructured = true
+            Categoria = "Estruturado"
         ],
 
         Function = [
             Kind = "Function",
             Nome = "Função",
             Type = type function,
-            Categoria = "Executável",
-            IsStructured = false
+            Categoria = "Executável"
         ],
 
         Action = [
             Kind = "Action",
             Nome = "Ação",
             Type = type action,
-            Categoria = "Executável",
-            IsStructured = false
+            Categoria = "Executável"
         ],
 
         Text = [
             Kind = "Text",
             Nome = "Texto",
             Type = type text,
-            Categoria = "Escalar",
-            IsStructured = false
+            Categoria = "Escalar"
         ],
 
         Logical = [
             Kind = "Logical",
             Nome = "Lógico",
             Type = type logical,
-            Categoria = "Escalar",
-            IsStructured = false
+            Categoria = "Escalar"
         ],
 
         Int64 = [
             Kind = "Int64",
             Nome = "Inteiro 64 bits",
             Type = Int64.Type,
-            Categoria = "Numérico",
-            IsStructured = false
+            Categoria = "Numérico"
         ],
 
         Number = [
             Kind = "Number",
             Nome = "Número",
             Type = type number,
-            Categoria = "Numérico",
-            IsStructured = false
+            Categoria = "Numérico"
         ],
 
         Date = [
             Kind = "Date",
             Nome = "Data",
             Type = type date,
-            Categoria = "Data e Hora",
-            IsStructured = false
+            Categoria = "Data e Hora"
         ],
 
         Time = [
             Kind = "Time",
             Nome = "Hora",
             Type = type time,
-            Categoria = "Data e Hora",
-            IsStructured = false
+            Categoria = "Data e Hora"
         ],
 
         DateTime = [
             Kind = "DateTime",
             Nome = "Data e Hora",
             Type = type datetime,
-            Categoria = "Data e Hora",
-            IsStructured = false
+            Categoria = "Data e Hora"
         ],
 
         DateTimeZone = [
             Kind = "DateTimeZone",
             Nome = "Data e Hora com Fuso",
             Type = type datetimezone,
-            Categoria = "Data e Hora",
-            IsStructured = false
+            Categoria = "Data e Hora"
         ],
 
         Duration = [
             Kind = "Duration",
             Nome = "Duração",
             Type = type duration,
-            Categoria = "Data e Hora",
-            IsStructured = false
+            Categoria = "Data e Hora"
         ],
 
         Binary = [
             Kind = "Binary",
             Nome = "Binário",
             Type = type binary,
-            Categoria = "Binário",
-            IsStructured = false
+            Categoria = "Binário"
         ],
 
         Type = [
             Kind = "Type",
             Nome = "Tipo",
             Type = type type,
-            Categoria = "Especial",
-            IsStructured = false
+            Categoria = "Especial"
         ],
 
         Null = [
             Kind = "Null",
             Nome = "Nulo",
             Type = type null,
-            Categoria = "Especial",
-            IsStructured = false
+            Categoria = "Especial"
         ],
 
         Any = [
             Kind = "Any",
             Nome = "Qualquer",
             Type = type any,
-            Categoria = "Especial",
-            IsStructured = false
+            Categoria = "Especial"
         ]
 
     ];
@@ -2183,6 +2174,23 @@ let
 in
     Resultado;
 
+shared fxTipoParaTexto = (tipo as type) as text =>
+let
+    Resultado =
+        if tipo = type any then "any"
+        else if tipo = type text then "text"
+        else if tipo = type list then "list"
+        else if tipo = Int64.Type then "int64"
+        else if tipo = type number then "number"
+        else if tipo = type date then "date"
+        else if tipo = type datetime then "datetime"
+        else if tipo = type datetimezone then "datetimezone"
+        else if tipo = type time then "time"
+        else if tipo = type duration then "duration"
+        else if tipo = type logical then "logical"
+        else "unknown"
+in
+    Resultado;
 
 shared fxConectorLocal = (Caminho as text) as table =>
 
@@ -2444,10 +2452,9 @@ in
 
 shared stgClientes = let
     Fonte = srcClientes,
-    Preparada = fxStgAplicar(Fonte, parTabelaClientes),
-    Resultado = Preparada
+    Preparada = fxStgAplicar(Fonte, parTabelaClientes)
 in
-    Resultado;
+    Preparada;
 
 shared stgProdutos = let
     Fonte = srcProdutos,
@@ -2506,6 +2513,7 @@ shared fatoVendas = let
     // Obtém os dados normalizados.
     Fonte =
         nrmVendas,
+    
     // Resolve a chave da dimensão Cliente.
     Cliente =
         Table.NestedJoin(
@@ -2522,6 +2530,7 @@ shared fatoVendas = let
             "_Cliente",
             {"IDCliente"}
         ),
+    
     // Resolve a chave da dimensão Produto.
     Produto =
         Table.NestedJoin(
@@ -2538,6 +2547,7 @@ shared fatoVendas = let
             "_Produto",
             {"IDProduto"}
         ),
+    
     // Resolve a chave da dimensão Calendário.
     Calendario =
         Table.NestedJoin(
@@ -2554,6 +2564,7 @@ shared fatoVendas = let
             "_Cal",
             {"IDData"}
         ),
+    
     // Seleciona apenas as colunas do modelo dimensional.
     Colunas =
         Table.SelectColumns(
@@ -2568,6 +2579,7 @@ shared fatoVendas = let
             },
             MissingField.Ignore
         ),
+    
     // Organiza as colunas da tabela fato.
     ColunasReordenadas =
         Table.ReorderColumns(
@@ -4995,18 +5007,16 @@ let
     Ordem =
         Pipeline[Ordem],
 
-    // Transformações apenas de tipos básicos nas colunas que realmente precisam de conversão
     ColunasTipos =
         List.Buffer(Record.FieldNames(TiposPorColuna)),
 
-    TransformacoesBasicas =
+    TransformacoesAnotadas =
         List.RemoveNulls(
             List.Transform(
                 ColunasTipos,
                 (Coluna) =>
                     let
-                        TipoDestino =
-                            Record.Field(TiposPorColuna, Coluna)
+                        TipoDestino = Record.Field(TiposPorColuna, Coluna)
                     in
                         if TipoDestino = type any then
                             null
@@ -5015,28 +5025,102 @@ let
                                 Coluna,
                                 (v) =>
                                     if v = null then
-                                        null
+                                        [Value = null, Ocorrencias = null]
                                     else
-                                        try
-                                            fxConversor(
-                                                v,
-                                                TipoDestino
-                                            )
-                                        otherwise
-                                            null,
+                                        let
+                                            Tentativa = try fxConversor(v, TipoDestino)
+                                        in
+                                            if Tentativa[HasError] then
+                                                [
+                                                    Value = v,
+                                                    Ocorrencias =
+                                                        {
+                                                            fxSchemaOcorrencia(
+                                                                "TIPO_INVALIDO",
+                                                                [
+                                                                    Coluna = Coluna,
+                                                                    Tipo = TipoDestino,
+                                                                    Operador = [Severidade = "ERRO"]
+                                                                ],
+                                                                v,
+                                                                v,
+                                                                "Valor inválido. Esperado tipo: " & fxTipoParaTexto(TipoDestino) & ".",
+                                                                [TipoEsperado = fxTipoParaTexto(TipoDestino)]
+                                                            )
+                                                        }
+                                                ]
+                                            else
+                                                [Value = Tentativa[Value], Ocorrencias = null],
+                                type any
+                            }
+            )
+        ),
+
+    Anotada =
+        if List.IsEmpty(TransformacoesAnotadas) then
+            Preparada
+        else
+            Table.TransformColumns(
+                Preparada,
+                TransformacoesAnotadas,
+                null,
+                MissingField.Ignore
+            ),
+
+    ComOcorrencias =
+        Table.AddColumn(
+            Anotada,
+            "_STG_Ocorrencias",
+            each
+                let
+                    Linha = _,
+                    OcorrenciasPorColuna =
+                        List.Transform(
+                            ColunasTipos,
+                            (Coluna) =>
+                                let
+                                    ValorColuna = Record.FieldOrDefault(Linha, Coluna, null)
+                                in
+                                    if Value.Is(ValorColuna, type record) then
+                                        Record.FieldOrDefault(ValorColuna, "Ocorrencias", null)
+                                    else
+                                        null
+                        ),
+                    Ocorrencias = List.Combine(List.RemoveNulls(OcorrenciasPorColuna))
+                in
+                    if List.IsEmpty(Ocorrencias) then
+                        null
+                    else
+                        Ocorrencias,
+            type any
+        ),
+
+    TransformacoesValores =
+        List.RemoveNulls(
+            List.Transform(
+                ColunasTipos,
+                (Coluna) =>
+                    let
+                        TipoDestino = Record.Field(TiposPorColuna, Coluna)
+                    in
+                        if TipoDestino = type any then
+                            null
+                        else
+                            {
+                                Coluna,
+                                (rec) => Record.FieldOrDefault(rec, "Value", null),
                                 TipoDestino
                             }
             )
         ),
 
-    // Aplicar tipos
     ComTipos =
-        if List.IsEmpty(TransformacoesBasicas) then
-            Preparada
+        if List.IsEmpty(TransformacoesValores) then
+            ComOcorrencias
         else
             Table.TransformColumns(
-                Preparada,
-                TransformacoesBasicas,
+                ComOcorrencias,
+                TransformacoesValores,
                 null,
                 MissingField.Ignore
             ),
@@ -5243,25 +5327,21 @@ let
 //--------------------------------------------------------------------------
 
     Categoria =
-
         if source = "Excel" then
-
             [
+                Categoria = "Excel",
+                Objetivo = null,
                 Saída = "Tabela"
             ]
-
         else
-
             Record.FieldOrDefault(
-
                 cfgCategoriasPowerQuery,
-
                 Prefixo,
-
                 [
+                    Categoria = "Qualquer",
+                    Objetivo = null,
                     Saída = "Qualquer"
                 ]
-
             ),
 
 //--------------------------------------------------------------------------
@@ -5305,7 +5385,7 @@ let
                     "A saída '#{0}' não está cadastrada em cfgTiposObjetos.",
 
                     {
-                        Categoria[Saída]
+                        Categoria[Categoria]
                     }
 
                 )
@@ -5315,19 +5395,11 @@ let
         else
 
             [
-
                 Prefix = Prefixo,
-
                 Kind = DefinicaoTipo[Kind],
-
                 Tipo = DefinicaoTipo[Nome],
-
                 Type = DefinicaoTipo[Type],
-
-                Categoria = DefinicaoTipo[Categoria],
-
-                IsStructured = DefinicaoTipo[IsStructured]
-
+                Categoria = Categoria[Categoria]
             ]
 
 in
@@ -6397,159 +6469,168 @@ let
             ValidacoesPorColuna
         ),
 
-    // Early exit se não houver validações
     Resultado =
-        if List.IsEmpty(ColunasValidacao) then
+        let
+            // Pré-compilação otimizada dos validadores
+            ValidadoresPorColuna =
+                Record.FromList(
+                    List.Transform(
+                        ColunasValidacao,
+                        (Coluna) =>
+                            fxQaCompilarValidacoesPorColuna(
+                                Record.Field(
+                                    ValidacoesPorColuna,
+                                    Coluna
+                                ),
+                                Record.FieldOrDefault(
+                                    TiposPorColuna,
+                                    Coluna,
+                                    type any
+                                ),
+                                Coluna
+                            )
+                    ),
+                    ColunasValidacao
+                ),
 
-            Table.AddColumn(
-                Tabela,
-                "_QA_Status",
-                each "OK",
-                type text
-            )
-
-        else
-
-            let
-                // Pré-compilação otimizada dos validadores
-                ValidadoresPorColuna =
+            // Cache de severidades
+            CacheSeveridades =
+                let
+                    Nomes =
+                        Record.FieldNames(
+                            cfgParametrosSeveridades
+                        )
+                in
                     Record.FromList(
                         List.Transform(
-                            ColunasValidacao,
-                            (Coluna) =>
-                                fxQaCompilarValidacoesPorColuna(
+                            Nomes,
+                            each
+                                Record.FieldOrDefault(
                                     Record.Field(
-                                        ValidacoesPorColuna,
-                                        Coluna
+                                        cfgParametrosSeveridades,
+                                        _
                                     ),
-                                    Record.FieldOrDefault(
-                                        TiposPorColuna,
-                                        Coluna,
-                                        type any
-                                    ),
-                                    Coluna
+                                    "Bloqueia",
+                                    false
                                 )
                         ),
-                        ColunasValidacao
+                        Nomes
                     ),
 
-                // Cache de severidades
-                CacheSeveridades =
-                    let
-                        Nomes =
-                            Record.FieldNames(
-                                cfgParametrosSeveridades
-                            )
-                    in
-                        Record.FromList(
-                            List.Transform(
-                                Nomes,
-                                each
-                                    Record.FieldOrDefault(
-                                        Record.Field(
-                                            cfgParametrosSeveridades,
-                                            _
-                                        ),
-                                        "Bloqueia",
-                                        false
-                                    )
-                            ),
-                            Nomes
-                        ),
+            // Única passagem pela tabela
+            TabelaComQA =
+                Table.AddColumn(
+                    Tabela,
+                    "_QA",
+                    each
+                        let
+                            Linha =
+                                _,
 
-                // Única passagem pela tabela
-                TabelaComQA =
-                    Table.AddColumn(
-                        Tabela,
-                        "_QA",
-                        each
-                            let
-                                Linha =
-                                    _,
-
-                                Ocorrencias =
-                                    List.Accumulate(
-                                        ColunasValidacao,
-                                        {},
-                                        (Estado, Coluna) =>
-                                            let
-                                                Validador =
-                                                    Record.Field(
-                                                        ValidadoresPorColuna,
-                                                        Coluna
-                                                    ),
-
-                                                Valor =
-                                                    Record.FieldOrDefault(
-                                                        Linha,
-                                                        Coluna,
-                                                        null
-                                                    ),
-
-                                                ResultadoVal =
-                                                    Validador(
-                                                        Valor
-                                                    )
-                                            in
-                                                if
-                                                    ResultadoVal = null
-                                                    or List.IsEmpty(ResultadoVal)
-                                                then
-                                                    Estado
-                                                else
-                                                    Estado & ResultadoVal
-                                    ),
-
-                                Status =
-                                    if List.IsEmpty(Ocorrencias) then
-
-                                        "OK"
-
+                            OcorrenciasIniciais =
+                                let
+                                    x =
+                                        Record.FieldOrDefault(
+                                            Linha,
+                                            "_STG_Ocorrencias",
+                                            null
+                                        )
+                                in
+                                    if x = null then
+                                        {}
                                     else
+                                        x,
 
+                            Ocorrencias =
+                                List.Accumulate(
+                                    ColunasValidacao,
+                                    OcorrenciasIniciais,
+                                    (Estado, Coluna) =>
                                         let
-                                            TemErro =
-                                                List.MatchesAny(
-                                                    Ocorrencias,
-                                                    (o) =>
-                                                        Record.FieldOrDefault(
-                                                            CacheSeveridades,
-                                                            o[Severidade],
-                                                            false
-                                                        )
+                                            Validador =
+                                                Record.Field(
+                                                    ValidadoresPorColuna,
+                                                    Coluna
+                                                ),
+
+                                            Valor =
+                                                Record.FieldOrDefault(
+                                                    Linha,
+                                                    Coluna,
+                                                    null
+                                                ),
+
+                                            ResultadoVal =
+                                                Validador(
+                                                    Valor
                                                 )
                                         in
-                                            if TemErro then
-                                                "ERRO"
+                                            if
+                                                ResultadoVal = null
+                                                or List.IsEmpty(ResultadoVal)
+                                            then
+                                                Estado
                                             else
-                                                "AVISO"
-                            in
-                                [
-                                    Status = Status,
-                                    Ocorrencias =
-                                        if List.IsEmpty(Ocorrencias) then
-                                            null
-                                        else
-                                            Ocorrencias
-                                ],
-                        type record
-                    ),
+                                                Estado & ResultadoVal
+                                ),
 
-                ResultadoFinal =
-                    Table.ExpandRecordColumn(
-                        TabelaComQA,
-                        "_QA",
-                        {
-                            "Status",
-                            "Ocorrencias"
-                        },
-                        {
-                            "_QA_Status",
-                            "_QA_Ocorrencias"
-                        }
-                    )
-            in
-                ResultadoFinal
+                            Status =
+                                if List.IsEmpty(Ocorrencias) then
+
+                                    "OK"
+
+                                else
+
+                                    let
+                                        TemErro =
+                                            List.MatchesAny(
+                                                Ocorrencias,
+                                                (o) =>
+                                                    Record.FieldOrDefault(
+                                                        CacheSeveridades,
+                                                        o[Severidade],
+                                                        false
+                                                    )
+                                            )
+                                    in
+                                        if TemErro then
+                                            "ERRO"
+                                        else
+                                            "AVISO"
+                        in
+                            [
+                                Status = Status,
+                                Ocorrencias =
+                                    if List.IsEmpty(Ocorrencias) then
+                                        null
+                                    else
+                                        Ocorrencias
+                            ],
+                    type record
+                ),
+
+            ResultadoFinal =
+                Table.ExpandRecordColumn(
+                    TabelaComQA,
+                    "_QA",
+                    {
+                        "Status",
+                        "Ocorrencias"
+                    },
+                    {
+                        "_QA_Status",
+                        "_QA_Ocorrencias"
+                    }
+                ),
+
+            ResultadoSemStgOcorrencias =
+                Table.RemoveColumns(
+                    ResultadoFinal,
+                    {"_STG_Ocorrencias"},
+                    MissingField.Ignore
+                )
+        in
+            ResultadoSemStgOcorrencias
 
 in
     Resultado;
@@ -6651,9 +6732,9 @@ in
 
 shared trnClientes = let
     Fonte = stgClientes,
-    Resultado = fxTrnAplicar(Fonte, parTabelaClientes)
+    Transformada = fxTrnAplicar(Fonte, parTabelaClientes)
 in
-    Resultado;
+    Transformada;
 
 shared qaClientes = let
     Fonte = trnClientes,
