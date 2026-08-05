@@ -34,7 +34,7 @@ Este documento descreve o Excel Data Framework DBB, com separação clara de res
 ┌─────────────────────────────────────────────────────────┐
 │  QA (Quality Assurance/Validação)                       │
 │  └─ qaClientes, qaProdutos, qaVendas                    │
-│  └─ Validações: REQUIRED, EMAIL, CPF, CNPJ, etc.        │
+│  └─ Validações: REQUIRED, EMAIL, CPFVAL, CNPJVAL, CEPVAL, etc.        │
 │  └─ Flagging de registros com erros/avisos              │
 └──────────────────────┬──────────────────────────────────┘
                        ↓
@@ -62,15 +62,17 @@ Este documento descreve o Excel Data Framework DBB, com separação clara de res
 **Função:** Preparação estrutural e normalização básica
 
 **Funções Principais:**
-- `fxStgPreparar()` - Limpeza inicial
+- `fxStgPreparar(tabela, ignorarColunas)` - Limpeza inicial
   - Remove linhas completamente vazias
-  - Normaliza nomes de colunas (trim, remover duplicatas)
+  - Normaliza nomes de colunas (trim)
   - Valida estrutura (sem nomes vazios, sem duplicidade)
+  - Mantém a tabela como source para otimizar avaliação lazy
   
-- `fxStgAplicar()` - Aplicação completa do estágio
-  - Chama `fxStgPreparar()`
-  - Aplica tipos básicos conforme schema
-  - Reordena colunas conforme pipeline
+- `fxStgAplicar(Tabela, Schema, ignorarColunas)` - Aplicação completa do estágio
+  - Chama `fxStgPreparar()` para estrutura
+  - Obtém `Pipeline = fxPipeline(Schema)`
+  - Aplica tipos básicos via `Table.TransformColumns`
+  - Reordena colunas com `Table.ReorderColumns`
 
 **Exemplo de Uso:**
 ```powerquery
@@ -83,8 +85,9 @@ in
 ```
 
 **Dados de Saída:**
-- Tabela estruturada e normalizada
-- Colunas no tipo correto (quando aplicável)
+- Tabela estruturada e validada
+- Tipos básicos aplicados conforme schema
+- Colunas ordenadas segundo o pipeline
 - Sem linhas completamente vazias
 
 ---
@@ -195,33 +198,28 @@ ProblemasCliente = fxQaExtrairProblemas(qaClientes);
 
 ### 4️⃣ NORMALIZAÇÃO (NRM)
 
-**Função:** Normalização de dados, deduplicação, enriquecimento
+**Função:** Normalização de dados e deduplicação por chave de negócio
 
 **Funções Principais:**
-- `fxNrmAplicar()` - Aplicação completa da normalização
+- `fxNrmAplicar(tabela, Schema)` - Deduplica por chaves de negócio definidas no schema
   - Filtra registros válidos (OK da QA)
-  - Remove duplicatas por domínio
-  - Resolve relacionamentos
-  - Aplica enriquecimento (customizável por schema)
-  - Aplica regras complexas de negócio
+  - Mantém a tabela intacta se não houver chaves de negócio definidas
+  - Usa `Table.Distinct(tabela, Chaves)` para remover duplicatas de domínio
 
 **Exemplo de Uso:**
 ```powerquery
 nrmClientes = let
     Fonte = qaClientes,
     Valida = fxQaFiltrarPorStatus(Fonte, "OK"),
-    Normalizada = fxNrmAplicar(Valida, "tbClientes"),
-    RegistrosUnicos = Table.Distinct(Normalizada, {"CPF"})
+    Normalizada = fxNrmAplicar(Valida, "tbClientes")
 in
-    RegistrosUnicos;
+    Normalizada;
 ```
 
 **Dados de Saída:**
-- Dados estruturados e verificados
-- Sem duplicatas (por chave de negócio)
-- Relacionamentos resolvidos
-- Enriquecido com dados externos
-- Pronto para modelo dimensional
+- Dados deduplicados segundo o schema
+- Sem reconstrução extra além da deduplicação
+- Pronto para o modelo dimensional
 
 ---
 
@@ -266,36 +264,25 @@ in
 
 ### Compilação de Tratamentos
 
-```powerquery
-shared fxNrmCompilarTratamentosPorColuna = (Operadores as list) as function =>
-    let
-        OperadoresBuffer = List.Buffer(Operadores ?? {})
-    in
-        if List.IsEmpty(OperadoresBuffer) then
-            (valor) => valor
-        else
-            (valor) =>
-                List.Accumulate(
-                    OperadoresBuffer,
-                    valor,
-                    (Estado, Operador) =>
-                        Operador[Função](
-                            Estado,
-                            Record.FieldOrDefault(Operador, "Parâmetros", null)
-                        )
-                )
-```
+`fxPipelineCompilarOperadores` resolve cada operador do schema em um registro de execução:
+- `Código` do operador
+- `Parâmetros` extraídos de `CODIGO(p1,p2)`
+- lookup em `cfgOperadores`
 
-**Resultado:** Pipeline compilado, executado uma única vez
+`fxPipelineCompilarColuna` combina:
+- operadores padrão de tratamento para o tipo da coluna (`fxOperadoresPadrao(Tipo)[Tratamentos]`)
+- operadores de tratamento definidos no schema (`Definição[Tratamentos] ?? {}`)
+
+O resultado é `TratamentosPorColuna`, um record onde cada coluna aponta para uma lista de operadores compilados.
 
 ### Compilação de Validações
 
-```powerquery
-shared fxQaCompilarValidacoesPorColuna = (Operadores as list, Tipo as type, Coluna as text) =>
-    // Retorna função que valida um valor
-    // Acumula todas as ocorrências de erro
-    // Retorna lista de problemas encontrados
-```
+`fxPipelineCompilarColuna` também monta o pipeline de validação por coluna:
+- `REQUIRED` implícito quando `Obrigatório = true`
+- validações padrão por tipo (`fxOperadoresPadrao(Tipo)[Validações]`)
+- validações declaradas no schema (`Definição[Validações] ?? {}`)
+
+O resultado é `ValidaçõesPorColuna`, um record onde cada coluna aponta para uma lista de validadores compilados.
 
 ---
 
@@ -306,8 +293,8 @@ shared fxQaCompilarValidacoesPorColuna = (Operadores as list, Tipo as type, Colu
 ```powerquery
 // tbSchema (Excel)
 Tabela      | Coluna           | Tipo    | Obrigatório | Tratamentos        | Validações
-tbClientes  | CPF              | TEXT    | SIM         | TRIM;UPPER;DIGITS  | REQUIRED;CPFVAL
-tbClientes  | Nome             | TEXT    | SIM         | TRIM;PROPER        | REQUIRED;SIZE(100)
+tbClientes  | CPF              | TEXT    | SIM         | TRIM;UPPER;DIGITS  | CPFVAL
+tbClientes  | Nome             | TEXT    | SIM         | TRIM;PROPER        | SIZE(100)
 tbClientes  | DataNascimento   | DATE    | NÃO         |                    |
 tbClientes  | Cidade           | TEXT    | NÃO         | TRIM;PROPER        |
 tbClientes  | Estado           | TEXT    | NÃO         | TRIM;UPPER         |
@@ -315,32 +302,84 @@ tbClientes  | Estado           | TEXT    | NÃO         | TRIM;UPPER         |
 
 ### Pipeline Compilado
 
+`cfgPipeline` aplica `fxPipelineCompilar` a cada tabela do schema e cria um pipeline simplificado com os campos realmente usados pelo framework.
+
+**Campos do pipeline:**
+- `Ordem`
+- `TiposPorColuna`
+- `TratamentosPorColuna`
+- `ValidaçõesPorColuna`
+- `ChavesNegocio`
+
 ```powerquery
-cfgPipeline = Record.TransformFields(
-    cfgSchema,
-    List.Transform(
-        Record.FieldNames(cfgSchema),
-        each { _, fxPipelineCompilar }
-    )
-)
+cfgPipeline[tbClientes] =
+[
+    Ordem = {"CPF","Nome","DataNascimento","Cidade","Estado"},
+    TiposPorColuna = [CPF=type text, Nome=type text, DataNascimento=type date, Cidade=type text, Estado=type text],
+    TratamentosPorColuna = [CPF={...}, Nome={...}, ...],
+    ValidaçõesPorColuna = [CPF={...}, Nome={...}, ...],
+    ChavesNegocio = {"CPF"}
+]
 ```
 
-**Resultado:**
-```
-cfgPipeline[tbClientes][TratamentosPorColuna]
-{
-    "CPF": [Operador1, Operador2, Operador3],
-    "Nome": [Operador1, Operador2],
-    ...
-}
+---
 
-cfgPipeline[tbClientes][ValidacoesPorColuna]
-{
-    "CPF": [Validador1, Validador2],
-    "Nome": [Validador1],
-    ...
-}
-```
+## 🧩 Métodos de Tratamento Disponíveis
+
+### Tratamentos básicos
+- `TRIM` → `fxTratamentoTrim`
+- `UPPER` → `fxTratamentoUpper`
+- `LOWER` → `fxTratamentoLower`
+- `PROPER` → `fxTratamentoProper`
+- `CLEAN` → `fxTratamentoClean`
+- `EMPTYTONULL` → `fxTratamentoEmptyToNull`
+- `NULLTOEMPTY` → `fxTratamentoNullToEmpty`
+- `SINGLESPACE` → `fxTratamentoSingleSpace`
+- `DIGITS` → `fxTratamentoDigits`
+- `ALPHANUMERIC` → `fxTratamentoAlphaNumeric`
+- `ABS` → `fxTratamentoAbs`
+- `ROUND` → `fxTratamentoRound`
+- `NORMALIZEBASIC` → `fxTratamentoNormalizeBasic`
+- `NUMBER` → `fxTratamentoNumber`
+- `CPF` → `fxTratamentoCPF`
+- `CNPJ` → `fxTratamentoCNPJ`
+- `CEP` → `fxTratamentoCEP`
+
+### Tratamentos de texto avançados
+- `REPLACE` → `fxTratamentoReplace`
+- `LEFT` → `fxTratamentoLeft`
+- `RIGHT` → `fxTratamentoRight`
+- `MID` → `fxTratamentoMid`
+- `BEFORE` → `fxTratamentoBefore`
+- `AFTER` → `fxTratamentoAfter`
+- `ADDPREFIX` → `fxTratamentoAddPrefix`
+- `ADDSUFFIX` → `fxTratamentoAddSuffix`
+- `REMOVEPREFIX` → `fxTratamentoRemovePrefix`
+- `REMOVESUFFIX` → `fxTratamentoRemoveSuffix`
+- `PADLEFT` → `fxTratamentoPadLeft`
+- `PADRIGHT` → `fxTratamentoPadRight`
+- `REMOVECHARS` → `fxTratamentoRemoveChars`
+- `KEEPCHARS` → `fxTratamentoKeepChars`
+- `REMOVEACCENTS` → `fxTratamentoRemoveAccents`
+- `REMOVEPUNCTUATION` → `fxTratamentoRemovePunctuation`
+- `KEEPTEXT` → `fxTratamentoKeepText`
+
+---
+
+## ✅ Métodos de Validação Disponíveis
+
+- `REQUIRED` → `fxValidacaoREQUIRED`
+- `LIST` → `fxValidacaoList`
+- `DOMAIN` → `fxValidacaoDomain`
+- `SIZE` → `fxValidacaoSize`
+- `MIN` → `fxValidacaoMin`
+- `MAX` → `fxValidacaoMax`
+- `INTERVAL` → `fxValidacaoInterval`
+- `EMAIL` → `fxValidacaoEmail`
+- `URL` → `fxValidacaoURL`
+- `CEPVAL` → `fxValidacaoCEP`
+- `CPFVAL` → `fxValidacaoCPF`
+- `CNPJVAL` → `fxValidacaoCNPJ`
 
 ---
 
@@ -352,28 +391,39 @@ cfgPipeline[tbClientes][ValidacoesPorColuna]
 ```
 STG (prepare) → STG (tipos) → TRN (transformações) → 
 QA (validações) → NRM (normalização)
-// Cada camada é uma passagem, não há reconstrução desnecessária
 ```
+- `fxStgAplicar` faz preparação estrutural e aplicação de tipos básicos em uma sequência única por tabela.
+- `fxTrnAplicar` compila funções de tratamento por coluna e aplica com `Table.TransformColumns`.
+- `fxQaValidar` cria um único campo `_QA` com status e ocorrências, expandido apenas no final.
+- `fxNrmAplicar` faz deduplicação por chaves de negócio com `Table.Distinct`.
 
 ### 2. Compilação de Operadores
 
-- Pipelines compilados uma única vez (`cfgPipeline`)
-- Execução sequencial dentro de uma célula (não múltiplos passes)
-- Acúmulo eficiente de transformações
+- `cfgSchema` deriva de `stgSchema` e agrupa definições por tabela.
+- `cfgPipeline` compila o schema em um pipeline enxuto com campos usados pelo framework.
+- `fxPipelineCompilarColuna` combina operadores padrão e schema, incluindo `REQUIRED` implícito.
+- Pipelines por coluna são pré-compilados para reduzir overhead durante a execução.
 
 ### 3. Bufferização Estratégica
 
 ```powerquery
-// Buffer apenas onde necessário
-Table.Buffer(Table.Distinct(...))  // Dedup + Cache
-List.Buffer(...)                   // Listas de operadores
+Table.Buffer(stgSchema)
+List.Buffer(...)
 ```
+- Buffer apenas em estruturas de metadados e listas de operadores.
+- Evita `Table.Buffer` em cada tabela de dados operacional, mantendo o fold quando possível.
 
-### 4. Lazy Evaluation
+### 4. QA em uma única passagem
 
-- Operações aplicadas apenas a colunas que precisam
-- Sem recálculos desnecessários
-- Validação condicional (tipo any)
+- `fxQaValidar` percorre cada linha apenas uma vez e acumula ocorrências em um registro `_QA`.
+- O status final (`OK`, `AVISO`, `ERRO`) é definido na mesma passagem.
+- `fxQaFiltrarPorStatus` remove colunas de controle após a validação.
+
+### 5. Lazy Evaluation e coluna a coluna
+
+- Cada transformação é aplicada somente às colunas presentes no schema.
+- Colunas com `type any` não recebem transformações de tipo desnecessárias.
+- O fluxo prioriza reconstrução mínima de tabelas para manter o desempenho.
 
 ---
 
