@@ -360,9 +360,10 @@ cfgPipeline[tbClientes] =
 - `ROUND` → `fxTratamentoRound`
 - `NORMALIZEBASIC` → `fxTratamentoNormalizeBasic`
 - `NUMBER` → `fxTratamentoNumber`
-- `CPF` → `fxTratamentoCPF`
-- `CNPJ` → `fxTratamentoCNPJ`
-- `CEP` → `fxTratamentoCEP`
+- `CPF` → `fxTratamentoDigits`
+- `CNPJ` → `fxTratamentoDigits`
+- `CEP` → `fxTratamentoDigits`
+- `PHONE` → `fxTratamentoDigits`
 
 ### Tratamentos de texto avançados
 - `REPLACE` → `fxTratamentoReplace`
@@ -389,7 +390,6 @@ cfgPipeline[tbClientes] =
 
 - `REQUIRED` → `fxValidacaoREQUIRED`
 - `LIST` → `fxValidacaoList`
-- `DOMAIN` → `fxValidacaoDomain`
 - `SIZE` → `fxValidacaoSize`
 - `MIN` → `fxValidacaoMin`
 - `MAX` → `fxValidacaoMax`
@@ -399,6 +399,7 @@ cfgPipeline[tbClientes] =
 - `CEPVAL` → `fxValidacaoCEP`
 - `CPFVAL` → `fxValidacaoCPF`
 - `CNPJVAL` → `fxValidacaoCNPJ`
+- `PHONEVAL` → `fxValidacaoPhone`
 
 ---
 

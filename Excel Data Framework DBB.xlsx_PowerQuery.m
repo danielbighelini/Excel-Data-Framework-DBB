@@ -1,6 +1,6 @@
 // Power Query from: Excel Data Framework DBB.xlsx
 // Pathname: c:\Users\daniel-bighelini\OneDrive\Documentos\Planilhas\Excel Data Framework DBB\Excel Data Framework DBB.xlsx
-// Extracted: 2026-08-05T21:12:06.762Z
+// Extracted: 2026-08-06T17:39:14.078Z
 
 section Section1;
 
@@ -107,23 +107,24 @@ let
         ],
         {
             // Tratamentos básicos
-            {"TRIM", "Remove espaços em branco do início e do final do texto", fxTratamentoTrim, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"UPPER", "Converte todo o texto para letras maiúsculas", fxTratamentoUpper, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"LOWER", "Converte todo o texto para letras minúsculas", fxTratamentoLower, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"PROPER", "Converte a primeira letra de cada palavra para maiúscula", fxTratamentoProper, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"CLEAN", "Remove caracteres não imprimíveis do texto", fxTratamentoClean, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"EMPTYTONULL", "Converte valores vazios ou em branco para null", fxTratamentoEmptyToNull, type any, type any, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"NULLTOEMPTY", "Converte valores nulos (null) em textos vazios", fxTratamentoNullToEmpty, type any, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"SINGLESPACE", "Substitui múltiplos espaços consecutivos por apenas um espaço", fxTratamentoSingleSpace, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"DIGITS", "Mantém apenas os dígitos numéricos do texto", fxTratamentoDigits, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"ALPHANUMERIC", "Mantém apenas letras e números, removendo símbolos e pontuações", fxTratamentoAlphaNumeric, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"ABS", "Retorna o valor absoluto (positivo) de um número", fxTratamentoAbs, type number, type number, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"ROUND", "Arredonda um número decimal para a quantidade de casas especificadas", fxTratamentoRound, type number, type number, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"TRIM", "Remove espaços em branco do início e do final do texto.", fxTratamentoTrim, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"UPPER", "Converte todo o texto para letras maiúsculas.", fxTratamentoUpper, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"LOWER", "Converte todo o texto para letras minúsculas.", fxTratamentoLower, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"PROPER", "Converte a primeira letra de cada palavra para maiúscula.", fxTratamentoProper, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"CLEAN", "Remove caracteres não imprimíveis do texto.", fxTratamentoClean, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"EMPTYTONULL", "Converte valores vazios ou em branco para null.", fxTratamentoEmptyToNull, type any, type any, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"NULLTOEMPTY", "Converte valores nulos (null) em textos vazios.", fxTratamentoNullToEmpty, type any, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"SINGLESPACE", "Substitui múltiplos espaços consecutivos por apenas um espaço.", fxTratamentoSingleSpace, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"DIGITS", "Mantém apenas os dígitos numéricos do texto.", fxTratamentoDigits, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"ALPHANUMERIC", "Mantém apenas letras e números, removendo símbolos e pontuações.", fxTratamentoAlphaNumeric, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"ABS", "Retorna o valor absoluto (positivo) de um número.", fxTratamentoAbs, type number, type number, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"ROUND", "Arredonda um número decimal para a quantidade de casas especificadas.", fxTratamentoRound, type number, type number, false, true, CategoriaTratamento, SeveridadeAviso, null},
             {"NORMALIZEBASIC", "Remove caracteres de controle, elimina espaços excedentes no início, fim e entre palavras, retornando um texto normalizado ou nulo quando vazio.", fxTratamentoNormalizeBasic, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
             {"NUMBER", "Converte textos contendo valores numéricos em um número, reconhecendo automaticamente sinais, moeda e separadores decimal e de milhar.", fxTratamentoNumber, type text, type number, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"CPF", "Formata ou extrai apenas os números para o padrão de CPF", fxTratamentoDigits, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"CNPJ", "Formata ou extrai apenas os números para o padrão de CNPJ", fxTratamentoDigits, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"CEP", "Formata ou extrai apenas os números para o padrão de CEP", fxTratamentoDigits, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"CPF", "Formata ou extrai apenas os números para o padrão de CPF.", fxTratamentoDigits, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"CNPJ", "Formata ou extrai apenas os números para o padrão de CNPJ.", fxTratamentoDigits, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"CEP", "Formata ou extrai apenas os números para o padrão de CEP.", fxTratamentoDigits, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"PHONE", "Formata ou extrai apenas os números para o padrão de telefone.", fxTratamentoDigits, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
             
             // Tratamentos avançados
             {"REPLACE", "Substitui todas as ocorrências de um texto por outro.", fxTratamentoReplace, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
@@ -134,8 +135,8 @@ let
             {"AFTER", "Extrai o texto localizado após um delimitador informado.", fxTratamentoAfter, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
             {"ADDPREFIX", "Adiciona um prefixo ao início do texto.", fxTratamentoAddPrefix, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
             {"ADDSUFFIX", "Adiciona um sufixo ao final do texto.", fxTratamentoAddSuffix, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"REMOVEPREFIX", "Remove o primeiro prefixo encontrado no início do texto. Aceita um único prefixo ou uma lista de prefixos e preserva o restante do conteúdo.", fxTratamentoRemovePrefix, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"REMOVESUFFIX", "Remove o primeiro sufixo encontrado no final do texto. Aceita um único sufixo ou uma lista de sufixos e preserva o restante do conteúdo.", fxTratamentoRemoveSuffix, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"REMOVEPREFIX", "Remove o primeiro prefixo encontrado no início do texto.", fxTratamentoRemovePrefix, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"REMOVESUFFIX", "Remove o primeiro sufixo encontrado no final do texto.", fxTratamentoRemoveSuffix, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
             {"PADLEFT", "Completa o texto à esquerda até atingir o comprimento especificado.", fxTratamentoPadLeft, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
             {"PADRIGHT", "Completa o texto à direita até atingir o comprimento especificado.", fxTratamentoPadRight, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
             {"REMOVECHARS", "Remove todos os caracteres pertencentes a uma lista informada.", fxTratamentoRemoveChars, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
@@ -145,18 +146,18 @@ let
             {"KEEPTEXT", "Mantém apenas caracteres e espaços do texto.", fxTratamentoKeepText, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
 
             // Validações
-            {"REQUIRED", "Valida se um campo obrigatório foi preenchido", fxValidacaoREQUIRED, type any, type any, true, true, CategoriaValidacao, SeveridadeErro, null},
-            {"CPFVAL", "Valida se o número de CPF informado é matematicamente válido", fxValidacaoCPF, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"CNPJVAL", "Valida se o número de CNPJ informado é matematicamente válido", fxValidacaoCNPJ, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"CEPVAL", "Valida se o formato do CEP informado está correto", fxValidacaoCEP, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"EMAIL", "Valida se a estrutura do endereço de e-mail está correta", fxValidacaoEmail, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"URL", "Valida se a estrutura do endereço web (URL) está correta", fxValidacaoURL, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"LIST", "Valida se o valor pertence a uma lista de opções permitidas", fxValidacaoList, type any, type any, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"DOMAIN", "Valida se o domínio de rede ou e-mail é válido", fxValidacaoDomain, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"SIZE", "Valida se o tamanho ou comprimento do dado está dentro do limite", fxValidacaoSize, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"MIN", "Valida se o valor é maior ou igual ao limite mínimo permitido", fxValidacaoMin, type any, type any, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"MAX", "Valida se o valor é menor ou igual ao limite máximo permitido", fxValidacaoMax, type any, type any, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"INTERVAL", "Valida se o valor está dentro de um intervalo numérico ou temporal específico", fxValidacaoInterval, type any, type any, false, true, CategoriaValidacao, SeveridadeErro, null}
+            {"REQUIRED", "Valida se um campo obrigatório foi preenchido.", fxValidacaoREQUIRED, type any, type any, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"CPFVAL", "Valida se o número de CPF informado é matematicamente válido.", fxValidacaoCPF, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"CNPJVAL", "Valida se o número de CNPJ informado é matematicamente válido.", fxValidacaoCNPJ, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"CEPVAL", "Valida se o formato do CEP informado está correto.", fxValidacaoCEP, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"PHONEVAL", "Valida se o valor possui um formato válido de telefone brasileiro (fixo ou celular), aceitando números com ou sem máscara e com ou sem código do país (+55).", fxValidacaoPhone, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"EMAIL", "Valida se a estrutura do endereço de e-mail está correta.", fxValidacaoEmail, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"URL", "Valida se a estrutura do endereço web (URL) está correta.", fxValidacaoURL, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"LIST", "Valida se o valor pertence a uma lista de opções permitidas.", fxValidacaoList, type any, type any, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"SIZE", "Valida se o tamanho ou comprimento do dado está dentro do limite.", fxValidacaoSize, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"MIN", "Valida se o valor é maior ou igual ao limite mínimo permitido.", fxValidacaoMin, type any, type any, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"MAX", "Valida se o valor é menor ou igual ao limite máximo permitido.", fxValidacaoMax, type any, type any, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"INTERVAL", "Valida se o valor está dentro de um intervalo numérico ou temporal específico.", fxValidacaoInterval, type any, type any, false, true, CategoriaValidacao, SeveridadeErro, null}
         }
     )
 in
@@ -1635,7 +1636,7 @@ shared stgParametrosCalendario = let
         Table.TransformColumnTypes(
             Fonte,
             {
-                {"Nome da Coluna", type text},
+                {"Coluna", type text},
                 {"Código", type text},
                 {"Ordem", Int64.Type},
                 {"Ativo", type logical}
@@ -1646,7 +1647,7 @@ shared stgParametrosCalendario = let
         Table.TransformColumns(
             Tipos,
             {
-                {"Nome da Coluna", each Text.Trim(_), type text},
+                {"Coluna", each Text.Trim(_), type text},
                 {"Código", each Text.Upper(Text.Trim(_)), type text}
             }
         ),
@@ -1663,8 +1664,8 @@ shared stgParametrosCalendario = let
             each
                 [Código] <> null and
                 [Código] <> "" and
-                [Nome da Coluna] <> null and
-                [Nome da Coluna] <> ""
+                [Coluna] <> null and
+                [Coluna] <> ""
         ),
 
     RemoverDuplicados =
@@ -1678,7 +1679,7 @@ shared stgParametrosCalendario = let
             RemoverDuplicados,
             {
                 {"Ordem", Order.Ascending},
-                {"Nome da Coluna", Order.Ascending}
+                {"Coluna", Order.Ascending}
             }
         ),
 
@@ -2081,42 +2082,26 @@ let
 in
     if Resultado = null then null 
     else List.Buffer(List.Distinct(Resultado));
-shared fxParseBooleano = (valor as any, optional culture as nullable text) as nullable logical =>
-
+shared fxParseBooleano = // Converte representações textuais (SIM/NÃO/TRUE/FALSE/1/0) em logical via cfgTiposBooleanos.
+(valor as any, optional culture as nullable text) as nullable logical =>
 let
-    // Converte representações textuais (SIM/NÃO/TRUE/FALSE/1/0) em logical via cfgTiposBooleanos.
     Culture = culture ?? parCulturaBootstrap,
-
-    Nome = 
+    Nome =
         if valor = null then null
-        else
-            Text.Upper(
-                Text.Trim(
-                    Text.From(valor, Culture)
-                )
-            )
+        else Text.Upper(Text.Trim(Text.From(valor, Culture))),
+    Sentinela = "__##NAO_ENCONTRADO##__",
+    Achado = if Nome = null then null
+             else Record.FieldOrDefault(cfgTiposBooleanos, Nome, Sentinela)
 in
     if Nome = null then null
-    else if Record.HasFields(cfgTiposBooleanos, Nome) then
-        Record.Field(cfgTiposBooleanos, Nome)
-    else
-        error Error.Record(
-            "Valor lógico inválido",
-            Text.Format(
-                "O valor '#{0}' não é uma representação válida de lógico.",
-                {valor}
-            ),
-            [
-                Valor = valor,
-                ValoresPermitidos =
-                    Text.Combine(
-                        List.Sort(
-                            Record.FieldNames(cfgTiposBooleanos)
-                        ),
-                        ", "
-                    )
-            ]
-        );
+    else if Achado <> Sentinela then Achado
+    else error Error.Record(
+        "Valor lógico inválido",
+        Text.Format("O valor '#{0}' não é uma representação válida de lógico.", {valor}),
+        [Valor = valor,
+         ValoresPermitidos = Text.Combine(List.Sort(Record.FieldNames(cfgTiposBooleanos)), ", ")]
+    )
+;
 shared fxOrigemComoTabela = (Valor as any) as table =>
 // Normaliza qualquer valor (table, record, list, scalar) em tabela de uma coluna.
 let
@@ -2398,7 +2383,7 @@ shared diagConsultasPQ = let
 //--------------------------------------------------------------------------
 
     Objetos =
-        Table.SelectColumns(stgObjetosPowerQuery, {"Nome", "Categoria", "Tipo"}),
+        Table.SelectColumns(stgObjetosPowerQuery, {"Nome", "Categoria"}),
 
 //--------------------------------------------------------------------------
 // Resultado
@@ -3587,8 +3572,7 @@ let
 in
     cfgIntervalos;
 
-shared cfgCalendarioAtributos = 
-// Lido uma vez; capturado nas closures de todos os atributos fiscais.
+shared cfgCalendarioAtributos = // Lido uma vez; capturado nas closures de todos os atributos fiscais.
 let
     InicioFiscal = fxParametro("Calendario_Inicio_Fiscal", 1),
 
@@ -3843,7 +3827,7 @@ let
             List.Transform(
                 Table.ToRecords(Expandido),
                 each [
-                    Nome = [Nome da Coluna],
+                    Nome = [Coluna],
                     Ordem = [Ordem],
                     Tipo = [Tipo],
                     Categoria = [Categoria],
@@ -4252,36 +4236,6 @@ shared fxValidacaoList = (
 as record =>
 
 let
-    Lista = if parametros = null then {} else parametros,
-
-    Valido =
-        if valor = null then true
-        else List.Contains(Lista, Text.From(valor)),
-
-    Ocorrencias =
-        if Valido then null
-        else
-            {
-                fxSchemaOcorrencia(
-                    "LIST",
-                    contexto,
-                    valor,
-                    valor,
-                    "Valor não pertence à lista permitida.",
-                    [Permitidos = Lista]
-                )
-            }
-
-in
-    [Valor = valor, Ocorrencias = Ocorrencias];
-shared fxValidacaoDomain = (
-    valor as any,
-    optional parametros as nullable list,
-    optional contexto as nullable record
-)
-as record =>
-
-let
     Dominio =
         if parametros = null then {}
         else List.Transform(
@@ -4302,17 +4256,18 @@ let
         else
             {
                 fxSchemaOcorrencia(
-                    "DOMAIN",
+                    "LIST",
                     contexto,
                     valor,
                     valor,
-                    "Valor fora do domínio permitido.",
+                    "Valor não pertence à lista permitida.",
                     [Permitidos = parametros]
                 )
             }
 
 in
-    [Valor = valor, Ocorrencias = Ocorrencias];
+    [Valor = valor, Ocorrencias = Ocorrencias]
+;
 shared fxValidacaoSize = (
     valor as any,
     optional parametros as nullable list,
@@ -4586,7 +4541,7 @@ let
                 else
                     {
                         fxSchemaOcorrencia(
-                            "CEP",
+                            "CEPVAL",
                             contexto,
                             valor,
                             valor,
@@ -4666,7 +4621,7 @@ let
         else
             {
                 fxSchemaOcorrencia(
-                    "CPF",
+                    "CPFVAL",
                     contexto,
                     valor,
                     valor,
@@ -4757,7 +4712,7 @@ let
         else
             {
                 fxSchemaOcorrencia(
-                    "CNPJ",
+                    "CNPJVAL",
                     contexto,
                     valor,
                     valor,
@@ -5016,7 +4971,8 @@ let
                 ColunasTipos,
                 (Coluna) =>
                     let
-                        TipoDestino = Record.Field(TiposPorColuna, Coluna)
+                        TipoDestino = Record.Field(TiposPorColuna, Coluna),
+                        ConversorCol = (v) => fxConversor(v, TipoDestino, parCulturaBootstrap)
                     in
                         if TipoDestino = type any then
                             null
@@ -5028,7 +4984,7 @@ let
                                         [Value = null, Ocorrencias = null]
                                     else
                                         let
-                                            Tentativa = try fxConversor(v, TipoDestino)
+                                            Tentativa = try ConversorCol(v)
                                         in
                                             if Tentativa[HasError] then
                                                 [
@@ -5348,25 +5304,7 @@ let
 // Definição do tipo
 //--------------------------------------------------------------------------
 
-    DefinicaoTipo =
-
-        List.First(
-
-            List.Select(
-
-                Record.FieldValues(
-
-                    cfgTiposObjetos
-
-                ),
-
-                each [Nome] = Categoria[Saída]
-
-            ),
-
-            null
-
-        ),
+    DefinicaoTipo = Record.FieldOrDefault(cfgTiposObjetosPorNome, Categoria[Saída], null),
 
 //--------------------------------------------------------------------------
 // Resultado
@@ -5575,6 +5513,11 @@ let
 in
     Resultado;
 
+shared cfgOperadoresTratamentoPadraoMap = Record.FromList(
+    List.Transform(cfgOperadoresTratamentoPadrao, each [Operadores]),
+    List.Transform(cfgOperadoresTratamentoPadrao, each fxTipoParaTexto([Tipo]))
+);
+
 shared cfgOperadoresValidacaoPadrao = let
 
     Fonte =
@@ -5634,9 +5577,12 @@ shared cfgOperadoresValidacaoPadrao = let
             )
         )
 in
-    Resultado
+    Resultado;
 
-;
+shared cfgOperadoresValidacaoPadraoMap = Record.FromList(
+    List.Transform(cfgOperadoresValidacaoPadrao, each [Operadores]),
+    List.Transform(cfgOperadoresValidacaoPadrao, each fxTipoParaTexto([Tipo]))
+);
 
 shared cfgSchema = 
 // Record {Tabela → {Coluna → definição}} derivado de stgSchema; base de cfgPipeline.
@@ -5860,8 +5806,7 @@ in
         Parâmetros = Parametros
     ];
 
-shared fxPipelineCompilarOperadores = 
-// Resolve lista de strings de operadores (ex: ["TRIM","UPPER"]) em lista de operadores compilados prontos para execução.
+shared fxPipelineCompilarOperadores = // Resolve lista de strings de operadores (ex: ["TRIM","UPPER"]) em lista de operadores compilados prontos para execução.
 (
     Operadores as nullable list
 )
@@ -5965,8 +5910,7 @@ in
 
     Resultado;
 
-shared fxPipelineCompilarColuna = 
-// Compila os operadores de uma coluna mesclando padrões do tipo + definições do schema + REQUIRED implícito.
+shared fxPipelineCompilarColuna = // Compila os operadores de uma coluna mesclando padrões do tipo + definições do schema + REQUIRED implícito.
 (
     Definicao as record
 )
@@ -6086,11 +6030,9 @@ let
 
 in
 
-    Resultado
-;
+    Resultado;
 
-shared fxPipelineCompilar = 
-// Compila o schema completo de uma tabela em pipeline executável.
+shared fxPipelineCompilar = // Compila o schema completo de uma tabela em pipeline executável.
 (
     Schema as record
 )
@@ -6098,164 +6040,176 @@ as record =>
 
 let
 
-//--------------------------------------------------------------------------
-// Colunas e ordem
-//--------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
+    // Colunas e ordem (bufferizadas — usadas em várias etapas)
+    //--------------------------------------------------------------------------
 
     Colunas =
-        Record.FieldNames(
-            Schema
+        List.Buffer(
+            Record.FieldNames(Schema)
         ),
 
-    Ordem =
-        Colunas,
+    Ordem = Colunas,
 
-//--------------------------------------------------------------------------
-// Tipos por coluna
-//--------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
+    // REQUIRED bufferizado — evita reconstrução do record a cada coluna obrigatória
+    //--------------------------------------------------------------------------
+
+    OperadorRequired =
+        Record.Combine(
+            {
+                cfgOperadores[REQUIRED],
+                [Parâmetros = null]
+            }
+        ),
+
+    //--------------------------------------------------------------------------
+    // Cache de operadores padrão POR TIPO
+    // ------------------------------------------------------------------------
+    // fxOperadoresPadrao faz List.Select sobre as tabelas de configuração.
+    // Como muitas colunas compartilham o mesmo Tipo (ex.: vários "type text"),
+    // memorizamos o resultado por chave textual do tipo. Assim, dentro de uma
+    // única compilação de tabela, cada tipo distinto resolve os padrões só 1x.
+    //--------------------------------------------------------------------------
+
+    TiposDistintos =
+        List.Buffer(
+            List.Distinct(
+                List.Transform(
+                    Colunas,
+                    each Record.Field(Record.Field(Schema, _), "Tipo")
+                ),
+                // comparador por representação textual do tipo
+                (t) => fxTipoParaTexto(t)
+            )
+        ),
+
+    PadroesPorChaveTipo =
+        Record.FromList(
+            List.Transform(
+                TiposDistintos,
+                each fxOperadoresPadrao(_)
+            ),
+            List.Transform(
+                TiposDistintos,
+                each fxTipoParaTexto(_)
+            )
+        ),
+
+    ObterPadroes =
+        (Tipo as type) as record =>
+            Record.Field(
+                PadroesPorChaveTipo,
+                fxTipoParaTexto(Tipo)
+            ),
+
+    //--------------------------------------------------------------------------
+    // PASSAGEM ÚNICA
+    // ------------------------------------------------------------------------
+    // Para cada coluna extraímos a Definicao UMA vez e computamos, de uma só
+    // varredura, todos os artefatos necessários. O resultado é uma lista de
+    // records intermediários que depois é "fatiada" nos records de saída.
+    //--------------------------------------------------------------------------
+
+    Compilado =
+        List.Transform(
+            Colunas,
+            (Coluna) =>
+                let
+                    Definicao = Record.Field(Schema, Coluna),
+                    Tipo      = Definicao[Tipo],
+                    Padroes   = ObterPadroes(Tipo),
+
+                    Tratamentos =
+                        fxPipelineCompilarOperadores(
+                            List.Combine(
+                                {
+                                    Padroes[Tratamentos],
+                                    Definicao[Tratamentos] ?? {}
+                                }
+                            )
+                        ),
+
+                    ValidacoesBase =
+                        fxPipelineCompilarOperadores(
+                            List.Combine(
+                                {
+                                    Padroes[Validações],
+                                    Definicao[Validações] ?? {}
+                                }
+                            )
+                        ) ?? {},
+
+                    Required =
+                        if Definicao[Obrigatório] and OperadorRequired[Padrão] then
+                            {OperadorRequired}
+                        else
+                            {},
+
+                    Validacoes =
+                        List.Combine({Required, ValidacoesBase}),
+
+                    EhChave =
+                        Record.FieldOrDefault(Definicao, "Chave", null) = true
+                in
+                    [
+                        Coluna       = Coluna,
+                        Tipo         = Tipo,
+                        Tratamentos  = if List.IsEmpty(Tratamentos) then null else Tratamentos,
+                        Validacoes   = if List.IsEmpty(Validacoes)  then null else Validacoes,
+                        Chave        = EhChave
+                    ]
+        ),
+
+    CompiladoBuffer = List.Buffer(Compilado),
+
+    //--------------------------------------------------------------------------
+    // Distribuição dos resultados nos records de saída
+    //--------------------------------------------------------------------------
 
     TiposPorColuna =
         Record.FromList(
-            List.Transform(
-                Colunas,
-                each Record.Field(Record.Field(Schema, _), "Tipo")
-            ),
-            Colunas
+            List.Transform(CompiladoBuffer, each [Tipo]),
+            List.Transform(CompiladoBuffer, each [Coluna])
         ),
 
-//--------------------------------------------------------------------------
-// Tratamentos por coluna
-//--------------------------------------------------------------------------
-
-    Tratamentos =
-        List.RemoveNulls(
-            List.Transform(
-                Colunas,
-                each
-                    let
-                        Definicao =
-                            Record.Field(Schema, _),
-                        Operadores =
-                            fxPipelineCompilarOperadores(
-                                List.Combine(
-                                    {
-                                        fxOperadoresPadrao(Definicao[Tipo])[Tratamentos],
-                                        Definicao[Tratamentos] ?? {}
-                                    }
-                                )
-                            )
-                    in
-                        if List.IsEmpty(Operadores) then
-                            null
-                        else
-                            [
-                                Coluna = _,
-                                Operadores = Operadores
-                            ]
-            )
-        ),
+    ComTratamentos =
+        List.Select(CompiladoBuffer, each [Tratamentos] <> null),
 
     TratamentosPorColuna =
         Record.FromList(
-            List.Transform(
-                Tratamentos,
-                each [Operadores]
-            ),
-            List.Transform(
-                Tratamentos,
-                each [Coluna]
-            )
+            List.Transform(ComTratamentos, each [Tratamentos]),
+            List.Transform(ComTratamentos, each [Coluna])
         ),
 
-//--------------------------------------------------------------------------
-// Validações por coluna
-//--------------------------------------------------------------------------
-
-    Validacoes =
-        List.RemoveNulls(
-            List.Transform(
-                Colunas,
-                each
-                    let
-                        Definicao =
-                            Record.Field(Schema, _),
-                        Required =
-                            if Definicao[Obrigatório] then
-                                {
-                                    Record.Combine(
-                                        {
-                                            cfgOperadores[REQUIRED],
-                                            [Parâmetros = null]
-                                        }
-                                    )
-                                }
-                            else
-                                {},
-                        Operadores =
-                            List.Combine(
-                                {
-                                    Required,
-                                    fxPipelineCompilarOperadores(
-                                        List.Combine(
-                                            {
-                                                fxOperadoresPadrao(Definicao[Tipo])[Validações],
-                                                Definicao[Validações] ?? {}
-                                            }
-                                        )
-                                    ) ?? {}
-                                }
-                            )
-                    in
-                        if List.IsEmpty(Operadores) then
-                            null
-                        else
-                            [
-                                Coluna = _,
-                                Operadores = Operadores
-                            ]
-            )
-        ),
+    ComValidacoes =
+        List.Select(CompiladoBuffer, each [Validacoes] <> null),
 
     ValidacoesPorColuna =
         Record.FromList(
+            List.Transform(ComValidacoes, each [Validacoes]),
+            List.Transform(ComValidacoes, each [Coluna])
+        ),
+
+    ChavesNegocio =
+        List.Buffer(
             List.Transform(
-                Validacoes,
-                each [Operadores]
-            ),
-            List.Transform(
-                Validacoes,
+                List.Select(CompiladoBuffer, each [Chave]),
                 each [Coluna]
             )
         ),
 
-//--------------------------------------------------------------------------
-// Chaves de negócio
-//--------------------------------------------------------------------------
-
-    ChavesNegocio =
-        List.Buffer(
-            List.Select(
-                Colunas,
-                each
-                    Record.FieldOrDefault(
-                        Record.Field(Schema, _),
-                        "Chave",
-                        null
-                    ) = true
-            )
-        ),
-
-//--------------------------------------------------------------------------
-// Resultado
-//--------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
+    // Resultado (contrato idêntico ao original)
+    //--------------------------------------------------------------------------
 
     Resultado =
         [
-            Ordem = Ordem,
-            TiposPorColuna = TiposPorColuna,
+            Ordem                = Ordem,
+            TiposPorColuna       = TiposPorColuna,
             TratamentosPorColuna = TratamentosPorColuna,
-            ValidaçõesPorColuna = ValidacoesPorColuna,
-            ChavesNegocio = ChavesNegocio
+            ValidaçõesPorColuna  = ValidacoesPorColuna,
+            ChavesNegocio        = ChavesNegocio
         ]
 
 in
@@ -6874,7 +6828,7 @@ let
 in
     _QA_OcorrenciasComMensagem;
 
-shared tstClientes1M_ComFramework = let
+shared tstClientes_ComFramework = let
     Schema = "tstClientes1M",
     Fonte = stgDados,
 
@@ -7112,61 +7066,17 @@ shared fxTratamentoRemovePunctuation = (valor as any, optional parametros as nul
         Text.Remove(Text.From(valor), ".,;:!?()[]{}<>/\|-_""'");
 
 shared fxTratamentoKeepText = (valor as any, optional parametros as nullable any) as any =>
+    if valor = null then null
+    else Text.Select(Text.From(valor), srcKeepTextChars);
+
+shared fxOperadoresPadrao = // Retorna {Tratamentos, Validações} padrão para o tipo de dado informado.
+(Tipo as type) as record =>
 let
-    CaracteresPermitidos =
-        List.Distinct(
-            Text.ToList(
-                "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 "
-            ) &
-            List.Transform(srcMapaAcentos, each _{0})
-        )
+    Chave = fxTipoParaTexto(Tipo)
 in
-    if valor = null then
-        null
-    else
-        Text.Select(
-            Text.From(valor),
-            CaracteresPermitidos
-        );
-
-shared fxOperadoresPadrao = 
-// Retorna {Tratamentos, Validações} padrão para o tipo de dado informado.
-(
-    Tipo as type
-)
-as record =>
-
-let
-
-    Tratamentos =
-        List.First(
-            List.Select(
-                cfgOperadoresTratamentoPadrao,
-                each Value.Equals([Tipo], Tipo)
-            ),
-            [
-                Tipo = Tipo,
-                Operadores = {}
-            ]
-        )[Operadores],
-
-    Validações =
-        List.First(
-            List.Select(
-                cfgOperadoresValidacaoPadrao,
-                each Value.Equals([Tipo], Tipo)
-            ),
-            [
-                Tipo = Tipo,
-                Operadores = {}
-            ]
-        )[Operadores]
-
-in
-
     [
-        Tratamentos = Tratamentos,
-        Validações = Validações
+        Tratamentos = Record.FieldOrDefault(cfgOperadoresTratamentoPadraoMap, Chave, {}),
+        Validações  = Record.FieldOrDefault(cfgOperadoresValidacaoPadraoMap,  Chave, {})
     ];
 
 shared fxTratamentoNumber = 
@@ -7367,7 +7277,7 @@ let
 in
     Resultado;
 
-shared tstClientes1M_SemFramework = let
+shared tstClientes_SemFramework = let
     Fonte = stgDados,
 
     // Tratamentos
@@ -7676,3 +7586,83 @@ let
             )
 in
     Resultado;
+
+shared cfgTiposObjetosPorNome = let
+    Vals = Record.FieldValues(cfgTiposObjetos)
+in
+    Record.FromList(Vals, List.Transform(Vals, each [Nome]));
+
+shared srcKeepTextChars = List.Buffer(
+    List.Distinct(
+        Text.ToList("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ")
+        & List.Transform(srcMapaAcentos, each _{0})
+    )
+);
+
+shared fxValidacaoPhone = (
+    valor as any,
+    optional parametros as nullable list,
+    optional contexto as nullable record
+)
+as record =>
+
+let
+    Digitos =
+        if valor = null then
+            null
+        else
+            Text.Select(
+                Text.From(valor),
+                {"0".."9"}
+            ),
+
+    Numero =
+        if Digitos = null then
+            null
+        else if List.Contains({12, 13}, Text.Length(Digitos)) and Text.StartsWith(Digitos, "55") then
+            Text.Range(Digitos, 2)
+        else
+            Digitos,
+
+    Tamanho =
+        if Numero = null then
+            null
+        else
+            Text.Length(Numero),
+
+    PrimeiroDigito =
+        if Numero = null then
+            null
+        else
+            Text.At(Numero, 2),
+
+    Valido =
+        if valor = null then
+            true
+        else if Tamanho = 10 then
+            List.Contains({"2", "3", "4", "5"}, PrimeiroDigito)
+        else if Tamanho = 11 then
+            PrimeiroDigito = "9"
+        else
+            false,
+
+    Ocorrencias =
+        if Valido then
+            null
+        else
+            {
+                fxSchemaOcorrencia(
+                    "PHONEVAL",
+                    contexto,
+                    valor,
+                    valor,
+                    "Telefone inválido.",
+                    []
+                )
+            }
+
+in
+    [
+        Valor = valor,
+        Ocorrencias = Ocorrencias
+    ];
