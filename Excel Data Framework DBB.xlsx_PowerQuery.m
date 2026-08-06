@@ -1,6 +1,6 @@
 // Power Query from: Excel Data Framework DBB.xlsx
 // Pathname: c:\Users\daniel-bighelini\OneDrive\Documentos\Planilhas\Excel Data Framework DBB\Excel Data Framework DBB.xlsx
-// Extracted: 2026-08-06T17:39:14.078Z
+// Extracted: 2026-08-06T18:01:02.940Z
 
 section Section1;
 
@@ -155,9 +155,9 @@ let
             {"URL", "Valida se a estrutura do endereço web (URL) está correta.", fxValidacaoURL, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
             {"LIST", "Valida se o valor pertence a uma lista de opções permitidas.", fxValidacaoList, type any, type any, false, true, CategoriaValidacao, SeveridadeErro, null},
             {"SIZE", "Valida se o tamanho ou comprimento do dado está dentro do limite.", fxValidacaoSize, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"MIN", "Valida se o valor é maior ou igual ao limite mínimo permitido.", fxValidacaoMin, type any, type any, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"MAX", "Valida se o valor é menor ou igual ao limite máximo permitido.", fxValidacaoMax, type any, type any, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"INTERVAL", "Valida se o valor está dentro de um intervalo numérico ou temporal específico.", fxValidacaoInterval, type any, type any, false, true, CategoriaValidacao, SeveridadeErro, null}
+            {"MIN", "Valida se o valor é maior ou igual ao limite mínimo permitido.", fxValidacaoMin, type number, type number, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"MAX", "Valida se o valor é menor ou igual ao limite máximo permitido.", fxValidacaoMax, type number, type number, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"INTERVAL", "Valida se o valor está dentro de um intervalo numérico ou temporal específico.", fxValidacaoInterval, type number, type number, false, true, CategoriaValidacao, SeveridadeErro, null}
         }
     )
 in
