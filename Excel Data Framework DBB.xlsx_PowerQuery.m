@@ -1,6 +1,6 @@
 // Power Query from: Excel Data Framework DBB.xlsx
 // Pathname: c:\Users\daniel-bighelini\OneDrive\Documentos\Planilhas\Excel Data Framework DBB\Excel Data Framework DBB.xlsx
-// Extracted: 2026-08-07T02:53:22.131Z
+// Extracted: 2026-08-07T12:36:57.472Z
 
 section Section1;
 
@@ -203,10 +203,6 @@ in
     Fonte;
 shared srcVendas = let
     Fonte = srcWorkbook{[Name=parTabelaVendas]}[Content]
-in
-    Fonte;
-shared srcDadosGenericos = let
-    Fonte = srcWorkbook{[Name=parTabelaDadosGenericos]}[Content]
 in
     Fonte;
 shared parTabelaParametros = "tbParametros" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
@@ -2138,65 +2134,6 @@ in
     Resultado
 ;
 
-shared stgDados = let
-    Fonte =
-        fxOrigem(),
-
-    Tabela =
-        if
-            Value.Is(Fonte, type table)
-            and Table.HasColumns(Fonte, "Dados")
-            and not Table.IsEmpty(Fonte)
-            and Value.Is(Fonte{0}[Dados], type table)
-        then
-            Table.Combine(Fonte[Dados])
-        else
-            fxOrigemComoTabela(Fonte),
-
-    // Remove linhas completamente vazias.
-    LinhasValidas =
-        Table.SelectRows(
-            Tabela,
-            each
-                List.NonNullCount(
-                    Record.FieldValues(_)
-                ) > 0
-        ),
-
-    // Remove colunas que não serão utilizadas.
-    ColunasRemovidas =
-        LinhasValidas,
-
-    // Renomeia colunas para o padrão do projeto.
-    ColunasRenomeadas =
-        ColunasRemovidas,
-
-    // Garante a existência de colunas opcionais.
-    ColunasGarantidas =
-        ColunasRenomeadas,
-
-    // Define os tipos de dados.
-    Tipos =
-        ColunasGarantidas,
-
-    // Limpa espaços excedentes em colunas de texto.
-    TextosPadronizados =
-        Tipos,
-
-    // Remove registros duplicados quando aplicável.
-    RegistrosUnicos =
-        TextosPadronizados,
-
-    // Reordena as colunas para facilitar a leitura.
-    ColunasReordenadas =
-        RegistrosUnicos,
-
-    Resultado =
-        ColunasReordenadas
-
-in
-    Resultado;
-
 shared cfgTiposBooleanos = srcTiposBooleanos;
 shared srcTiposBooleanos =
 // Mapa string → logical; aceita representações em pt-BR e en-US.
@@ -2630,9 +2567,10 @@ in
 
 shared nrmClientes = let
     Fonte = qaClientes,
-    Valida = fxQaFiltrarPorStatus(Fonte, "OK")
+    Validada = fxQaFiltrarPorStatus(Fonte, "OK"),
+    Normalizada = fxNrmAplicar(Validada, parTabelaClientes)
 in
-    fxNrmAplicar(Valida, parTabelaClientes);
+    Normalizada;
 
 shared dimClientes = let
     Fonte =
@@ -3600,6 +3538,37 @@ shared srcArquivos = let
 in
     Resultado;
 
+shared srcDados = let
+    Fonte =
+        fxOrigem(),
+
+    Tabela =
+        if
+            Value.Is(Fonte, type table)
+            and Table.HasColumns(Fonte, "Dados")
+            and not Table.IsEmpty(Fonte)
+            and Value.Is(Fonte{0}[Dados], type table)
+        then
+            Table.Combine(Fonte[Dados])
+        else
+            fxOrigemComoTabela(Fonte),
+
+    // Remove linhas completamente vazias.
+    LinhasValidas =
+        Table.SelectRows(
+            Tabela,
+            each
+                List.NonNullCount(
+                    Record.FieldValues(_)
+                ) > 0
+        ),
+
+    Resultado =
+        LinhasValidas
+
+in
+    Resultado;
+
 shared cfgFormatosArquivos = let
     Fonte =
         stgParametrosFormatosArquivos,
@@ -4220,30 +4189,35 @@ shared parTabelaParametrosSeveridades = "tbParametrosSeveridades" meta [IsParame
 shared parTabelaParametrosCalendario = "tbParametrosCalendario" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
 
 shared parTabelaParametrosFeriados = "tbParametrosFeriados" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
+
+shared parTabelaCategoriasConsultasPQ = "tbSobreCategoriasConsultasPQ" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
 shared parTabelaSchema = "tbSchema" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
 shared parTabelaClientes = "tbClientes" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
 shared parTabelaProdutos = "tbProdutos" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
 shared parTabelaVendas = "tbVendas" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
-shared parTabelaDadosGenericos = "tbDadosGenericos" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
 
 shared nrmProdutos = let
     Fonte = qaProdutos,
-    Valida = fxQaFiltrarPorStatus(Fonte, "OK")
+    Validada = fxQaFiltrarPorStatus(Fonte, "OK"),
+    Normalizada = fxNrmAplicar(Validada, parTabelaProdutos)
 in
-    fxNrmAplicar(Valida, parTabelaProdutos);
+    Normalizada;
 
 shared nrmVendas = let
     Fonte = qaVendas,
-    Valida = fxQaFiltrarPorStatus(Fonte, "OK"),
-    Normalizada = fxNrmAplicar(Valida, parTabelaVendas),
+    Validada = fxQaFiltrarPorStatus(Fonte, "OK"),
+    Normalizada = fxNrmAplicar(Validada, parTabelaVendas),
     ValorTotal = Table.AddColumn(Normalizada, "ValorTotal", each [Quantidade] * [ValorUnitário], type number)
 in
     ValorTotal;
 
 shared nrmDados = let
-    Fonte = stgDados
+    Fonte = qaDados,
+    Validada = fxQaFiltrarPorStatus(Fonte, "OK"),
+    Normalizada = fxNrmAplicar(Validada, null)
 in
-    Fonte;
+    Normalizada
+;
 
 shared dimProdutos = let
     Fonte =
@@ -5142,8 +5116,6 @@ shared fxNrmAplicar =
     in
         if List.IsEmpty(Chaves) then tabela
         else Table.Distinct(tabela, Chaves);
-
-shared parTabelaCategoriasConsultasPQ = "tbSobreCategoriasConsultasPQ" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
 
 shared parConsultasCatalogo = 
 // Queries do próprio catálogo — excluídas de stgTabelasPowerQuery para evitar auto-referência.
@@ -6999,14 +6971,21 @@ in
 shared qaClientes = let
     Fonte = trnClientes,
     qa = fxQaValidar(Fonte, parTabelaClientes)
+
+    // Usar apenas dados válidos
+    // Validos = fxQaFiltrarPorStatus(qa, "OK"),
+
+    // Extrair problemas para auditoria
+    // Problemas = fxQaExtrairProblemas(qa)
+
 in
     qa;
 
 shared trnProdutos = let
     Fonte = stgProdutos,
-    Resultado = fxTrnAplicar(Fonte, parTabelaProdutos)
+    Transformada = fxTrnAplicar(Fonte, parTabelaProdutos)
 in
-    Resultado;
+    Transformada;
 
 shared qaProdutos = let
     Fonte = trnProdutos,
@@ -7023,13 +7002,39 @@ in
 
 shared trnVendas = let
     Fonte = stgVendas,
-    Resultado = fxTrnAplicar(Fonte, parTabelaVendas)
+    Transformada = fxTrnAplicar(Fonte, parTabelaVendas)
 in
-    Resultado;
+    Transformada;
+
+shared trnDados = let
+    Fonte = stgDados,
+    Transformada = fxTrnAplicar(Fonte, null)
+in
+    Transformada;
 
 shared qaVendas = let
     Fonte = trnVendas,
     qa = fxQaValidar(Fonte, parTabelaVendas)
+
+    // Usar apenas dados válidos
+    // Validos = fxQaFiltrarPorStatus(qa, "OK"),
+
+    // Extrair problemas para auditoria
+    // Problemas = fxQaExtrairProblemas(qa)
+
+in
+    qa;
+
+shared qaDados = let
+    Fonte = trnDados,
+    qa = fxQaValidar(Fonte, null)
+
+    // Usar apenas dados válidos
+    // Validos = fxQaFiltrarPorStatus(qa, "OK"),
+
+    // Extrair problemas para auditoria
+    // Problemas = fxQaExtrairProblemas(qa)
+
 in
     qa;
 
@@ -7136,7 +7141,7 @@ in
 
 shared tstClientes_ComFramework = let
     Schema = "tstClientes1M",
-    Fonte = stgDados,
+    Fonte = srcDados,
 
     Resultado =
         if Table.ColumnCount(Fonte) = 0 then
@@ -7464,7 +7469,7 @@ in
     Resultado;
 
 shared tstClientes_SemFramework = let
-    Fonte = stgDados,
+    Fonte = srcDados,
 
     // Tratamentos
     Tratamentos =
@@ -8006,5 +8011,12 @@ let
             ]
         )
 
+in
+    Resultado;
+
+shared stgDados = let
+    Fonte = srcDados,
+    Preparada = fxStgAplicar(Fonte, null),
+    Resultado = Preparada
 in
     Resultado;
