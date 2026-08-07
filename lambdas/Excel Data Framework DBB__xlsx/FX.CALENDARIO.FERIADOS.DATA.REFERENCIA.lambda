@@ -1,0 +1,15 @@
+Name: FX.CALENDARIO.FERIADOS.DATA.REFERENCIA
+Scope: Workbook
+Source Workbook: Excel Data Framework DBB.xlsx
+Source Workbook Folder: Excel Data Framework DBB__xlsx
+Description: Retorna a data correspondente a uma referÃªncia de calendÃ¡rio para um determinado ano. Utilizada como base para o cÃ¡lculo de feriados e eventos mÃ³veis.
+
+
+Formula:
+=LAMBDA(Ano,Referencia,LET(AnoCalc, IF(OR(Ano = "", ISBLANK(Ano)), YEAR(NOW()), Ano), Ref, UPPER(TRIM(Referencia)), Pascoa, DOLLAR(("4/" & AnoCalc) / 7 + MOD(19 * MOD(AnoCalc, 19) - 7, 30) * 14%) * 7 - 6, PrimeiroDomingo, LAMBDA(Mes, DATE(AnoCalc, Mes, 1) + MOD(7 - WEEKDAY(DATE(AnoCalc, Mes, 1), 2), 7)), Resultado, CHOOSE(MATCH(Ref, {"PASCOA";"SEGUNDO_DOMINGO_MAIO";"SEGUNDO_DOMINGO_AGOSTO"}, 0), Pascoa, PrimeiroDomingo(5) + 7, PrimeiroDomingo(8) + 7), Resultado))
+
+Localized Formula (pt-BR) - Preview Only:
+=LAMBDA(Ano,Referencia,LET(AnoCalc, SE(OU(Ano = "", ÉCÉL.VAZIA(Ano)), ANO(AGORA()), Ano), Ref, MAIÚSCULA(ARRUMAR(Referencia)), Pascoa, MOEDA(("4/" & AnoCalc) / 7 + MOD(19 * MOD(AnoCalc, 19) - 7, 30) * 14%) * 7 - 6, PrimeiroDomingo, LAMBDA(Mes, DATA(AnoCalc, Mes, 1) + MOD(7 - DIA.DA.SEMANA(DATA(AnoCalc, Mes, 1), 2), 7)), Resultado, ESCOLHER(CORRESP(Ref, {"PASCOA";"SEGUNDO_DOMINGO_MAIO";"SEGUNDO_DOMINGO_AGOSTO"}, 0), Pascoa, PrimeiroDomingo(5) + 7, PrimeiroDomingo(8) + 7), Resultado))
+
+Raw Formula Snapshot (en-US) - Preview Only:
+=_xlfn.LAMBDA(_xlpm.Ano,_xlpm.Referencia,_xlfn.LET(_xlpm.AnoCalc, IF(OR(_xlpm.Ano = "", ISBLANK(_xlpm.Ano)), YEAR(NOW()), _xlpm.Ano), _xlpm.Ref, UPPER(TRIM(_xlpm.Referencia)), _xlpm.Pascoa, DOLLAR(("4/" & _xlpm.AnoCalc) / 7 + MOD(19 * MOD(_xlpm.AnoCalc, 19) - 7, 30) * 14%) * 7 - 6, _xlpm.PrimeiroDomingo, _xlfn.LAMBDA(_xlpm.Mes, DATE(_xlpm.AnoCalc, _xlpm.Mes, 1) + MOD(7 - WEEKDAY(DATE(_xlpm.AnoCalc, _xlpm.Mes, 1), 2), 7)), _xlpm.Resultado, CHOOSE(MATCH(_xlpm.Ref, {"PASCOA";"SEGUNDO_DOMINGO_MAIO";"SEGUNDO_DOMINGO_AGOSTO"}, 0), _xlpm.Pascoa, _xlpm.PrimeiroDomingo(5) + 7, _xlpm.PrimeiroDomingo(8) + 7), _xlpm.Resultado))

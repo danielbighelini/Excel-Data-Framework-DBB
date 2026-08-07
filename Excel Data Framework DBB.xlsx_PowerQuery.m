@@ -1,6 +1,6 @@
 // Power Query from: Excel Data Framework DBB.xlsx
 // Pathname: c:\Users\daniel-bighelini\OneDrive\Documentos\Planilhas\Excel Data Framework DBB\Excel Data Framework DBB.xlsx
-// Extracted: 2026-08-06T18:01:02.940Z
+// Extracted: 2026-08-07T02:53:22.131Z
 
 section Section1;
 
@@ -184,6 +184,11 @@ shared srcParametrosCalendario = let
     Fonte = srcWorkbook{[Name=parTabelaParametrosCalendario]}[Content]
 in
     Fonte;
+
+shared srcParametrosFeriados = let
+    Fonte = srcWorkbook{[Name=parTabelaParametrosFeriados]}[Content]
+in
+    Fonte;
 shared srcSchema = let
     Fonte = srcWorkbook{[Name=parTabelaSchema]}[Content]
 in
@@ -205,6 +210,126 @@ shared srcDadosGenericos = let
 in
     Fonte;
 shared parTabelaParametros = "tbParametros" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
+
+shared cfgCultura = 
+// Record {Separadores, Símbolos, Formatações} derivados da cultura ativa; usado por fxConversor e fxTratamentoNumber.
+let
+    Parametro =
+        (Nome as text, Padrao as any) as any =>
+            Record.FieldOrDefault(
+                cfgParametros,
+                Nome,
+                [Valor = Padrao]
+            )[Valor],
+
+    Cultura = parCulturaBootstrap,
+
+    TextoNumero =
+        try
+            Number.ToText(
+                1234.5,
+                "#,##0.0",
+                Cultura
+            )
+        otherwise
+            error "Cultura inválida.",
+
+    SeparadorMilhar =
+        Text.At(TextoNumero, 1),
+
+    SeparadorDecimal =
+        Text.At(
+            TextoNumero,
+            Text.Length(TextoNumero) - 2
+        ),
+
+    SimboloMoeda =
+        Parametro(
+            "Cultura_Simbolo_Moeda",
+            "R$"
+        ),
+
+    SimboloPercentual =
+        Parametro(
+            "Cultura_Simbolo_Percentual",
+            "%"
+        ),
+
+    NegativoParenteses =
+        fxParseBooleano(
+            Parametro(
+                "Cultura_Negativo_Parenteses",
+                true
+            ),
+            Cultura
+        ),
+
+    CaracteresPermitidosNumero =
+        List.Buffer(
+            List.Combine(
+                {
+                    {"0".."9"},
+                    {SeparadorDecimal, SeparadorMilhar},
+                    {"-","+","(",")"}
+                }
+            )
+        ),
+
+    SeparadorLista =
+        Parametro(
+            "Cultura_Separador_Lista",
+            ";"
+        ),
+
+    SeparadorParametros =
+        Parametro(
+            "Cultura_Separador_Parametros",
+            ","
+        ),
+
+    FormatoData = 
+        Parametro(
+            "Cultura_Formato_Data",
+            "dd/mm/aaaa"
+        ),
+
+    FormatoHora = 
+        Parametro(
+            "Cultura_Formato_Hora",
+            "hh:mm:ss"
+        ),
+
+    FormatoDataHora = 
+        Parametro(
+            "Cultura_Formato_DataHora",
+            "dd/mm/aaaa hh:mm"
+        ),
+
+    PrimeiroDiaSemana =
+        Parametro(
+            "Cultura_Primeiro_Dia_Semana",
+            "Domingo"
+        ),
+
+    Resultado =
+        [
+            Cultura = Cultura,
+            SeparadorDecimal = SeparadorDecimal,
+            SeparadorMilhar = SeparadorMilhar,
+            SimboloMoeda = SimboloMoeda,
+            SimboloPercentual = SimboloPercentual,
+            NegativoParenteses = NegativoParenteses,
+            CaracteresPermitidosNumero = CaracteresPermitidosNumero,
+            SeparadorLista = SeparadorLista,
+            SeparadorParametros = SeparadorParametros,
+            FormatoData = FormatoData,
+            FormatoHora = FormatoHora,
+            FormatoDataHora = FormatoDataHora,
+            PrimeiroDiaSemana = PrimeiroDiaSemana
+        ]
+in
+    Resultado
+;
 
 shared cfgVersaoInfo = // Versão do framework; incremente a cada alteração que quebre compatibilidade.
 let
@@ -1122,6 +1247,11 @@ in
 shared cfgTiposDados = srcTiposDados;
 
 shared cfgTiposObjetos = srcTiposObjetos;
+
+shared cfgTiposObjetosPorNome = let
+    Vals = Record.FieldValues(cfgTiposObjetos)
+in
+    Record.FromList(Vals, List.Transform(Vals, each [Nome]));
 // Mapa Kind → metadados de tipo M (Nome, Type, Categoria, IsStructured).
 shared srcTiposObjetos = [
         Table = [
@@ -1643,7 +1773,7 @@ shared stgParametrosCalendario = let
             }
         ),
 
-    Trim =
+    Tratamento =
         Table.TransformColumns(
             Tipos,
             {
@@ -1652,16 +1782,11 @@ shared stgParametrosCalendario = let
             }
         ),
 
-    FiltrarAtivos =
+    Filtro =
         Table.SelectRows(
-            Trim,
-            each [Ativo]
-        ),
-
-    FiltrarValidos =
-        Table.SelectRows(
-            FiltrarAtivos,
+            Tratamento,
             each
+                [Ativo] and
                 [Código] <> null and
                 [Código] <> "" and
                 [Coluna] <> null and
@@ -1670,7 +1795,7 @@ shared stgParametrosCalendario = let
 
     RemoverDuplicados =
         Table.Distinct(
-            FiltrarValidos,
+            Filtro,
             {"Código"}
         ),
 
@@ -1681,13 +1806,68 @@ shared stgParametrosCalendario = let
                 {"Ordem", Order.Ascending},
                 {"Coluna", Order.Ascending}
             }
-        ),
-
-    Buffer =
-        Table.Buffer(Ordenar)
+        )
 
 in
-    Buffer;
+    Ordenar;
+
+shared stgParametrosFeriados = let
+    Fonte = srcParametrosFeriados,
+
+    Tipos =
+        Table.TransformColumnTypes(
+            Fonte,
+            {
+                {"Nome", type text},
+                {"Código", type text},
+                {"Regularidade", type text},
+                {"Referência", type text},
+                {"Offset", Int64.Type},
+                {"Dia", Int64.Type},
+                {"Mês", Int64.Type},
+                {"Abrangência", type text},
+                {"PontoFacultativo", type logical},
+                {"Expediente", type text},
+                {"Estado", type text},
+                {"Município", type text},
+                {"VigênciaInicial", type date},
+                {"VigênciaFinal", type date},
+                {"Ativo", type logical}
+            }
+        ),
+
+    Tratamento =
+        Table.TransformColumns(
+            Tipos,
+            {
+                {"Nome", each Text.Trim(_), type text},
+                {"Código", each Text.Upper(Text.Trim(_)), type text},
+                {"Regularidade", each Text.Upper(Text.Trim(_)), type text},
+                {"Referência", each if _ = null then null else Text.Upper(Text.Trim(_)), type text},
+                {"Abrangência", each Text.Trim(_), type text},
+                {"Expediente", each Text.Trim(_), type text},
+                {"Estado", each if _ = null then null else Text.Upper(Text.Trim(_)), type text},
+                {"Município", each if _ = null then null else Text.Trim(_), type text}
+            }
+        ),
+
+    FiltrarValidos =
+        Table.SelectRows(
+            Tratamento,
+            each
+                [Ativo] and
+                [Código] <> null and
+                [Código] <> ""
+        ),
+
+    RemoverDuplicados =
+        Table.Distinct(
+            FiltrarValidos,
+            {"Código"}
+        )
+    
+in
+    RemoverDuplicados;
 
 shared stgSchema = 
 // Schema ativo normalizado e filtrado (Ativo=true); base para cfgSchema e cfgPipeline.
@@ -2043,7 +2223,8 @@ shared srcConversores = [
     DateTimeZone = (v as any, culture as text) as any => DateTimeZone.From(v, culture),
     Time = (v as any, culture as text) as any => Time.From(v, culture),
     Duration = (v as any, culture as text) as any => Duration.From(v),
-    Logical = (v as any, culture as text) as any => fxParseBooleano(v, culture)
+    Logical = (v as any, culture as text) as any => fxParseBooleano(v, culture),
+    Unknow = (v as any, culture as text) as any => v
 ];
 shared fxListaNormalizar = (
     valor as any,
@@ -2135,26 +2316,18 @@ shared fxConversor = (valor as any, tipo as nullable type, optional culture as n
 let
     Culture = if culture = null then parCulturaBootstrap else culture,
     TipoDestino = if tipo = null then type any else tipo,
+    Chave = fxTipoParaTexto(TipoDestino),
+    ChaveFinal  =
+        if Chave = "Unknown" then
+            error Error.Record(
+                "Tipo não suportado",
+                "A função não possui conversor para o tipo solicitado.",
+                [Tipo = TipoDestino]
+            )
+        else
+            Chave,
 
-    Chave =
-        if TipoDestino = type any then "Any"
-        else if TipoDestino = type text then "Text"
-        else if TipoDestino = type list then "List"
-        else if TipoDestino = Int64.Type then "Int64"
-        else if TipoDestino = type number then "Number"
-        else if TipoDestino = type date then "Date"
-        else if TipoDestino = type datetime then "DateTime"
-        else if TipoDestino = type datetimezone then "DateTimeZone"
-        else if TipoDestino = type time then "Time"
-        else if TipoDestino = type duration then "Duration"
-        else if TipoDestino = type logical then "Logical"
-        else error Error.Record(
-            "Tipo não suportado",
-            "A função não possui conversor para o tipo solicitado.",
-            [Tipo = TipoDestino]
-        ),
-
-    Conversor = Record.Field(cfgConversores, Chave),
+    Conversor = Record.Field(cfgConversores, ChaveFinal),
     Resultado = Conversor(valor, Culture)
 in
     Resultado;
@@ -2162,18 +2335,18 @@ in
 shared fxTipoParaTexto = (tipo as type) as text =>
 let
     Resultado =
-        if tipo = type any then "any"
-        else if tipo = type text then "text"
-        else if tipo = type list then "list"
-        else if tipo = Int64.Type then "int64"
-        else if tipo = type number then "number"
-        else if tipo = type date then "date"
-        else if tipo = type datetime then "datetime"
-        else if tipo = type datetimezone then "datetimezone"
-        else if tipo = type time then "time"
-        else if tipo = type duration then "duration"
-        else if tipo = type logical then "logical"
-        else "unknown"
+        if tipo = type any then "Any"
+        else if tipo = type text then "Text"
+        else if tipo = type list then "List"
+        else if tipo = Int64.Type then "Int64"
+        else if tipo = type number then "Number"
+        else if tipo = type date then "Date"
+        else if tipo = type datetime then "Datetime"
+        else if tipo = type datetimezone then "Datetimezone"
+        else if tipo = type time then "Time"
+        else if tipo = type duration then "Duration"
+        else if tipo = type logical then "Logical"
+        else "Unknown"
 in
     Resultado;
 
@@ -3427,7 +3600,7 @@ shared srcArquivos = let
 in
     Resultado;
 
-shared cfgParametrosFormatosArquivos = let
+shared cfgFormatosArquivos = let
     Fonte =
         stgParametrosFormatosArquivos,
 
@@ -3451,7 +3624,7 @@ shared cfgParametrosFormatosArquivos = let
 in
     Resultado;
 
-shared cfgParametrosSeveridades = let
+shared cfgSeveridades = let
 
     Fonte =
         Table.Buffer(
@@ -3559,6 +3732,89 @@ in
         DataInicial = DataInicial,
         DataFinal = DataFinal
     ];
+
+shared cfgFeriados = let
+    Fonte = Table.Buffer(stgParametrosFeriados),
+
+    Fixos =
+        Table.SelectRows(
+            Fonte,
+            each [Regularidade] = "FIXO"
+        ),
+
+    Moveis =
+        Table.SelectRows(
+            Fonte,
+            each [Regularidade] = "MÓVEL"
+        ),
+
+    PorCodigo =
+        Record.FromList(
+            Table.ToRecords(Fonte),
+            Fonte[Código]
+        ),
+
+    Configuracao =
+        [
+            Todos = Fonte,
+            Fixos = Fixos,
+            Moveis = Moveis,
+            PorCodigo = PorCodigo
+        ]
+in
+    Configuracao;
+
+shared cfgFeriadosIndices = let
+    Anos =
+        {Date.Year(cfgCalendario[DataInicial])..Date.Year(cfgCalendario[DataFinal])},
+
+    Indices =
+        List.Transform(
+            Anos,
+            each
+                let
+                    Ano = _,
+
+                    Tabela =
+                        fxFeriadoGerar(Ano),
+
+                    Chaves =
+                        List.Transform(
+                            Tabela[Data],
+                            each Date.ToText(_, "yyyy-MM-dd")
+                        ),
+
+                    Valores =
+                        List.Transform(
+                            Table.ToRecords(Tabela),
+                            each [
+                                Existe = true,
+                                Nome = [Nome],
+                                Código = [Código],
+                                Abrangência = [Abrangência],
+                                PontoFacultativo = [PontoFacultativo],
+                                Expediente = [Expediente],
+                                Estado = [Estado],
+                                Município = [Município]
+                            ]
+                        )
+                in
+                    Record.FromList(
+                        Valores,
+                        Chaves
+                    )
+        ),
+
+    Resultado =
+        Record.FromList(
+            Indices,
+            List.Transform(
+                Anos,
+                each Text.From(_)
+            )
+        )
+in
+    Resultado;
 
 shared cfgCalendarioIntervalos =
 // Estrutura utilizada para descobrir o intervalo de datas
@@ -3690,7 +3946,11 @@ let
         DIA_UTIL = [
             Tipo = type logical,
             Categoria = "Semana",
-            Funcao = (Data as date, Cultura as text) => not List.Contains({0, 6}, Date.DayOfWeek(Data))
+            Funcao =
+                (Data as date, Cultura as text) =>
+                    not List.Contains({0, 6}, Date.DayOfWeek(Data))
+                    and
+                    not fxFeriado(Data)[Existe]
         ],
 
         BIMESTRE = [
@@ -3791,13 +4051,41 @@ let
         FERIADO = [
             Tipo = type logical,
             Categoria = "Feriados",
-            Funcao = (Data as date, Cultura as text) => false
+            Funcao =
+                (Data as date, Cultura as text) =>
+                    fxFeriado(Data)[Existe]
         ],
 
         NOME_FERIADO = [
             Tipo = type text,
             Categoria = "Feriados",
-            Funcao = (Data as date, Cultura as text) => null
+            Funcao =
+                (Data as date, Cultura as text) =>
+                    fxFeriado(Data)[Nome]
+        ],
+
+        CODIGO_FERIADO = [
+            Tipo = type text,
+            Categoria = "Feriados",
+            Funcao =
+                (Data as date, Cultura as text) =>
+                    fxFeriado(Data)[Código]
+        ],
+
+        TIPO_FERIADO = [
+            Tipo = type text,
+            Categoria = "Feriados",
+            Funcao =
+                (Data as date, Cultura as text) =>
+                    fxFeriado(Data)[Tipo]
+        ],
+
+        EXPEDIENTE = [
+            Tipo = type text,
+            Categoria = "Feriados",
+            Funcao =
+                (Data as date, Cultura as text) =>
+                    fxFeriado(Data)[Expediente]
         ],
 
         TIMESTAMP = [
@@ -3809,7 +4097,7 @@ let
 
     Tabela =
         Table.AddColumn(
-            stgParametrosCalendario,
+            Table.Buffer(stgParametrosCalendario),
             "Atributo",
             each Record.Field(Definicoes, [Código]),
             type record
@@ -3854,7 +4142,7 @@ let
     Extensoes =
         try
             Record.Field(
-                cfgParametrosFormatosArquivos,
+                cfgFormatosArquivos,
                 Formato
             )
         otherwise
@@ -3930,6 +4218,8 @@ shared parTabelaParametrosValidacoes = "tbParametrosValidacoes" meta [IsParamete
 shared parTabelaParametrosSeveridades = "tbParametrosSeveridades" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
 
 shared parTabelaParametrosCalendario = "tbParametrosCalendario" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
+
+shared parTabelaParametrosFeriados = "tbParametrosFeriados" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
 shared parTabelaSchema = "tbSchema" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
 shared parTabelaClientes = "tbClientes" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
 shared parTabelaProdutos = "tbProdutos" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
@@ -4041,29 +4331,47 @@ let
         ),
 
     Nomes =
-        List.Transform(Atributos, each [Value][Nome]),
+        List.Transform(
+            Atributos,
+            each [Value][Nome]
+        ),
 
     ComAtributos =
         Table.AddColumn(
             Calendario,
             "_Attrs",
             each
-                let D = [Data]
-                in Record.FromList(
-                    List.Transform(Atributos, (a) => a[Value][Funcao](D, Idioma)),
-                    Nomes
-                ),
+                let
+                    D = [Data]
+                in
+                    Record.FromList(
+                        List.Transform(
+                            Atributos,
+                            (a) => a[Value][Funcao](D, Idioma)
+                        ),
+                        Nomes
+                    ),
             type record
         ),
 
     Expandido =
-        Table.ExpandRecordColumn(ComAtributos, "_Attrs", Nomes),
+        Table.ExpandRecordColumn(
+            ComAtributos,
+            "_Attrs",
+            Nomes
+        ),
 
     Tipos =
-        List.Transform(Atributos, each {[Value][Nome], [Value][Tipo]}),
+        List.Transform(
+            Atributos,
+            each {[Value][Nome], [Value][Tipo]}
+        ),
 
     Resultado =
-        Table.TransformColumnTypes(Expandido, Tipos)
+        Table.TransformColumnTypes(
+            Expandido,
+            Tipos
+        )
 in
     Resultado;
 
@@ -4125,16 +4433,12 @@ in
             )
     ];
 
-shared dimCalendario = 
-// Dimensão calendário gerada com todos os atributos ativos configurados em tbParametrosCalendario.
+shared dimCalendario = // Dimensão calendário gerada com todos os atributos ativos configurados em tbParametrosCalendario.
 let
-    Intervalo =
-        cfgCalendario,
-
     CalendarioBase =
         fxCalendarioBase(
-            Intervalo[DataInicial],
-            Intervalo[DataFinal]
+            cfgCalendario[DataInicial],
+            cfgCalendario[DataFinal]
         ),
 
     Calendario =
@@ -4149,10 +4453,12 @@ let
         Table.ReorderColumns(
             ComChave,
             List.Combine({{"IDData", "Data"}, List.RemoveItems(Table.ColumnNames(ComChave), {"IDData", "Data"})})
-        )
+        ),
+    
+    Buffer = Table.Buffer(Reordenada)
 
 in
-    Table.Buffer(Reordenada);
+    Buffer;
 shared fxTratamentoTrim = (valor as any, optional parametros as nullable any) as any =>
 
 let
@@ -6452,7 +6758,7 @@ let
                 let
                     Nomes =
                         Record.FieldNames(
-                            cfgParametrosSeveridades
+                            cfgSeveridades
                         )
                 in
                     Record.FromList(
@@ -6461,7 +6767,7 @@ let
                             each
                                 Record.FieldOrDefault(
                                     Record.Field(
-                                        cfgParametrosSeveridades,
+                                        cfgSeveridades,
                                         _
                                     ),
                                     "Bloqueia",
@@ -7100,126 +7406,6 @@ in
     then "pt-BR"
     else Text.Trim(Text.From(Valor));
 
-shared cfgCultura = 
-// Record {Separadores, Símbolos, Formatações} derivados da cultura ativa; usado por fxConversor e fxTratamentoNumber.
-let
-    Parametro =
-        (Nome as text, Padrao as any) as any =>
-            Record.FieldOrDefault(
-                cfgParametros,
-                Nome,
-                [Valor = Padrao]
-            )[Valor],
-
-    Cultura = parCulturaBootstrap,
-
-    TextoNumero =
-        try
-            Number.ToText(
-                1234.5,
-                "#,##0.0",
-                Cultura
-            )
-        otherwise
-            error "Cultura inválida.",
-
-    SeparadorMilhar =
-        Text.At(TextoNumero, 1),
-
-    SeparadorDecimal =
-        Text.At(
-            TextoNumero,
-            Text.Length(TextoNumero) - 2
-        ),
-
-    SimboloMoeda =
-        Parametro(
-            "Cultura_Simbolo_Moeda",
-            "R$"
-        ),
-
-    SimboloPercentual =
-        Parametro(
-            "Cultura_Simbolo_Percentual",
-            "%"
-        ),
-
-    NegativoParenteses =
-        fxParseBooleano(
-            Parametro(
-                "Cultura_Negativo_Parenteses",
-                true
-            ),
-            Cultura
-        ),
-
-    CaracteresPermitidosNumero =
-        List.Buffer(
-            List.Combine(
-                {
-                    {"0".."9"},
-                    {SeparadorDecimal, SeparadorMilhar},
-                    {"-","+","(",")"}
-                }
-            )
-        ),
-
-    SeparadorLista =
-        Parametro(
-            "Cultura_Separador_Lista",
-            ";"
-        ),
-
-    SeparadorParametros =
-        Parametro(
-            "Cultura_Separador_Parametros",
-            ","
-        ),
-
-    FormatoData = 
-        Parametro(
-            "Cultura_Formato_Data",
-            "dd/mm/aaaa"
-        ),
-
-    FormatoHora = 
-        Parametro(
-            "Cultura_Formato_Hora",
-            "hh:mm:ss"
-        ),
-
-    FormatoDataHora = 
-        Parametro(
-            "Cultura_Formato_DataHora",
-            "dd/mm/aaaa hh:mm"
-        ),
-
-    PrimeiroDiaSemana =
-        Parametro(
-            "Cultura_Primeiro_Dia_Semana",
-            "Domingo"
-        ),
-
-    Resultado =
-        [
-            Cultura = Cultura,
-            SeparadorDecimal = SeparadorDecimal,
-            SeparadorMilhar = SeparadorMilhar,
-            SimboloMoeda = SimboloMoeda,
-            SimboloPercentual = SimboloPercentual,
-            NegativoParenteses = NegativoParenteses,
-            CaracteresPermitidosNumero = CaracteresPermitidosNumero,
-            SeparadorLista = SeparadorLista,
-            SeparadorParametros = SeparadorParametros,
-            FormatoData = FormatoData,
-            FormatoHora = FormatoHora,
-            FormatoDataHora = FormatoDataHora,
-            PrimeiroDiaSemana = PrimeiroDiaSemana
-        ]
-in
-    Resultado
-;
-
 shared fxConvertTextToNumber = (valor as any, cultura as record) as nullable number =>
 let
     Resultado =
@@ -7587,11 +7773,6 @@ let
 in
     Resultado;
 
-shared cfgTiposObjetosPorNome = let
-    Vals = Record.FieldValues(cfgTiposObjetos)
-in
-    Record.FromList(Vals, List.Transform(Vals, each [Nome]));
-
 shared srcKeepTextChars = List.Buffer(
     List.Distinct(
         Text.ToList("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ")
@@ -7666,3 +7847,164 @@ in
         Valor = valor,
         Ocorrencias = Ocorrencias
     ];
+
+shared fxFeriadoDataReferencia = (Ano as number, Referência as text) as nullable date =>
+let
+    Ref = Text.Upper(Text.Trim(Referência)),
+
+    Páscoa =
+        let
+            A = Number.Mod(Ano, 19),
+            B = Number.IntegerDivide(Ano, 100),
+            C = Number.Mod(Ano, 100),
+            D = Number.IntegerDivide(B, 4),
+            E = Number.Mod(B, 4),
+            F = Number.IntegerDivide(B + 8, 25),
+            G = Number.IntegerDivide(B - F + 1, 3),
+            H = Number.Mod(19 * A + B - D - G + 15, 30),
+            I = Number.IntegerDivide(C, 4),
+            K = Number.Mod(C, 4),
+            L = Number.Mod(32 + 2 * E + 2 * I - H - K, 7),
+            M = Number.IntegerDivide(A + 11 * H + 22 * L, 451),
+            Mes = Number.IntegerDivide(H + L - 7 * M + 114, 31),
+            Dia = Number.Mod(H + L - 7 * M + 114, 31) + 1
+        in
+            #date(Ano, Mes, Dia),
+
+    SegundoDomingoMaio =
+        let
+            Inicio = #date(Ano, 5, 1),
+            PrimeiroDomingo = Date.AddDays(Inicio, Number.Mod(7 - Date.DayOfWeek(Inicio, Day.Sunday), 7))
+        in
+            Date.AddDays(PrimeiroDomingo, 7),
+
+    SegundoDomingoAgosto =
+        let
+            Inicio = #date(Ano, 8, 1),
+            PrimeiroDomingo = Date.AddDays(Inicio, Number.Mod(7 - Date.DayOfWeek(Inicio, Day.Sunday), 7))
+        in
+            Date.AddDays(PrimeiroDomingo, 7),
+
+    Data =
+        if Ref = "PASCOA" then
+            Páscoa
+        else if Ref = "SEGUNDO_DOMINGO_MAIO" then
+            SegundoDomingoMaio
+        else if Ref = "SEGUNDO_DOMINGO_AGOSTO" then
+            SegundoDomingoAgosto
+        else
+            null
+in
+    Data;
+
+shared fxFeriadoGerar = (Ano as number, optional Estado as nullable text, optional Municipio as nullable text) as table =>
+let
+    Fonte = cfgFeriados[Todos],
+
+    FiltrarVigencia =
+        Table.SelectRows(
+            Fonte,
+            each
+                [VigênciaInicial] <= #date(Ano, 12, 31) and
+                (
+                    [VigênciaFinal] = null or
+                    [VigênciaFinal] >= #date(Ano, 1, 1)
+                )
+        ),
+
+    FiltrarEstado =
+        if Estado = null then
+            FiltrarVigencia
+        else
+            Table.SelectRows(
+                FiltrarVigencia,
+                each [Estado] = null or [Estado] = Estado
+            ),
+
+    FiltrarMunicipio =
+        if Municipio = null then
+            FiltrarEstado
+        else
+            Table.SelectRows(
+                FiltrarEstado,
+                each [Município] = null or [Município] = Municipio
+            ),
+
+    AdicionarData =
+        Table.AddColumn(
+            FiltrarMunicipio,
+            "Data",
+            each
+                if [Regularidade] = "FIXO" then
+                    #date(Ano, [Mês], [Dia])
+                else
+                    Date.AddDays(
+                        fxFeriadoDataReferencia(Ano, [Referência]),
+                        [Offset]
+                    ),
+            type date
+        ),
+
+    Selecionar =
+        Table.SelectColumns(
+            AdicionarData,
+            {
+                "Data",
+                "Nome",
+                "Código",
+                "Abrangência",
+                "PontoFacultativo",
+                "Expediente",
+                "Estado",
+                "Município"
+            }
+        ),
+
+    Ordenar =
+        Table.Sort(
+            Selecionar,
+            {
+                {"Data", Order.Ascending},
+                {"Nome", Order.Ascending}
+            }
+        )
+
+in
+    Ordenar;
+
+shared fxFeriado = (
+    Data as date
+)
+as record =>
+
+let
+    Ano =
+        Text.From(
+            Date.Year(Data)
+        ),
+
+    IndiceAno =
+        Record.FieldOrDefault(
+            cfgFeriadosIndices,
+            Ano,
+            []
+        ),
+
+    Resultado =
+        Record.FieldOrDefault(
+            IndiceAno,
+            Date.ToText(Data, "yyyy-MM-dd"),
+            [
+                Existe = false,
+                Nome = null,
+                Código = null,
+                Abrangência = null,
+                PontoFacultativo = false,
+                Expediente = null,
+                Estado = null,
+                Município = null
+            ]
+        )
+
+in
+    Resultado;

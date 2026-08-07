@@ -1,0 +1,15 @@
+Name: FX.CALENDARIO.FERIADO
+Scope: Workbook
+Source Workbook: Excel Data Framework DBB.xlsx
+Source Workbook Folder: Excel Data Framework DBB__xlsx
+Description: Retorna a data resultante da aplicaÃ§Ã£o de um deslocamento (Offset) sobre uma referÃªncia de calendÃ¡rio para um determinado ano.
+
+
+Formula:
+=LAMBDA(Ano,Referencia,Offset,FX.CALENDARIO.FERIADOS.DATA.REFERENCIA(Ano, Referencia) + Offset)
+
+Localized Formula (pt-BR) - Preview Only:
+=LAMBDA(Ano,Referencia,Offset,FX.CALENDARIO.FERIADOS.DATA.REFERENCIA(Ano, Referencia) + Offset)
+
+Raw Formula Snapshot (en-US) - Preview Only:
+=_xlfn.LAMBDA(_xlpm.Ano,_xlpm.Referencia,_xlpm.Offset,FX.CALENDARIO.FERIADOS.DATA.REFERENCIA(_xlpm.Ano, _xlpm.Referencia) + _xlpm.Offset)
