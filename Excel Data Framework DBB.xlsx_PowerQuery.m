@@ -1,6 +1,6 @@
 // Power Query from: Excel Data Framework DBB.xlsx
 // Pathname: c:\Users\daniel-bighelini\OneDrive\Documentos\Planilhas\Excel Data Framework DBB\Excel Data Framework DBB.xlsx
-// Extracted: 2026-08-07T12:36:57.472Z
+// Extracted: 2026-08-07T20:49:34.496Z
 
 section Section1;
 
@@ -776,7 +776,7 @@ Fonte =
 
         each
             [Kind] = "Table"
-            and not List.Contains(parConsultasCatalogo, [Nome])
+            and not List.Contains(parObjetosPowerQueryIgnorados, [Nome])
 
     ),
 
@@ -5117,14 +5117,15 @@ shared fxNrmAplicar =
         if List.IsEmpty(Chaves) then tabela
         else Table.Distinct(tabela, Chaves);
 
-shared parConsultasCatalogo = 
-// Queries do próprio catálogo — excluídas de stgTabelasPowerQuery para evitar auto-referência.
+shared parObjetosPowerQueryIgnorados = // Queries do próprio catálogo — excluídas de stgTabelasPowerQuery para evitar auto-referência.
 List.Buffer({
     "srcSections", "stgSections",
     "stgObjetos", "stgObjetosPowerQuery",
     "cfgObjetos", "cfgObjetosPowerQuery",
     "stgTabelas", "cfgTabelas",
-    "srcTabelasPowerQuery", "stgTabelasPowerQuery", "cfgTabelasPowerQuery"
+    "srcTabelasPowerQuery", "stgTabelasPowerQuery", "cfgTabelasPowerQuery",
+    "srcWorkbook",
+    "diagConsultasPQ", "diagTabelasExcel", "diagPipeline"
 });
 
 shared fxStgPreparar = 
@@ -7142,21 +7143,13 @@ in
 shared tstClientes_ComFramework = let
     Schema = "tstClientes1M",
     Fonte = srcDados,
-
-    Resultado =
-        if Table.ColumnCount(Fonte) = 0 then
-            Fonte
-        else
-            let
-                Stage = fxStgAplicar(Fonte, Schema),
-                Transform = fxTrnAplicar(Stage, Schema),
-                Qa = fxQaValidar(Transform, Schema),
-                Valida = fxQaFiltrarPorStatus(Qa, "OK"),
-                Normalize = fxNrmAplicar(Valida, Schema)
-            in
-                Normalize
+    Stage = fxStgAplicar(Fonte, Schema),
+    Transform = fxTrnAplicar(Stage, Schema),
+    Qa = fxQaValidar(Transform, Schema),
+    Valida = fxQaFiltrarPorStatus(Qa, "OK"),
+    Normalize = fxNrmAplicar(Valida, Schema)
 in
-    Resultado;
+    Normalize;
 
 shared fxTratamentoReplace = (valor as any, optional parametros as nullable any) as any =>
     //{"antigo","novo"}
@@ -8020,3 +8013,79 @@ shared stgDados = let
     Resultado = Preparada
 in
     Resultado;
+
+shared diagPipeline = let
+    Fonte =
+        stgTabelasPowerQuery,
+
+    Consultas =
+        Table.SelectRows(
+            Fonte,
+            each [Origem] = "PowerQuery"
+        ),
+
+    Entidade =
+        Table.AddColumn(
+            Consultas,
+            "Entidade",
+            each Text.AfterDelimiter([Nome], [Prefix]),
+            type text
+        ),
+
+    Selecionar =
+        Table.SelectColumns(
+            Entidade,
+            {"Entidade", "Categoria", "Nome"}
+        ),
+
+    Pivot =
+        Table.Pivot(
+            Selecionar,
+            List.Distinct(Selecionar[Categoria]),
+            "Categoria",
+            "Nome"
+        ),
+
+    Categorias =
+        Record.ToTable(cfgCategoriasPowerQuery),
+
+    CategoriasOrdenadas =
+        Table.Sort(
+            Table.ExpandRecordColumn(
+                Categorias,
+                "Value",
+                {"Ordem", "Categoria"}
+            ),
+            {{"Ordem", Order.Ascending}}
+        ),
+
+    Ordem =
+        Table.ReorderColumns(
+            Pivot,
+            List.Combine(
+                {
+                    {"Entidade"},
+                    CategoriasOrdenadas[Categoria]
+                }
+            ),
+            MissingField.Ignore
+        ),
+
+    Resultado =
+        Table.Sort(
+            Ordem,
+            {{"Entidade", Order.Ascending}}
+        ),
+
+    Filtrar =
+        Table.SelectRows(
+            Resultado,
+            each not (
+                [Normalização] = null and
+                [Dimensão] = null and
+                [Fato] = null
+            )
+        )
+
+in
+    Filtrar;

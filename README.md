@@ -316,7 +316,7 @@ tbClientes  | CPF              | TEXT    | SIM         | TRIM;UPPER;DIGITS  | CP
 tbClientes  | Nome             | TEXT    | SIM         | TRIM;PROPER        | SIZE(100)
 tbClientes  | DataNascimento   | DATE    | NÃO         |                    |
 tbClientes  | Cidade           | TEXT    | NÃO         | TRIM;PROPER        |
-tbClientes  | Estado           | TEXT    | NÃO         | TRIM;UPPER         |
+tbClientes  | Estado           | TEXT    | NÃO         | TRIM;UPPER         | LIST(RS,SP,SC)
 ```
 
 ### Pipeline Compilado
