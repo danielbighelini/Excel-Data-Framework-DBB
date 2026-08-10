@@ -1,6 +1,6 @@
 // Power Query from: Excel Data Framework DBB.xlsx
-// Pathname: c:\Users\daniel-bighelini\OneDrive\Documentos\Planilhas\Excel Data Framework DBB\Excel Data Framework DBB.xlsx
-// Extracted: 2026-08-10T12:03:02.098Z
+// Pathname: c:\Users\daniel-bighelini\OneDrive\Documentos\Planilhas\Excel Data Framework DBB\src\Excel Data Framework DBB.xlsx
+// Extracted: 2026-08-10T15:45:39.069Z
 
 section Section1;
 
@@ -734,9 +734,9 @@ shared stgTabelasExcel = let
     LinhasFiltradas =
         Table.SelectRows(
             Fonte,
-            each not Text.Contains([Nome], "!")
+            each not Text.Contains([Nome], "!") and not Text.StartsWith([Nome], "diag")
         ),
-
+    
     ComSchema =
         Table.AddColumn(
             LinhasFiltradas,
@@ -2220,33 +2220,6 @@ in
          ValoresPermitidos = Text.Combine(List.Sort(Record.FieldNames(cfgTiposBooleanos)), ", ")]
     )
 ;
-shared fxOrigemComoTabela = (Valor as any) as table =>
-// Normaliza qualquer valor (table, record, list, scalar) em tabela de uma coluna.
-let
-    Resultado =
-        if Valor = null then
-            #table(
-                type table [Value = any],
-                {}
-            )
-        else if Value.Is(Valor, type table) then
-            Valor
-        else if Value.Is(Valor, type record) then
-            Record.ToTable(Valor)
-        else if Value.Is(Valor, type list) then
-            Table.FromList(
-                Valor,
-                Splitter.SplitByNothing(),
-                {"Value"}
-            )
-        else
-            #table(
-                type table [Value = any],
-                {{Valor}}
-            )
-
-in
-    Resultado;
 
 shared fxConversor = (valor as any, tipo as nullable type, optional culture as nullable text) as any =>
 // Hub central de conversão de tipo M; seleciona o conversor pelo tipo e aplica com a cultura informada.
@@ -2693,30 +2666,6 @@ shared fatoVendas = let
 in
     ColunasReordenadas;
 
-shared fxCaminhoLocal = (Chave as text) as text =>
-
-let
-    Valor =
-        Text.Trim(
-            fxParametro(Chave)
-        ),
-
-    Corrigido =
-        Text.Replace(
-            Valor,
-            "/",
-            "\"
-        ),
-
-    SemBarraFinal =
-        Text.TrimEnd(
-            Corrigido,
-            {"\"}
-        )
-
-in
-    SemBarraFinal;
-
 shared fxCaminhoSharePoint = (Chave as text) as text =>
 
 let
@@ -3134,7 +3083,7 @@ let
 in
     Resultado;
 
-shared fxOrigemArquivos = () as table =>
+shared fxOrigemArquivos = () as record =>
 
 let
     Origem =
@@ -3143,17 +3092,24 @@ let
         ),
         
     Resultado =
-        if Origem = "LOCAL" then
+        if Origem = "LOCAL" or Origem = "REMOTA" then
 
-            fxConectorLocal(
-                fxCaminhoLocal("Local_Pasta")
-            )
+            let
+                Caminho =
+                    fxResolverCaminho(
+                        fxParametro("Local_Pasta")
+                    ),
 
-        else if Origem = "REMOTA" then
+                Arquivos =
+                    fxConectorLocal(
+                        Caminho[Pasta]
+                    )
 
-            fxConectorLocal(
-                fxCaminhoLocal("Remota_Pasta")
-            )
+            in
+                [
+                    Arquivos = Arquivos,
+                    Arquivo = Caminho[Arquivo]
+                ]
 
         else if Origem = "SHAREPOINT" then
 
@@ -3304,6 +3260,33 @@ let
         else
 
             Conteudo
+
+in
+    Resultado;
+shared fxOrigemComoTabela = (Valor as any) as table =>
+// Normaliza qualquer valor (table, record, list, scalar) em tabela de uma coluna.
+let
+    Resultado =
+        if Valor = null then
+            #table(
+                type table [Value = any],
+                {}
+            )
+        else if Value.Is(Valor, type table) then
+            Valor
+        else if Value.Is(Valor, type record) then
+            Record.ToTable(Valor)
+        else if Value.Is(Valor, type list) then
+            Table.FromList(
+                Valor,
+                Splitter.SplitByNothing(),
+                {"Value"}
+            )
+        else
+            #table(
+                type table [Value = any],
+                {{Valor}}
+            )
 
 in
     Resultado;
@@ -3512,7 +3495,7 @@ shared srcArquivos = let
         else
 
             let
-                CaminhoArquivos =
+                Origem =
                     fxOrigemArquivos(),
 
                 FormatoArquivo =
@@ -3521,7 +3504,11 @@ shared srcArquivos = let
                     ),
 
                 ArquivosFiltrados =
-                    fxFiltrarArquivos(CaminhoArquivos, FormatoArquivo),
+                    fxFiltrarArquivos(
+                        Origem[Arquivos],
+                        FormatoArquivo,
+                        Origem[Arquivo]
+                    ),
 
                 Dados =
                     Table.AddColumn(
@@ -4098,7 +4085,8 @@ in
 
 shared fxFiltrarArquivos = (
     Tabela as table,
-    FormatoArquivo as text
+    FormatoArquivo as text,
+    optional NomeArquivo as nullable text
 )
 as table =>
 
@@ -4128,7 +4116,7 @@ let
                 ]
             ),
 
-    Resultado =
+    ResultadoFormato =
         Table.SelectRows(
             Tabela,
             each
@@ -4136,7 +4124,16 @@ let
                     Extensoes,
                     Text.Lower([Extension])
                 )
-        )
+        ),
+
+    Resultado =
+        if NomeArquivo = null then
+            ResultadoFormato
+        else
+            Table.SelectRows(
+                ResultadoFormato,
+                each [Name] = NomeArquivo
+            )
 
 in
     Resultado;
@@ -5397,112 +5394,6 @@ let
 
 in
     Resultado;
-
-
-shared fxObjetoIdentificarTipo = 
-(
-    tipo as type
-)
-as record =>
-
-let
-    // Mapeia um type M para {Kind, Nome, Categoria, IsStructured} e gera flags IsTable, IsList, etc.
-
-    Tipos =
-        Record.FieldValues(
-            cfgTiposObjetos
-        ),
-
-    TiposComMatch =
-
-        List.Transform(
-
-            Tipos,
-
-            each
-
-                Record.AddField(
-
-                    _,
-
-                    "IsMatch",
-
-                    Type.Is(
-                        tipo,
-                        _[Type]
-                    )
-
-                )
-
-        ),
-
-    InformacoesTipo =
-
-        let
-
-            Correspondencias =
-
-                List.Select(
-
-                    TiposComMatch,
-
-                    each [IsMatch]
-
-                )
-
-        in
-
-            if List.IsEmpty(Correspondencias)
-            then
-                [
-                    Kind = "Unknown",
-                    Type = tipo
-                ]
-            else
-                Record.RemoveFields(
-
-                    Correspondencias{0},
-
-                    {"IsMatch"}
-
-                ),
-
-    Flags =
-
-        Record.FromList(
-
-            List.Transform(
-
-                TiposComMatch,
-
-                each [IsMatch]
-
-            ),
-
-            List.Transform(
-
-                TiposComMatch,
-
-                each "Is" & [Kind]
-
-            )
-
-        ),
-
-    Retorno =
-
-        Record.Combine(
-
-            {
-                InformacoesTipo,
-                Flags
-            }
-
-        )
-
-in
-
-    Retorno;
 
 shared fxObjetoIdentificarPeloNome = (
     objeto as text,
@@ -8089,3 +7980,75 @@ shared diagPipeline = let
 
 in
     Filtrar;
+
+shared fxResolverCaminho = (Caminho as text) as record =>
+
+let
+    Valor =
+        Text.Trim(Caminho),
+
+    Normalizado =
+        Text.Replace(
+            Valor,
+            "/",
+            "\"
+        ),
+
+    CaminhoSemBarraFinal =
+        if Text.EndsWith(Normalizado, "\") then
+            Text.Start(
+                Normalizado,
+                Text.Length(Normalizado) - 1
+            )
+        else
+            Normalizado,
+
+    UltimoSeparador =
+        Text.PositionOf(
+            CaminhoSemBarraFinal,
+            "\",
+            Occurrence.Last
+        ),
+
+    NomeUltimoElemento =
+        if UltimoSeparador >= 0 then
+            Text.Range(
+                CaminhoSemBarraFinal,
+                UltimoSeparador + 1
+            )
+        else
+            CaminhoSemBarraFinal,
+
+    Extensao =
+        if Text.Contains(NomeUltimoElemento, ".") then
+            Text.AfterDelimiter(
+                NomeUltimoElemento,
+                ".",
+                {0, RelativePosition.FromEnd}
+            )
+        else
+            null,
+
+    EhArquivo =
+        Extensao <> null,
+
+    Pasta =
+        if EhArquivo then
+            Text.Start(
+                CaminhoSemBarraFinal,
+                UltimoSeparador + 1
+            )
+        else
+            CaminhoSemBarraFinal & "\",
+
+    Arquivo =
+        if EhArquivo then
+            NomeUltimoElemento
+        else
+            null
+
+in
+    [
+        Pasta = Pasta,
+        Arquivo = Arquivo
+    ];

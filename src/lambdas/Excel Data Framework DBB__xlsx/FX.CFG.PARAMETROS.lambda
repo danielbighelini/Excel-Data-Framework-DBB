@@ -6,10 +6,10 @@ Description: Retorna a tabela de configuraÃ§Ã£o de parÃ¢metros do framewor
 
 
 Formula:
-=LAMBDA(tbParametros[#All])
+=LAMBDA(VSTACK(tbParametros[#Headers], FILTER(tbParametros[], tbParametros[Parâmetro] <> "")))
 
 Localized Formula (pt-BR) - Preview Only:
-=LAMBDA(tbParametros[#All])
+=LAMBDA(EMPILHARV(tbParametros[#Headers], FILTRO(tbParametros[], tbParametros[Parâmetro] <> "")))
 
 Raw Formula Snapshot (en-US) - Preview Only:
-=_xlfn.LAMBDA(tbParametros[#All])
+=_xlfn.LAMBDA(_xlfn.VSTACK(tbParametros[#Headers], _xlfn._xlws.FILTER(tbParametros[], tbParametros[Parâmetro] <> "")))

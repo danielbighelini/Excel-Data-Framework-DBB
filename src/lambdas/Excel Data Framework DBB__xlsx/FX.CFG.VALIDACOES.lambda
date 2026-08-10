@@ -1,0 +1,15 @@
+Name: FX.CFG.VALIDACOES
+Scope: Workbook
+Source Workbook: Excel Data Framework DBB.xlsx
+Source Workbook Folder: Excel Data Framework DBB__xlsx
+Description: Retorna a tabela de configuraÃ§Ã£o de validaÃ§Ãµes utilizada pelo framework.
+
+
+Formula:
+=LAMBDA(VSTACK(tbParametrosValidacoes[#Headers], FILTER(tbParametrosValidacoes[], tbParametrosValidacoes[Código] <> "")))
+
+Localized Formula (pt-BR) - Preview Only:
+=LAMBDA(EMPILHARV(tbParametrosValidacoes[#Headers], FILTRO(tbParametrosValidacoes[], tbParametrosValidacoes[Código] <> "")))
+
+Raw Formula Snapshot (en-US) - Preview Only:
+=_xlfn.LAMBDA(_xlfn.VSTACK(tbParametrosValidacoes[#Headers], _xlfn._xlws.FILTER(tbParametrosValidacoes[], tbParametrosValidacoes[Código] <> "")))

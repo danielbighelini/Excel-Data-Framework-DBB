@@ -1,0 +1,15 @@
+Name: FX.CFG.BOOLEANOS
+Scope: Workbook
+Source Workbook: Excel Data Framework DBB.xlsx
+Source Workbook Folder: Excel Data Framework DBB__xlsx
+Description: Retorna a tabela de configuraÃ§Ã£o de valores booleanos utilizada pelo framework.
+
+
+Formula:
+=LAMBDA(VSTACK(tbParametrosBooleanos[#Headers], FILTER(tbParametrosBooleanos[], tbParametrosBooleanos[Descrição] <> "")))
+
+Localized Formula (pt-BR) - Preview Only:
+=LAMBDA(EMPILHARV(tbParametrosBooleanos[#Headers], FILTRO(tbParametrosBooleanos[], tbParametrosBooleanos[Descrição] <> "")))
+
+Raw Formula Snapshot (en-US) - Preview Only:
+=_xlfn.LAMBDA(_xlfn.VSTACK(tbParametrosBooleanos[#Headers], _xlfn._xlws.FILTER(tbParametrosBooleanos[], tbParametrosBooleanos[Descrição] <> "")))

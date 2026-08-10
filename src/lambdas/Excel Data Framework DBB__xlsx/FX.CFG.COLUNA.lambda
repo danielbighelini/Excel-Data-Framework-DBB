@@ -1,0 +1,15 @@
+Name: FX.CFG.COLUNA
+Scope: Workbook
+Source Workbook: Excel Data Framework DBB.xlsx
+Source Workbook Folder: Excel Data Framework DBB__xlsx
+Description: Retorna uma coluna de uma tabela a partir do nome do cabeÃ§alho.
+
+
+Formula:
+=LAMBDA(tabela,coluna,incluir_rotulo,LET(_cabecalhos, TAKE(tabela, 1), _indice, XMATCH(coluna, _cabecalhos, 0), _incluir_rotulo, IF(ISOMITTED(incluir_rotulo), FALSE, incluir_rotulo), resultado, CHOOSECOLS(tabela, _indice), IF(_incluir_rotulo = FALSE, DROP(resultado, 1), resultado)))
+
+Localized Formula (pt-BR) - Preview Only:
+=LAMBDA(tabela,coluna,incluir_rotulo,LET(_cabecalhos, PEGAR(tabela, 1), _indice, CORRESPX(coluna, _cabecalhos, 0), _incluir_rotulo, SE(ISOMITTED(incluir_rotulo), FALSO, incluir_rotulo), resultado, ESCOLHERCOLS(tabela, _indice), SE(_incluir_rotulo = FALSO, DESCARTAR(resultado, 1), resultado)))
+
+Raw Formula Snapshot (en-US) - Preview Only:
+=_xlfn.LAMBDA(_xlpm.tabela,_xlpm.coluna,_xlop.incluir_rotulo,_xlfn.LET(_xlpm._cabecalhos, _xlfn.TAKE(_xlpm.tabela, 1), _xlpm._indice, _xlfn.XMATCH(_xlpm.coluna, _xlpm._cabecalhos, 0), _xlpm._incluir_rotulo, IF(_xlfn.ISOMITTED(_xlpm.incluir_rotulo), FALSE, _xlpm.incluir_rotulo), _xlpm.resultado, _xlfn.CHOOSECOLS(_xlpm.tabela, _xlpm._indice), IF(_xlpm._incluir_rotulo = FALSE, _xlfn.DROP(_xlpm.resultado, 1), _xlpm.resultado)))
