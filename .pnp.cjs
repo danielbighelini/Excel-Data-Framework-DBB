@@ -29,6 +29,7 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./",\
         "packageDependencies": [\
           ["@semantic-release/changelog", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:6.0.3"],\
+          ["@semantic-release/git", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:11.0.1"],\
           ["root-workspace-0b6124", "workspace:."],\
           ["semantic-release", "npm:25.0.9"]\
         ],\
@@ -637,6 +638,36 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "../../../../AppData/Local/Yarn/Berry/cache/@semantic-release-error-npm-4.0.0-8491f5d82c-10c0.zip/node_modules/@semantic-release/error/",\
         "packageDependencies": [\
           ["@semantic-release/error", "npm:4.0.0"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["@semantic-release/git", [\
+      ["npm:11.0.1", {\
+        "packageLocation": "../../../../AppData/Local/Yarn/Berry/cache/@semantic-release-git-npm-11.0.1-ab45488bb9-10c0.zip/node_modules/@semantic-release/git/",\
+        "packageDependencies": [\
+          ["@semantic-release/git", "npm:11.0.1"]\
+        ],\
+        "linkType": "SOFT"\
+      }],\
+      ["virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:11.0.1", {\
+        "packageLocation": "./.yarn/__virtual__/@semantic-release-git-virtual-a7d47dcfca/5/AppData/Local/Yarn/Berry/cache/@semantic-release-git-npm-11.0.1-ab45488bb9-10c0.zip/node_modules/@semantic-release/git/",\
+        "packageDependencies": [\
+          ["@semantic-release/error", "npm:4.0.0"],\
+          ["@semantic-release/git", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:11.0.1"],\
+          ["@types/semantic-release", null],\
+          ["aggregate-error", "npm:5.0.0"],\
+          ["debug", "virtual:8866147795d308091c464175a42e9db9c8525e58f8ee83ac382b2a6d7dfca9f0262a439c98e1e6c97839fb23bdce1374c6611813b5e2e1c7d2aa725e24e64d29#npm:4.4.3"],\
+          ["dir-glob", "npm:3.0.1"],\
+          ["execa", "npm:10.0.1"],\
+          ["lodash-es", "npm:4.18.1"],\
+          ["micromatch", "npm:4.0.8"],\
+          ["p-reduce", "npm:3.0.0"],\
+          ["semantic-release", "npm:25.0.9"]\
+        ],\
+        "packagePeers": [\
+          "@types/semantic-release",\
+          "semantic-release"\
         ],\
         "linkType": "HARD"\
       }]\
@@ -1609,6 +1640,25 @@ const RAW_RUNTIME_STATE =
       }]\
     ]],\
     ["execa", [\
+      ["npm:10.0.1", {\
+        "packageLocation": "../../../../AppData/Local/Yarn/Berry/cache/execa-npm-10.0.1-81879e23c3-10c0.zip/node_modules/execa/",\
+        "packageDependencies": [\
+          ["@sindresorhus/merge-streams", "npm:4.0.0"],\
+          ["execa", "npm:10.0.1"],\
+          ["figures", "npm:6.1.0"],\
+          ["get-stream", "npm:9.0.1"],\
+          ["human-signals", "npm:8.0.1"],\
+          ["is-plain-obj", "npm:4.1.0"],\
+          ["is-stream", "npm:4.0.1"],\
+          ["npm-run-path", "npm:6.0.0"],\
+          ["pretty-ms", "npm:9.3.0"],\
+          ["signal-exit", "npm:4.1.0"],\
+          ["strip-final-newline", "npm:4.0.0"],\
+          ["which-command", "npm:0.1.0"],\
+          ["yoctocolors", "npm:2.2.0"]\
+        ],\
+        "linkType": "HARD"\
+      }],\
       ["npm:8.0.1", {\
         "packageLocation": "../../../../AppData/Local/Yarn/Berry/cache/execa-npm-8.0.1-0211bd404c-10c0.zip/node_modules/execa/",\
         "packageDependencies": [\
@@ -3706,6 +3756,7 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./",\
         "packageDependencies": [\
           ["@semantic-release/changelog", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:6.0.3"],\
+          ["@semantic-release/git", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:11.0.1"],\
           ["root-workspace-0b6124", "workspace:."],\
           ["semantic-release", "npm:25.0.9"]\
         ],\
@@ -4471,6 +4522,15 @@ const RAW_RUNTIME_STATE =
         "packageDependencies": [\
           ["isexe", "npm:4.0.0"],\
           ["which", "npm:6.0.1"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["which-command", [\
+      ["npm:0.1.0", {\
+        "packageLocation": "../../../../AppData/Local/Yarn/Berry/cache/which-command-npm-0.1.0-464a06fdde-10c0.zip/node_modules/which-command/",\
+        "packageDependencies": [\
+          ["which-command", "npm:0.1.0"]\
         ],\
         "linkType": "HARD"\
       }]\
