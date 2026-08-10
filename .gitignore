@@ -1,13 +1,27 @@
-.env
+# Excel
+*.xlsx
+*.xlsm
+*.xlsb
+*.xls
+
+# Node.js
+node_modules/
+
+# Python
 .venv/
+__pycache__/
+*.py[cod]
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Misc
 .agents/
 .vscode/
 backups/
 assets/videos/
 examples/data/
-*.xlsx
-*.xlsm
-*.xlsb
-*.xls
 TODO.md
 PROMPTS.md
