@@ -29,6 +29,7 @@ __pycache__/
 .agents/
 .vscode/
 backups/
+*.xlsx.backup.*
 assets/videos/
 examples/data/
 TODO.md
