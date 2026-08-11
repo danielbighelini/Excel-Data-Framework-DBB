@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/danielbighelini/Excel-Data-Framework-DBB/compare/v1.3.0...v1.4.0) (2026-08-11)
+
+
+### Features
+
+* setup.ps1 ([16a122f](https://github.com/danielbighelini/Excel-Data-Framework-DBB/commit/16a122f5ba944bd65ce916e8c41428e5d691d4a8))
+
 # [1.3.0](https://github.com/danielbighelini/Excel-Data-Framework-DBB/compare/v1.2.0...v1.3.0) (2026-08-10)
 
 
