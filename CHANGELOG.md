@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/danielbighelini/Excel-Data-Framework-DBB/compare/v1.5.0...v1.5.1) (2026-08-11)
+
+
+### Bug Fixes
+
+* função de intervalo calendario corrigida ([d7c9abf](https://github.com/danielbighelini/Excel-Data-Framework-DBB/commit/d7c9abf65539f07dda758a4fce1c33cf0305dd4c))
+
 # [1.5.0](https://github.com/danielbighelini/Excel-Data-Framework-DBB/compare/v1.4.0...v1.5.0) (2026-08-11)
 
 
