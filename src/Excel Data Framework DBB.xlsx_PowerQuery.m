@@ -1,6 +1,6 @@
 // Power Query from: Excel Data Framework DBB.xlsx
-// Pathname: c:\Users\daniel-bighelini\OneDrive\Documentos\Planilhas\Excel Data Framework DBB\src\Excel Data Framework DBB.xlsx
-// Extracted: 2026-08-10T15:45:39.069Z
+// Pathname: c:\Users\daniel-bighelini\OneDrive\Documentos\Planilhas\Excel-Data-Framework-DBB\src\Excel Data Framework DBB.xlsx
+// Extracted: 2026-08-11T00:58:26.239Z
 
 section Section1;
 
