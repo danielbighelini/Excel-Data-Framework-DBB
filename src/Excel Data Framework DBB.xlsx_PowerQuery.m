@@ -1,6 +1,6 @@
 // Power Query from: Excel Data Framework DBB.xlsx
 // Pathname: c:\Users\daniel-bighelini\OneDrive\Documentos\Planilhas\Excel-Data-Framework-DBB\src\Excel Data Framework DBB.xlsx
-// Extracted: 2026-08-11T00:58:26.239Z
+// Extracted: 2026-08-11T02:47:39.233Z
 
 section Section1;
 
@@ -3772,15 +3772,27 @@ shared cfgFeriadosIndices = let
 in
     Resultado;
 
-shared cfgCalendarioIntervalos =
-// Estrutura utilizada para descobrir o intervalo de datas
-// que será utilizado na dimensão de calendario.
+shared cfgCalendarioIntervalos = // Estrutura de configuração utilizada para definir o intervalo de datas
+// que será considerado na dimensão de calendário.
+//
+// Quando a tabela é informada como null, a função utiliza automaticamente
+// o primeiro e o último dia do ano atual.
+//
+// Quando uma tabela é informada, a função analisa a coluna indicada e
+// determina a menor e a maior data encontrada.
+//
+// Para adicionar um intervalo específico de uma tabela, inclua uma nova
+// chamada à função no registro abaixo, informando a tabela e a coluna de data.
 
 let
+    // Lista de intervalos que serão utilizados pela dimensão de calendário.
+    //
+    // null = utiliza automaticamente o intervalo do ano atual.
+    // "Data" = coluna utilizada para determinar o intervalo quando uma
+    // tabela específica for informada.
     cfgIntervalos = {
-    // Adicione uma entrada por tabela e sua coluna de data.
-    fxCalendarioIntervaloData(srcVendas, "Data")
-}
+        fxCalendarioIntervaloData(null, "Data")
+    }
 in
     cfgIntervalos;
 
@@ -5002,65 +5014,78 @@ in
     [Valor = valor, Ocorrencias = Ocorrencias];
 
 shared fxCalendarioIntervaloData = (
-    tabela as table,
+    tabela as nullable table,
     coluna as text
 ) as nullable record =>
 
 let
-    SchemaTipo = try Type.TableColumn(Value.Type(tabela), coluna) otherwise type any,
-
-    ValoresOrigem = Table.Column(tabela, coluna),
-
-    Datas =
-        if SchemaTipo = type date or SchemaTipo = type datetime or SchemaTipo = type datetimezone then
-            List.Buffer(List.RemoveNulls(ValoresOrigem))
-        else
-            let
-                NaoNulos =
-                    List.Select(
-                        ValoresOrigem,
-                        each _ <> null and _ <> ""
-                    ),
-
-                Convertidos =
-                    List.Transform(
-                        NaoNulos,
-                        (v) =>
-                            if v is date then
-                                v
-                            else if v is datetime then
-                                DateTime.Date(v)
-                            else
-                                try Date.From(v) otherwise null
-                    )
-            in
-                List.Buffer(List.RemoveNulls(Convertidos)),
+    AnoAtual =
+        Date.Year(Date.From(DateTime.LocalNow())),
 
     Resultado =
-        if List.IsEmpty(Datas) then
-            null
+        if tabela = null then
+            [
+                DataInicial = #date(AnoAtual, 1, 1),
+                DataFinal = #date(AnoAtual, 12, 31)
+            ]
         else
-            List.Accumulate(
-                List.Skip(Datas),
-                [
-                    DataInicial = Datas{0},
-                    DataFinal = Datas{0}
-                ],
-                (estado, atual) =>
-                    [
-                        DataInicial =
-                            if atual < estado[DataInicial] then
-                                atual
-                            else
-                                estado[DataInicial],
+            let
+                SchemaTipo =
+                    try Type.TableColumn(
+                        Value.Type(tabela),
+                        coluna
+                    )
+                    otherwise type any,
 
-                        DataFinal =
-                            if atual > estado[DataFinal] then
-                                atual
-                            else
-                                estado[DataFinal]
+                ValoresOrigem =
+                    Table.Column(
+                        tabela,
+                        coluna
+                    ),
+
+                Datas =
+                    if
+                        SchemaTipo = type date
+                        or SchemaTipo = type datetime
+                        or SchemaTipo = type datetimezone
+                    then
+                        List.Buffer(
+                            List.RemoveNulls(
+                                List.Transform(
+                                    ValoresOrigem,
+                                    each
+                                        try Date.From(_)
+                                        otherwise null
+                                )
+                            )
+                        )
+                    else
+                        let
+                            NaoNulos =
+                                List.Select(
+                                    ValoresOrigem,
+                                    each _ <> null and _ <> ""
+                                ),
+
+                            Convertidos =
+                                List.Transform(
+                                    NaoNulos,
+                                    (v) =>
+                                        try Date.From(v)
+                                        otherwise null
+                                )
+                        in
+                            List.Buffer(
+                                List.RemoveNulls(Convertidos)
+                            )
+            in
+                if List.IsEmpty(Datas) then
+                    null
+                else
+                    [
+                        DataInicial = List.Min(Datas),
+                        DataFinal = List.Max(Datas)
                     ]
-            )
 in
     Resultado;
 shared fxValidacaoREQUIRED = (
@@ -7972,9 +7997,9 @@ shared diagPipeline = let
         Table.SelectRows(
             Resultado,
             each not (
-                [Normalização] = null and
-                [Dimensão] = null and
-                [Fato] = null
+                Record.FieldOrDefault(_, "Normalização", null) = null and
+                Record.FieldOrDefault(_, "Dimensão", null) = null and
+                Record.FieldOrDefault(_, "Fato", null) = null
             )
         )
 
