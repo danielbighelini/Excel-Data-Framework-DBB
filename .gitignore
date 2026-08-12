@@ -34,6 +34,7 @@ assets/videos/
 examples/data/
 TODO.md
 PROMPTS.md
+AGENTS.md
 
 # Yarn Plug'n'Play generated artifacts
 .pnp.cjs
