@@ -2,14 +2,14 @@ Name: FX.PARAMETRO
 Scope: Workbook
 Source Workbook: Excel Data Framework DBB.xlsx
 Source Workbook Folder: Excel Data Framework DBB__xlsx
-Description: Retorna o valor de um parÃ¢metro da tabela tbParametros a partir do seu nome. Opcionalmente permite informar um valor padrÃ£o, utilizado quando o parÃ¢metro nÃ£o Ã© encontrado. Retorna #N/D caso nÃ£o exista e nenhum padrÃ£o seja informado.
+Description: Retorna o valor de um parÃ¢metro da tabela de parÃ¢metros a partir do seu nome. Opcionalmente permite informar um valor padrÃ£o, utilizado quando o parÃ¢metro nÃ£o Ã© encontrado. Retorna #N/D caso nÃ£o exista e nenhum padrÃ£o seja informado.
 
 
 Formula:
-=LAMBDA(parametro,padrao,LET(_Posicao, XMATCH(parametro, FX.CFG.COLUNA(FX.CFG.PARAMETROS(), "Parâmetro"), 0), IFERROR(INDEX(FX.CFG.COLUNA(FX.CFG.PARAMETROS(), "Valor"), _Posicao), IF(ISOMITTED(padrao), NA(), padrao))))
+=LAMBDA(parametro,padrao,LET(_Parametros, FX.CFG.PARAMETROS(), _Booleanos, FX.CFG.BOOLEANOS(), _Posicao, XMATCH(parametro, FX.CFG.COLUNA(_Parametros, "Parâmetro"), 0), _Valor, INDEX(FX.CFG.COLUNA(_Parametros, "Valor"), _Posicao), _Tipo, INDEX(FX.CFG.COLUNA(_Parametros, "Tipo"), _Posicao), _Resultado, IFERROR(IF(_Tipo = "Booleano", INDEX(FX.CFG.COLUNA(_Booleanos, "Código"), XMATCH(_Valor, FX.CFG.COLUNA(_Booleanos, "Descrição"), 0)), _Valor), IF(ISOMITTED(padrao), NA(), padrao)), _Resultado))
 
 Localized Formula (pt-BR) - Preview Only:
-=LAMBDA(parametro,padrao,LET(_Posicao, CORRESPX(parametro, FX.CFG.COLUNA(FX.CFG.PARAMETROS(), "Parâmetro"), 0), SEERRO(ÍNDICE(FX.CFG.COLUNA(FX.CFG.PARAMETROS(), "Valor"), _Posicao), SE(ISOMITTED(padrao), NÃO.DISP(), padrao))))
+=LAMBDA(parametro,padrao,LET(_Parametros, FX.CFG.PARAMETROS(), _Booleanos, FX.CFG.BOOLEANOS(), _Posicao, CORRESPX(parametro, FX.CFG.COLUNA(_Parametros, "Parâmetro"), 0), _Valor, ÍNDICE(FX.CFG.COLUNA(_Parametros, "Valor"), _Posicao), _Tipo, ÍNDICE(FX.CFG.COLUNA(_Parametros, "Tipo"), _Posicao), _Resultado, SEERRO(SE(_Tipo = "Booleano", ÍNDICE(FX.CFG.COLUNA(_Booleanos, "Código"), CORRESPX(_Valor, FX.CFG.COLUNA(_Booleanos, "Descrição"), 0)), _Valor), SE(ISOMITTED(padrao), NÃO.DISP(), padrao)), _Resultado))
 
 Raw Formula Snapshot (en-US) - Preview Only:
-=_xlfn.LAMBDA(_xlpm.parametro,_xlop.padrao,_xlfn.LET(_xlpm._Posicao, _xlfn.XMATCH(_xlpm.parametro, FX.CFG.COLUNA(FX.CFG.PARAMETROS(), "Parâmetro"), 0), IFERROR(INDEX(FX.CFG.COLUNA(FX.CFG.PARAMETROS(), "Valor"), _xlpm._Posicao), IF(_xlfn.ISOMITTED(_xlpm.padrao), NA(), _xlpm.padrao))))
+=_xlfn.LAMBDA(_xlpm.parametro,_xlop.padrao,_xlfn.LET(_xlpm._Parametros, FX.CFG.PARAMETROS(), _xlpm._Booleanos, FX.CFG.BOOLEANOS(), _xlpm._Posicao, _xlfn.XMATCH(_xlpm.parametro, FX.CFG.COLUNA(_xlpm._Parametros, "Parâmetro"), 0), _xlpm._Valor, INDEX(FX.CFG.COLUNA(_xlpm._Parametros, "Valor"), _xlpm._Posicao), _xlpm._Tipo, INDEX(FX.CFG.COLUNA(_xlpm._Parametros, "Tipo"), _xlpm._Posicao), _xlpm._Resultado, IFERROR(IF(_xlpm._Tipo = "Booleano", INDEX(FX.CFG.COLUNA(_xlpm._Booleanos, "Código"), _xlfn.XMATCH(_xlpm._Valor, FX.CFG.COLUNA(_xlpm._Booleanos, "Descrição"), 0)), _xlpm._Valor), IF(_xlfn.ISOMITTED(_xlpm.padrao), NA(), _xlpm.padrao)), _xlpm._Resultado))

@@ -1,6 +1,6 @@
 // Power Query from: Excel Data Framework DBB.xlsx
-// Pathname: c:\Users\daniel-bighelini\OneDrive\Documentos\Planilhas\Excel-Data-Framework-DBB\src\Excel Data Framework DBB.xlsx
-// Extracted: 2026-08-12T13:52:55.220Z
+// Pathname: c:\Users\daniel-bighelini\OneDrive\Documentos\04_Projetos\Excel-Data-Framework-DBB\src\Excel Data Framework DBB.xlsx
+// Extracted: 2026-08-19T15:20:54.350Z
 
 section Section1;
 
@@ -146,7 +146,7 @@ let
             {"KEEPTEXT", "Mantém apenas caracteres e espaços do texto.", fxTratamentoKeepText, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
 
             // Validações
-            {"REQUIRED", "Valida se um campo obrigatório foi preenchido.", fxValidacaoREQUIRED, type any, type any, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"REQUIRED", "Valida se um campo obrigatório foi preenchido.", fxValidacaoRequired, type any, type any, false, true, CategoriaValidacao, SeveridadeErro, null},
             {"CPFVAL", "Valida se o número de CPF informado é matematicamente válido.", fxValidacaoCPF, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
             {"CNPJVAL", "Valida se o número de CNPJ informado é matematicamente válido.", fxValidacaoCNPJ, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
             {"CEPVAL", "Valida se o formato do CEP informado está correto.", fxValidacaoCEP, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
@@ -401,17 +401,30 @@ shared cfgPrefixosPowerQuery = List.Buffer(
 shared fxParametro = (
     parametro as text,
     optional valorPadrao as nullable any,
-    optional culture as nullable text
+    optional culture as nullable text,
+    optional config as nullable record
 )
 as any =>
 
 let
-    Parametros = cfgParametros,
+
+    Parametros =
+        cfgParametros,
+
+    NomeParametro =
+        Text.Upper(parametro),
+
+    ExisteOverride =
+        config <> null
+        and Record.HasFields(
+            config,
+            NomeParametro
+        ),
 
     Parametro =
         Record.FieldOrDefault(
             Parametros,
-            parametro
+            NomeParametro
         ),
 
     ExisteParametro =
@@ -419,26 +432,46 @@ let
 
     Tipo =
         if ExisteParametro then
-            Record.FieldOrDefault(Parametro, "Tipo", type any)
+            Record.FieldOrDefault(
+                Parametro,
+                "Tipo",
+                type any
+            )
         else
             type any,
 
     Obrigatorio =
         if ExisteParametro then
-            Record.FieldOrDefault(Parametro, "Obrigatório", true)
+            Record.FieldOrDefault(
+                Parametro,
+                "Obrigatório",
+                true
+            )
         else
-            true,
+            false,
 
     Permitidos =
         if ExisteParametro then
-            Record.FieldOrDefault(Parametro, "Permitidos")
+            Record.FieldOrDefault(
+                Parametro,
+                "Permitidos"
+            )
         else
             null,
 
     Valor =
-        if ExisteParametro then
+        if ExisteOverride then
+            Record.Field(
+                config,
+                NomeParametro
+            )
+        else if ExisteParametro then
             let
-                v = Record.FieldOrDefault(Parametro, "Valor")
+                v =
+                    Record.FieldOrDefault(
+                        Parametro,
+                        "Valor"
+                    )
             in
                 if v = null then
                     valorPadrao
@@ -448,28 +481,61 @@ let
             valorPadrao,
 
     Resultado =
-        if not ExisteParametro and Obrigatorio and valorPadrao = null then
+        if
+            not ExisteParametro
+            and not ExisteOverride
+            and valorPadrao = null
+        then
+
             error Error.Record(
                 "Parâmetro inexistente",
                 Text.Format(
                     "O parâmetro '#{0}' não foi encontrado.",
-                    {parametro}
+                    {
+                        parametro
+                    }
                 ),
                 [
                     Parametro = parametro,
                     Disponiveis =
                         Text.Combine(
                             List.Sort(
-                                Record.FieldNames(Parametros)
+                                Record.FieldNames(
+                                    Parametros
+                                )
                             ),
                             ", "
                         )
                 ]
             )
+
+        else if
+            ExisteParametro
+            and Obrigatorio
+            and Valor = null
+        then
+
+            error Error.Record(
+                "Parâmetro obrigatório",
+                Text.Format(
+                    "O parâmetro '#{0}' é obrigatório e não possui valor.",
+                    {
+                        parametro
+                    }
+                ),
+                [
+                    Parametro = parametro
+                ]
+            )
+
         else if Valor = null then
+
             null
+
         else
+
             let
+
                 Conversao =
                     try
                         fxConversor(
@@ -477,8 +543,11 @@ let
                             Tipo,
                             culture ?? "pt-BR"
                         )
+
             in
+
                 if Conversao[HasError] then
+
                     error Error.Record(
                         "Erro de conversão",
                         Text.Format(
@@ -494,6 +563,7 @@ let
                             TipoDestino = Tipo
                         ]
                     )
+
                 else if
                     Permitidos <> null
                     and not List.Contains(
@@ -501,6 +571,7 @@ let
                         Conversao[Value]
                     )
                 then
+
                     error Error.Record(
                         "Valor inválido",
                         Text.Format(
@@ -516,8 +587,10 @@ let
                             Permitidos = Permitidos
                         ]
                     )
+
                 else
                     Conversao[Value]
+
 in
     Resultado;
 
@@ -1147,9 +1220,21 @@ shared stgParametros = let
             }
         ),
 
+    NormalizarName =
+        Table.TransformColumns(
+            Fonte,
+            {
+                {
+                    "Parâmetro",
+                    Text.Upper,
+                    type text
+                }
+            }
+        ),
+
     Distintos =
         Table.Distinct(
-            Fonte,
+            NormalizarName,
             {"Parâmetro"}
         ),
 
@@ -1201,9 +1286,7 @@ shared stgParametros = let
 
 in
 
-    Resultado
-
-;
+    Resultado;
 
 shared fxParametroIdentificarTipo = (tipo as nullable text) as nullable type =>
 // Converte nome de tipo em texto (ex: "TEXTO", "DATA") no type M correspondente via cfgTiposDados.
@@ -1238,6 +1321,42 @@ in
                     )
             ]
         );
+
+shared fxConfigParametro = (
+    Config as nullable record,
+    Parametro as text,
+    optional ValorPadrao as nullable any,
+    optional Culture as nullable text
+)
+as any =>
+
+let
+    TemOverride =
+        Config <> null
+        and Record.HasFields(
+            Config,
+            Parametro
+        ),
+
+    Resultado =
+        if TemOverride then
+            fxParametro(
+                Parametro,
+                Record.Field(
+                    Config,
+                    Parametro
+                ),
+                Culture
+            )
+        else
+            fxParametro(
+                Parametro,
+                ValorPadrao,
+                Culture
+            )
+
+in
+    Resultado;
 
 
 shared cfgTiposDados = srcTiposDados;
@@ -2701,15 +2820,29 @@ in
     SemBarraFinal;
 
 shared fxODataRequest = (
-    optional Url as nullable text
+    optional Url as nullable text,
+    optional Config as nullable record
 )
 as any =>
 
 let
     Endpoint =
         if Url = null then
-            fxParametro("REST_Endpoint_Base")
-                & fxParametro("REST_Endpoint_Path", "")
+
+            fxParametro(
+                "REST_Endpoint_Base",
+                null,
+                null,
+                Config
+            )
+            &
+            fxParametro(
+                "REST_Endpoint_Path",
+                "",
+                null,
+                Config
+            )
+
         else
             Url,
 
@@ -2723,22 +2856,43 @@ in
 
 shared fxSOAPRequest = (
     optional Envelope as nullable text,
-    optional Headers as nullable record
+    optional Headers as nullable record,
+    optional Config as nullable record
 )
 as binary =>
 
 let
     BaseUrl =
-        fxParametro("REST_Endpoint_Base"),
+        fxParametro(
+            "REST_Endpoint_Base",
+            null,
+            null,
+            Config
+        ),
 
     Path =
-        fxParametro("REST_Endpoint_Path", ""),
+        fxParametro(
+            "REST_Endpoint_Path",
+            "",
+            null,
+            Config
+        ),
 
     Timeout =
-        fxParametro("REST_Timeout", 30),
+        fxParametro(
+            "REST_Timeout",
+            30,
+            null,
+            Config
+        ),
 
     Tentativas =
-        fxParametro("REST_Tentativas", 3),
+        fxParametro(
+            "REST_Tentativas",
+            3,
+            null,
+            Config
+        ),
 
     Corpo =
         if Envelope = null then
@@ -2760,10 +2914,14 @@ let
         Record.Combine(
             {
                 [
-                    #"Content-Type" = "text/xml; charset=utf-8"
+                    #"Content-Type" =
+                        "text/xml; charset=utf-8"
                 ],
                 cfgRESTHeaders,
-                if Headers = null then [] else Headers
+                if Headers = null then
+                    []
+                else
+                    Headers
             }
         ),
 
@@ -2788,10 +2946,22 @@ let
                         [
                             RelativePath = Path,
                             Headers = Cabecalhos,
-                            Content = Text.ToBinary(Corpo, TextEncoding.Utf8),
-                            Timeout = #duration(0,0,0,Timeout),
-                            IsRetry = Tentativa > 0,
-                            ManualStatusHandling = StatusReprocessar
+                            Content =
+                                Text.ToBinary(
+                                    Corpo,
+                                    TextEncoding.Utf8
+                                ),
+                            Timeout =
+                                #duration(
+                                    0,
+                                    0,
+                                    0,
+                                    Timeout
+                                ),
+                            IsRetry =
+                                Tentativa > 0,
+                            ManualStatusHandling =
+                                StatusReprocessar
                         ]
                     ),
 
@@ -2806,25 +2976,38 @@ let
                     null
                 else
                     try
-                        Value.Metadata(Binario)[Response.Status]
+                        Value.Metadata(
+                            Binario
+                        )[Response.Status]
                     otherwise
                         200,
 
             DeveRepetir =
-                (Resposta[HasError]
-                    or List.Contains(StatusReprocessar, Status))
+                (
+                    Resposta[HasError]
+                    or List.Contains(
+                        StatusReprocessar,
+                        Status
+                    )
+                )
                 and Tentativa < Tentativas,
 
             Resultado =
                 if DeveRepetir then
 
                     Function.InvokeAfter(
-                        () => @Requisitar(Tentativa + 1),
+                        () =>
+                            @Requisitar(
+                                Tentativa + 1
+                            ),
                         #duration(
                             0,
                             0,
                             0,
-                            Number.Power(2, Tentativa)
+                            Number.Power(
+                                2,
+                                Tentativa
+                            )
                         )
                     )
 
@@ -2832,7 +3015,12 @@ let
 
                     error Resposta[Error]
 
-                else if List.Contains(StatusReprocessar, Status) then
+                else if
+                    List.Contains(
+                        StatusReprocessar,
+                        Status
+                    )
+                then
 
                     error Error.Record(
                         "Falha HTTP",
@@ -2859,25 +3047,46 @@ in
 
 shared fxRESTRequest = (
     optional RelativePath as nullable text,
-    optional Headers as nullable record
+    optional Headers as nullable record,
+    optional Config as nullable record
 )
 as binary =>
 
 let
     BaseUrl =
-        fxParametro("REST_Endpoint_Base"),
+        fxParametro(
+            "REST_Endpoint_Base",
+            null,
+            null,
+            Config
+        ),
 
     Path =
         if RelativePath = null then
-            fxParametro("REST_Endpoint_Path")
+            fxParametro(
+                "REST_Endpoint_Path",
+                null,
+                null,
+                Config
+            )
         else
             RelativePath,
 
     Timeout =
-        fxParametro("REST_Timeout", 30),
+        fxParametro(
+            "REST_Timeout",
+            30,
+            null,
+            Config
+        ),
 
     Tentativas =
-        fxParametro("REST_Tentativas", 3),
+        fxParametro(
+            "REST_Tentativas",
+            3,
+            null,
+            Config
+        ),
 
     Cabecalhos =
         if Headers = null then
@@ -2911,9 +3120,17 @@ let
                         [
                             RelativePath = Path,
                             Headers = Cabecalhos,
-                            Timeout = #duration(0, 0, 0, Timeout),
-                            IsRetry = Tentativa > 0,
-                            ManualStatusHandling = StatusReprocessar
+                            Timeout =
+                                #duration(
+                                    0,
+                                    0,
+                                    0,
+                                    Timeout
+                                ),
+                            IsRetry =
+                                Tentativa > 0,
+                            ManualStatusHandling =
+                                StatusReprocessar
                         ]
                     ),
 
@@ -2928,25 +3145,38 @@ let
                     null
                 else
                     try
-                        Value.Metadata(Binario)[Response.Status]
+                        Value.Metadata(
+                            Binario
+                        )[Response.Status]
                     otherwise
                         200,
 
             DeveRepetir =
-                (Resposta[HasError]
-                    or List.Contains(StatusReprocessar, Status))
+                (
+                    Resposta[HasError]
+                    or List.Contains(
+                        StatusReprocessar,
+                        Status
+                    )
+                )
                 and Tentativa < Tentativas,
 
             Resultado =
                 if DeveRepetir then
 
                     Function.InvokeAfter(
-                        () => @Requisitar(Tentativa + 1),
+                        () =>
+                            @Requisitar(
+                                Tentativa + 1
+                            ),
                         #duration(
                             0,
                             0,
                             0,
-                            Number.Power(2, Tentativa)
+                            Number.Power(
+                                2,
+                                Tentativa
+                            )
                         )
                     )
 
@@ -2954,7 +3184,12 @@ let
 
                     error Resposta[Error]
 
-                else if List.Contains(StatusReprocessar, Status) then
+                else if
+                    List.Contains(
+                        StatusReprocessar,
+                        Status
+                    )
+                then
 
                     error Error.Record(
                         "Falha HTTP",
@@ -2979,26 +3214,40 @@ let
 in
     Resultado;
 
-shared fxOrigemRESTConteudo = () as any =>
+shared fxOrigemRESTConteudo = (
+    optional Config as nullable record
+)
+as any =>
 
 let
     Protocolo =
         Text.Upper(
-            fxParametro("REST_Protocolo")
+            fxParametro(
+                "REST_Protocolo",
+                null,
+                null,
+                Config
+            )
         ),
 
     Resultado =
         if Protocolo = "REST" then
 
-            fxRESTRequest()
+            fxRESTRequest(
+                null,
+                null,
+                Config
+            )
 
         else if Protocolo = "ODATA" then
 
-            fxODataRequest()
+            fxODataRequest(
+                null,
+                Config
+            )
 
         else if Protocolo = "SOAP" then
 
-            // fxSOAPRequest()
             error Error.Record(
                 "SOAP requer implementação específica",
                 "As consultas SOAP exigem um envelope XML. Utilize diretamente fxSOAPRequest(Envelope)."
@@ -3028,19 +3277,32 @@ let
 in
     Resultado;
 
-shared fxOrigem = () as any =>
-// Roteador de fonte de dados: delega para srcArquivos, srcREST ou srcSGBD conforme Dados_Fonte.
+shared fxOrigem = (
+    optional Config as nullable record
+)
+as any =>
+
 let
     CarregarDadosExternos =
         fxParametro(
             "Dados_Carregar",
-            true
+            true,
+            null,
+            Config
         ),
 
     FonteDados =
         Text.Upper(
-            fxParametro("Dados_Fonte")
+            fxParametro(
+                "Dados_Fonte",
+                null,
+                null,
+                Config
+            )
         ),
+
+    UsarFontePrincipal =
+        Config = null,
 
     Resultado =
         if not CarregarDadosExternos then
@@ -3049,15 +3311,24 @@ let
 
         else if FonteDados = "ARQUIVOS" then
 
-            srcArquivos
+            if UsarFontePrincipal then
+                srcArquivos
+            else
+                fxOrigemArquivos(Config)
 
         else if FonteDados = "REST" then
 
-            srcREST
+            if UsarFontePrincipal then
+                srcREST
+            else
+                fxOrigemREST(Config)
 
         else if FonteDados = "SGBD" then
 
-            srcSGBD
+            if UsarFontePrincipal then
+                srcSGBD
+            else
+                fxOrigemSGBD(Config)
 
         else
 
@@ -3083,12 +3354,20 @@ let
 in
     Resultado;
 
-shared fxOrigemArquivos = () as record =>
+shared fxOrigemArquivos = (
+    optional Config as nullable record
+)
+as record =>
 
 let
     Origem =
         Text.Upper(
-            fxParametro("Arquivo_Origem")
+            fxParametro(
+                "Arquivo_Origem",
+                null,
+                null,
+                Config
+            )
         ),
         
     Resultado =
@@ -3097,7 +3376,12 @@ let
             let
                 Caminho =
                     fxResolverCaminho(
-                        fxParametro("Local_Pasta")
+                        fxParametro(
+                            "Local_Pasta",
+                            null,
+                            null,
+                            Config
+                        )
                     ),
 
                 Arquivos =
@@ -3114,8 +3398,20 @@ let
         else if Origem = "SHAREPOINT" then
 
             fxConectorSharePoint(
-                fxParametro("Sharepoint_Site"),
-                fxCaminhoSharePoint("Sharepoint_Pasta")
+                fxParametro(
+                    "Sharepoint_Site",
+                    null,
+                    null,
+                    Config
+                ),
+                fxCaminhoSharePoint(
+                    fxParametro(
+                        "Sharepoint_Pasta",
+                        null,
+                        null,
+                        Config
+                    )
+                )
             )
 
         else
@@ -3131,22 +3427,45 @@ let
 in
     Resultado;
 
-shared fxOrigemSGBD = () as table =>
+shared fxOrigemSGBD = (
+    optional Config as nullable record
+)
+as table =>
 
 let
     TipoSGBD =
         Text.Upper(
-            fxParametro("SGBD_Tipo")
+            fxParametro(
+                "SGBD_Tipo",
+                null,
+                null,
+                Config
+            )
         ),
 
     Host =
-        fxParametro("SGBD_Host"),
+        fxParametro(
+            "SGBD_Host",
+            null,
+            null,
+            Config
+        ),
 
     Banco =
-        fxParametro("SGBD_Banco"),
+        fxParametro(
+            "SGBD_Banco",
+            null,
+            null,
+            Config
+        ),
 
     SQL =
-        fxParametro("SGBD_SQL"),
+        fxParametro(
+            "SGBD_SQL",
+            null,
+            null,
+            Config
+        ),
 
     Resultado =
         if TipoSGBD = "ORACLE" then
@@ -3206,23 +3525,32 @@ let
 in
     Resultado;
 
-shared fxOrigemREST = () as any =>
+shared fxOrigemREST = (
+    optional Config as nullable record
+)
+as any =>
 
 let
     Conteudo =
-        fxOrigemRESTConteudo(),
+        fxOrigemRESTConteudo(
+            Config
+        ),
 
     Resultado =
         if Value.Is(
             Conteudo,
             Binary.Type
-        
         ) then
 
             let
                 Formato =
                     Text.Upper(
-                        fxParametro("REST_Formato")
+                        fxParametro(
+                            "REST_Formato",
+                            null,
+                            null,
+                            Config
+                        )
                     )
             in
                 if Formato = "JSON" then
@@ -3307,19 +3635,36 @@ let
         Csv.Document(
             Content,
             [
-                Delimiter = pDelimiter ?? ";",
-                Encoding = pEncoding ?? 65001,
-                QuoteStyle = pQuoteStyle ?? QuoteStyle.Csv
+                Delimiter =
+                    pDelimiter
+                    ?? ";",
+
+                Encoding =
+                    pEncoding
+                    ?? 65001,
+
+                QuoteStyle =
+                    pQuoteStyle
+                    ?? QuoteStyle.Csv
             ]
         ),
 
+    PromoverCabecalhos =
+        pPromoteHeaders
+        ?? true,
+
     Cabecalhos =
-        if (pPromoteHeaders ?? true) = false or Table.IsEmpty(Fonte) then
+        if
+            not PromoverCabecalhos
+            or Table.IsEmpty(Fonte)
+        then
             Fonte
         else
             Table.PromoteHeaders(
                 Fonte,
-                [PromoteAllScalars = true]
+                [
+                    PromoteAllScalars = true
+                ]
             ),
 
     SemLinhasVazias =
@@ -3331,13 +3676,16 @@ let
                         Record.FieldValues(_),
                         (Valor) =>
                             Valor <> null
-                            and Text.Trim(Text.From(Valor)) <> ""
+                            and Text.Trim(
+                                Text.From(Valor)
+                            ) <> ""
                     )
                 )
         )
 
 in
-    SemLinhasVazias;
+    SemLinhasVazias
+;
 
 shared fxLeitorExcel = (
     Content as binary,
@@ -3411,7 +3759,9 @@ shared fxLeitorArquivo = (
     Content as binary,
     optional pFormatoArquivo as nullable text,
     optional pDelimitadorArquivo as nullable text,
-    optional pCodificadorArquivo as nullable number
+    optional pCodificadorArquivo as nullable number,
+    optional pQuoteStyle as nullable number,
+    optional pPromoteHeaders as nullable logical
 )
 as any =>
 
@@ -3424,9 +3774,19 @@ let
             )
         ),
 
-    DelimitadorArquivo = pDelimitadorArquivo ?? fxParametro("Arquivo_Delimitador", ";"),
+    DelimitadorArquivo =
+        pDelimitadorArquivo
+            ?? fxParametro(
+                "Arquivo_Delimitador",
+                ";"
+            ),
 
-    CodificadorArquivo = pCodificadorArquivo ?? fxParametro("Arquivo_Codificador", 65001),
+    CodificadorArquivo =
+        pCodificadorArquivo
+            ?? fxParametro(
+                "Arquivo_Codificador",
+                65001
+            ),
 
     Resultado =
         if FormatoArquivo = "CSV" then
@@ -3434,7 +3794,9 @@ let
             fxLeitorCSV(
                 Content,
                 DelimitadorArquivo,
-                CodificadorArquivo
+                CodificadorArquivo,
+                pQuoteStyle,
+                pPromoteHeaders
             )
 
         else if FormatoArquivo = "EXCEL" then
@@ -3484,7 +3846,9 @@ in
 shared srcArquivos = let
     FonteDados =
         Text.Upper(
-            fxParametro("Dados_Fonte")
+            fxParametro(
+                "Dados_Fonte"
+            )
         ),
 
     Resultado =
@@ -3500,7 +3864,36 @@ shared srcArquivos = let
 
                 FormatoArquivo =
                     Text.Upper(
-                        Text.From(fxParametro("Arquivo_Formato", ""))
+                        Text.From(
+                            fxParametro(
+                                "Arquivo_Formato",
+                                ""
+                            )
+                        )
+                    ),
+
+                DelimitadorArquivo =
+                    fxParametro(
+                        "Arquivo_Delimitador",
+                        ";"
+                    ),
+
+                CodificadorArquivo =
+                    fxParametro(
+                        "Arquivo_Codificador",
+                        65001
+                    ),
+
+                QuoteStyleArquivo =
+                    fxParametro(
+                        "Arquivo_QuoteStyle",
+                        QuoteStyle.Csv
+                    ),
+
+                PromoverCabecalhos =
+                    fxParametro(
+                        "Arquivo_Promover_Cabecalhos",
+                        true
                     ),
 
                 ArquivosFiltrados =
@@ -3515,43 +3908,19 @@ shared srcArquivos = let
                         ArquivosFiltrados,
                         "Dados",
                         each
-                            fxLeitorArquivo([Content], FormatoArquivo),
+                            fxLeitorArquivo(
+                                [Content],
+                                FormatoArquivo,
+                                DelimitadorArquivo,
+                                CodificadorArquivo,
+                                QuoteStyleArquivo,
+                                PromoverCabecalhos
+                            ),
                         type any
                     )
 
             in
                 Dados
-
-in
-    Resultado;
-
-shared srcDados = let
-    Fonte =
-        fxOrigem(),
-
-    Tabela =
-        if
-            Value.Is(Fonte, type table)
-            and Table.HasColumns(Fonte, "Dados")
-            and not Table.IsEmpty(Fonte)
-            and Value.Is(Fonte{0}[Dados], type table)
-        then
-            Table.Combine(Fonte[Dados])
-        else
-            fxOrigemComoTabela(Fonte),
-
-    // Remove linhas completamente vazias.
-    LinhasValidas =
-        Table.SelectRows(
-            Tabela,
-            each
-                List.NonNullCount(
-                    Record.FieldValues(_)
-                ) > 0
-        ),
-
-    Resultado =
-        LinhasValidas
 
 in
     Resultado;
@@ -4167,6 +4536,7 @@ shared srcREST = let
                 {},
                 {}
             )
+
 in
     Fonte;
 
@@ -4190,6 +4560,13 @@ shared srcSGBD = let
 
 in
     Fonte;
+
+shared srcDados = let
+    Resultado =
+        fxDados()
+
+in
+    Resultado;
 shared parTabelaParametrosFormatosArquivos = "tbParametrosFormatosArquivos" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
 shared parTabelaParametrosTratamentos = "tbParametrosTratamentos" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
 shared parTabelaParametrosValidacoes = "tbParametrosValidacoes" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
@@ -4223,7 +4600,7 @@ in
 shared nrmDados = let
     Fonte = qaDados,
     Validada = fxQaFiltrarPorStatus(Fonte, "OK"),
-    Normalizada = fxNrmAplicar(Validada, "tstClientes1M")
+    Normalizada = fxNrmAplicar(Validada, "nrmDados")
 in
     Normalizada;
 
@@ -5087,7 +5464,7 @@ let
                     ]
 in
     Resultado;
-shared fxValidacaoREQUIRED = (
+shared fxValidacaoRequired = (
     valor as any,
     optional parametros as nullable list,
     optional contexto as nullable record
@@ -5244,819 +5621,315 @@ shared fxStgAplicar = (
     Tabela as table,
     optional Schema as nullable text,
     optional ignorarColunas as nullable list
-)
-as table =>
+) as table =>
 
 let
-    Preparada =
-        fxStgPreparar(
-            Tabela,
-            ignorarColunas
-        ),
-
-    Pipeline =
-        fxPipeline(Schema),
-
-    TiposPorColuna =
-        Pipeline[TiposPorColuna],
-
-    Ordem =
-        Pipeline[Ordem],
-
-    ColunasTipos =
-        List.Buffer(
-            Record.FieldNames(
-                TiposPorColuna
-            )
-        ),
-
-    ColunasNativas =
-        List.Buffer(
-            List.Select(
-                ColunasTipos,
-                (NomeColuna as text) =>
-                    let
-                        TipoDestino =
-                            Record.Field(
-                                TiposPorColuna,
-                                NomeColuna
-                            )
-                    in
-                        TipoDestino <> type any
-                        and TipoDestino <> type list
-                        and TipoDestino <> type logical
-            )
-        ),
-
-    ColunasEspeciais =
-        List.Buffer(
-            List.Select(
-                ColunasTipos,
-                (NomeColuna as text) =>
-                    let
-                        TipoDestino =
-                            Record.Field(
-                                TiposPorColuna,
-                                NomeColuna
-                            )
-                    in
-                        TipoDestino = type list
-                        or TipoDestino = type logical
-            )
-        ),
-
-    DefinicoesNativas =
-        List.Buffer(
-            List.Transform(
-                ColunasNativas,
-                (NomeColuna as text) =>
-                    let
-                        TipoDestino =
-                            Record.Field(
-                                TiposPorColuna,
-                                NomeColuna
-                            )
-                    in
-                        [
-                            Coluna = NomeColuna,
-                            Tipo = TipoDestino,
-                            TipoTexto =
-                                fxTipoParaTexto(
-                                    TipoDestino
-                                )
-                        ]
-            )
-        ),
-
-    DefinicoesEspeciais =
-        List.Buffer(
-            List.Transform(
-                ColunasEspeciais,
-                (NomeColuna as text) =>
-                    let
-                        TipoDestino =
-                            Record.Field(
-                                TiposPorColuna,
-                                NomeColuna
-                            )
-                    in
-                        [
-                            Coluna = NomeColuna,
-                            Tipo = TipoDestino,
-                            TipoTexto =
-                                fxTipoParaTexto(
-                                    TipoDestino
-                                )
-                        ]
-            )
-        ),
-
-    TiposNativos =
-        List.Buffer(
-            List.Transform(
-                DefinicoesNativas,
-                (Definicao as record) =>
-                    {
-                        Definicao[Coluna],
-                        Definicao[Tipo]
-                    }
-            )
-        ),
-
-    TiposAplicados =
-        if List.IsEmpty(TiposNativos) then
-            Preparada
-        else
-            Table.TransformColumnTypes(
-                Preparada,
-                TiposNativos,
-                parCulturaBootstrap
-            ),
-
-    TransformacoesEspeciais =
-        List.Buffer(
-            List.Transform(
-                DefinicoesEspeciais,
-                (Definicao as record) =>
-                    let
-                        NomeColuna =
-                            Definicao[Coluna],
-
-                        TipoDestino =
-                            Definicao[Tipo],
-
-                        TipoTexto =
-                            Definicao[TipoTexto],
-
-                        ConversorColuna =
-                            (ValorCelula as any) =>
-                                fxConversor(
-                                    ValorCelula,
-                                    TipoDestino,
-                                    parCulturaBootstrap
-                                )
-                    in
-                        {
-                            NomeColuna,
-
-                            (ValorCelula as any) =>
-                                if ValorCelula = null then
-                                    null
-                                else
-                                    let
-                                        Tentativa =
-                                            try ConversorColuna(
-                                                ValorCelula
-                                            )
-                                    in
-                                        if Tentativa[HasError] then
-                                            [
-                                                __STG_ERRO = true,
-                                                Ocorrencias =
-                                                    fxSchemaOcorrencia(
-                                                        "TIPO_INVALIDO",
-                                                        [
-                                                            Coluna = NomeColuna,
-                                                            Tipo = TipoDestino,
-                                                            Operador = [
-                                                                Severidade = "ERRO"
-                                                            ]
-                                                        ],
-                                                        null,
-                                                        null,
-                                                        "Valor inválido removido. Esperado tipo: "
-                                                            & TipoTexto
-                                                            & ".",
-                                                        [
-                                                            TipoEsperado = TipoTexto,
-                                                            ValorRemovido = true
-                                                        ]
-                                                    )
-                                            ]
-                                        else
-                                            Tentativa[Value],
-
-                            type any
-                        }
-            )
-        ),
-
-    EspeciaisAplicados =
-        if List.IsEmpty(TransformacoesEspeciais) then
-            TiposAplicados
-        else
-            Table.TransformColumns(
-                TiposAplicados,
-                TransformacoesEspeciais,
-                null,
-                MissingField.Ignore
-            ),
-
-    // Pré-compilação dos dados invariantes utilizados na criação das ocorrências.
-    // Os records de contexto, mensagens e detalhes são criados uma única vez por coluna.
-    DefinicoesNativasCompiladas =
-        List.Buffer(
-            List.Transform(
-                DefinicoesNativas,
-                (Definicao as record) =>
-                    [
-                        Coluna =
-                            Definicao[Coluna],
-
-                        Contexto = [
-                            Coluna =
-                                Definicao[Coluna],
-
-                            Tipo =
-                                Definicao[Tipo],
-
-                            Operador = [
-                                Severidade = "ERRO"
-                            ]
-                        ],
-
-                        Mensagem =
-                            "Valor inválido removido. Esperado tipo: "
-                            & Definicao[TipoTexto]
-                            & ".",
-
-                        Detalhes = [
-                            TipoEsperado =
-                                Definicao[TipoTexto],
-
-                            ValorRemovido =
-                                true
-                        ]
-                    ]
-            )
-        ),
-
-    // Pré-calcula uma única vez a configuração utilizada
-    // pela substituição dos erros nativos.
-    SubstituicoesErroNativos =
-        List.Buffer(
-            List.Transform(
-                ColunasNativas,
-                (NomeColuna as text) =>
-                    {
-                        NomeColuna,
-                        null
-                    }
-            )
-        ),
-
-    ComOcorrencias =
-        Table.AddColumn(
-            EspeciaisAplicados,
-            "_STG_Ocorrencias",
-            (LinhaAtual as record) =>
+    // ========================================================================
+    // FASE 1: PRÉ-COMPILAÇÃO E CACHE
+    // ========================================================================
+    // Evita recomputação de metadados em cada linha
+    
+    Preparada = fxStgPreparar(Tabela, ignorarColunas),
+    
+    Pipeline = fxPipeline(Schema),
+    TiposPorColuna = Pipeline[TiposPorColuna],
+    Ordem = Pipeline[Ordem],
+    
+    // Cache de nomes de colunas com tipos
+    ColunasTipos = List.Buffer(Record.FieldNames(TiposPorColuna)),
+    
+    // ========================================================================
+    // FASE 2: SEPARAÇÃO DE TIPOS POR ESTRATÉGIA DE CONVERSÃO
+    // ========================================================================
+    // Agrupa colunas por tipo de tratamento necessário
+    
+    // Tipos nativos que o Power Query converte diretamente
+    ColunasNativas = List.Buffer(
+        List.Select(
+            ColunasTipos,
+            (NomeColuna) =>
                 let
-                    OcorrenciasNativas =
-                        List.RemoveNulls(
-                            List.Transform(
-                                DefinicoesNativasCompiladas,
-                                (Definicao as record) =>
-                                    let
-                                        TentativaValor =
-                                            try Record.Field(
-                                                LinhaAtual,
-                                                Definicao[Coluna]
-                                            )
-                                    in
-                                        if TentativaValor[HasError] then
-                                            fxSchemaOcorrencia(
-                                                "TIPO_INVALIDO",
-                                                Definicao[Contexto],
-                                                null,
-                                                null,
-                                                Definicao[Mensagem],
-                                                Definicao[Detalhes]
-                                            )
-                                        else
-                                            null
-                            )
-                        ),
-
-                    OcorrenciasEspeciais =
-                        List.RemoveNulls(
-                            List.Transform(
-                                DefinicoesEspeciais,
-                                (Definicao as record) =>
-                                    let
-                                        ValorCelula =
-                                            Record.FieldOrDefault(
-                                                LinhaAtual,
-                                                Definicao[Coluna],
-                                                null
-                                            ),
-
-                                        EhErro =
-                                            Value.Is(
-                                                ValorCelula,
-                                                type record
-                                            )
-                                            and
-                                            Record.FieldOrDefault(
-                                                ValorCelula,
-                                                "__STG_ERRO",
-                                                false
-                                            ) = true
-                                    in
-                                        if EhErro then
-                                            Record.FieldOrDefault(
-                                                ValorCelula,
-                                                "Ocorrencias",
-                                                null
-                                            )
-                                        else
-                                            null
-                            )
-                        ),
-
-                    TodasOcorrencias =
-                        List.Combine(
-                            {
-                                OcorrenciasNativas,
-                                OcorrenciasEspeciais
-                            }
-                        )
+                    TipoDestino = Record.Field(TiposPorColuna, NomeColuna)
                 in
-                    if List.IsEmpty(TodasOcorrencias) then
-                        null
-                    else
-                        TodasOcorrencias,
-            type any
-        ),
-
-    NativosSemErros =
-        if List.IsEmpty(ColunasNativas) then
-            ComOcorrencias
-        else
-            Table.ReplaceErrorValues(
-                ComOcorrencias,
-                SubstituicoesErroNativos
-            ),
-
-    TransformacoesEspeciaisFinais =
-        List.Buffer(
-            List.Transform(
-                DefinicoesEspeciais,
-                (Definicao as record) =>
-                    let
-                        NomeColuna =
-                            Definicao[Coluna],
-
-                        TipoDestino =
-                            Definicao[Tipo]
-                    in
-                        {
-                            NomeColuna,
-
-                            (ValorCelula as any) =>
-                                if
-                                    Value.Is(
-                                        ValorCelula,
-                                        type record
-                                    )
-                                    and
-                                    Record.FieldOrDefault(
-                                        ValorCelula,
-                                        "__STG_ERRO",
-                                        false
-                                    ) = true
-                                then
-                                    null
-                                else
-                                    ValorCelula,
-
-                            TipoDestino
-                        }
-            )
-        ),
-
-    ComTipos =
-        if List.IsEmpty(TransformacoesEspeciaisFinais) then
-            NativosSemErros
-        else
-            Table.TransformColumns(
-                NativosSemErros,
-                TransformacoesEspeciaisFinais,
-                null,
-                MissingField.Ignore
-            ),
-
-    Resultado =
-        if List.IsEmpty(Ordem) then
-            ComTipos
-        else
-            Table.ReorderColumns(
-                ComTipos,
-                Ordem,
-                MissingField.Ignore
-            )
-
-in
-    Resultado
-
-
-/*
-(
-    Tabela as table,
-    optional Schema as nullable text,
-    optional ignorarColunas as nullable list
-)
-as table =>
-
-let
-    Preparada =
-        fxStgPreparar(
-            Tabela,
-            ignorarColunas
-        ),
-
-    Pipeline =
-        fxPipeline(Schema),
-
-    TiposPorColuna =
-        Pipeline[TiposPorColuna],
-
-    Ordem =
-        Pipeline[Ordem],
-
-    ColunasTipos =
-        List.Buffer(
-            Record.FieldNames(
-                TiposPorColuna
-            )
-        ),
-
-    ColunasNativas =
-        List.Buffer(
-            List.Select(
-                ColunasTipos,
-                (NomeColuna as text) =>
-                    let
-                        TipoDestino =
-                            Record.Field(
-                                TiposPorColuna,
-                                NomeColuna
-                            )
-                    in
-                        TipoDestino <> type any
-                        and TipoDestino <> type list
-                        and TipoDestino <> type logical
-            )
-        ),
-
-    ColunasEspeciais =
-        List.Buffer(
-            List.Select(
-                ColunasTipos,
-                (NomeColuna as text) =>
-                    let
-                        TipoDestino =
-                            Record.Field(
-                                TiposPorColuna,
-                                NomeColuna
-                            )
-                    in
-                        TipoDestino = type list
-                        or TipoDestino = type logical
-            )
-        ),
-
-    DefinicoesNativas =
-        List.Buffer(
-            List.Transform(
-                ColunasNativas,
-                (NomeColuna as text) =>
-                    let
-                        TipoDestino =
-                            Record.Field(
-                                TiposPorColuna,
-                                NomeColuna
-                            )
-                    in
-                        [
-                            Coluna = NomeColuna,
-                            Tipo = TipoDestino,
-                            TipoTexto =
-                                fxTipoParaTexto(
-                                    TipoDestino
-                                )
-                        ]
-            )
-        ),
-
-    DefinicoesEspeciais =
-        List.Buffer(
-            List.Transform(
-                ColunasEspeciais,
-                (NomeColuna as text) =>
-                    let
-                        TipoDestino =
-                            Record.Field(
-                                TiposPorColuna,
-                                NomeColuna
-                            )
-                    in
-                        [
-                            Coluna = NomeColuna,
-                            Tipo = TipoDestino,
-                            TipoTexto =
-                                fxTipoParaTexto(
-                                    TipoDestino
-                                )
-                        ]
-            )
-        ),
-
-    TiposNativos =
-        List.Buffer(
-            List.Transform(
-                DefinicoesNativas,
-                (Definicao as record) =>
-                    {
-                        Definicao[Coluna],
-                        Definicao[Tipo]
-                    }
-            )
-        ),
-
-    TiposAplicados =
-        if List.IsEmpty(TiposNativos) then
-            Preparada
-        else
-            Table.TransformColumnTypes(
-                Preparada,
-                TiposNativos,
-                parCulturaBootstrap
-            ),
-
-    TransformacoesEspeciais =
+                    TipoDestino <> type any
+                    and TipoDestino <> type list
+                    and TipoDestino <> type logical
+        )
+    ),
+    
+    // Tipos especiais que precisam de conversão customizada
+    ColunasEspeciais = List.Buffer(
+        List.Select(
+            ColunasTipos,
+            (NomeColuna) =>
+                let
+                    TipoDestino = Record.Field(TiposPorColuna, NomeColuna)
+                in
+                    TipoDestino = type list or TipoDestino = type logical
+        )
+    ),
+    
+    // ========================================================================
+    // FASE 3: PRÉ-COMPILAÇÃO DE DEFINIÇÕES
+    // ========================================================================
+    // Cria estruturas de dados otimizadas para lookup rápido
+    
+    // Mapa de tipo textual para conversão
+    MapaTipos = Record.FromList(
         List.Transform(
-            DefinicoesEspeciais,
-            (Definicao as record) =>
-                let
-                    NomeColuna =
-                        Definicao[Coluna],
-
-                    TipoDestino =
-                        Definicao[Tipo],
-
-                    TipoTexto =
-                        Definicao[TipoTexto],
-
-                    ConversorColuna =
-                        (ValorCelula as any) =>
-                            fxConversor(
-                                ValorCelula,
-                                TipoDestino,
-                                parCulturaBootstrap
-                            )
-                in
-                    {
-                        NomeColuna,
-
-                        (ValorCelula as any) =>
-                            if ValorCelula = null then
-                                null
-                            else
-                                let
-                                    Tentativa =
-                                        try ConversorColuna(
-                                            ValorCelula
-                                        )
-                                in
-                                    if Tentativa[HasError] then
-                                        [
-                                            __STG_ERRO = true,
-                                            Ocorrencias =
-                                                fxSchemaOcorrencia(
-                                                    "TIPO_INVALIDO",
-                                                    [
-                                                        Coluna = NomeColuna,
-                                                        Tipo = TipoDestino,
-                                                        Operador = [
-                                                            Severidade = "ERRO"
-                                                        ]
-                                                    ],
-                                                    null,
-                                                    null,
-                                                    "Valor inválido removido. Esperado tipo: "
-                                                        & TipoTexto
-                                                        & ".",
-                                                    [
-                                                        TipoEsperado = TipoTexto,
-                                                        ValorRemovido = true
-                                                    ]
-                                                )
-                                        ]
-                                    else
-                                        Tentativa[Value],
-
-                        type any
-                    }
+            ColunasTipos,
+            (Col) => [
+                Coluna = Col,
+                Tipo = Record.Field(TiposPorColuna, Col),
+                TipoTexto = fxTipoParaTexto(Record.Field(TiposPorColuna, Col))
+            ]
         ),
-
-    EspeciaisAplicados =
-        if List.IsEmpty(TransformacoesEspeciais) then
-            TiposAplicados
-        else
-            Table.TransformColumns(
-                TiposAplicados,
-                TransformacoesEspeciais,
-                null,
-                MissingField.Ignore
-            ),
-
-    // Pré-compilação: contextos de erro e mensagens estáticas gerados uma vez por coluna,
-    // fora do loop de linhas, eliminando alocações repetidas de records por célula com erro.
-    DefinicoesNativasCompiladas =
-        List.Buffer(
-            List.Transform(
-                DefinicoesNativas,
-                (Def as record) =>
+        ColunasTipos
+    ),
+    
+    // Definições nativas pré-compiladas com contextos de erro
+    DefinicoesNativasCompiladas = List.Buffer(
+        List.Transform(
+            ColunasNativas,
+            (Col) =>
+                let
+                    Info = Record.Field(MapaTipos, Col)
+                in
                     [
-                        Coluna   = Def[Coluna],
+                        Coluna = Col,
+                        Tipo = Info[Tipo],
                         Contexto = [
-                            Coluna   = Def[Coluna],
-                            Tipo     = Def[Tipo],
-                            Operador = [ Severidade = "ERRO" ]
+                            Coluna = Col,
+                            Tipo = Info[Tipo],
+                            Operador = [Severidade = "ERRO"]
                         ],
-                        Mensagem = "Valor inválido removido. Esperado tipo: "
-                            & Def[TipoTexto] & ".",
+                        Mensagem = "Valor inválido removido. Esperado tipo: " & Info[TipoTexto] & ".",
                         Detalhes = [
-                            TipoEsperado = Def[TipoTexto],
+                            TipoEsperado = Info[TipoTexto],
                             ValorRemovido = true
                         ]
                     ]
-            )
-        ),
-
-    // Pré-calcula a lista de substituição de erros nativos uma única vez por tabela.
-    SubstituicoesErroNativos =
-        List.Buffer(
-            List.Transform(
-                ColunasNativas,
-                (NomeColuna as text) => { NomeColuna, null }
-            )
-        ),
-
-    ComOcorrencias =
-        Table.AddColumn(
-            EspeciaisAplicados,
-            "_STG_Ocorrencias",
-            (LinhaAtual as record) =>
-                let
-                    OcorrenciasNativas =
-                        List.RemoveNulls(
-                            List.Transform(
-                                DefinicoesNativasCompiladas,
-                                (Def as record) =>
-                                    let
-                                        TentativaValor =
-                                            try Record.Field(
-                                                LinhaAtual,
-                                                Def[Coluna]
-                                            )
-                                    in
-                                        if TentativaValor[HasError] then
-                                            fxSchemaOcorrencia(
-                                                "TIPO_INVALIDO",
-                                                Def[Contexto],
-                                                null,
-                                                null,
-                                                Def[Mensagem],
-                                                Def[Detalhes]
-                                            )
-                                        else
-                                            null
-                            )
-                        ),
-
-                    OcorrenciasEspeciais =
-                        List.RemoveNulls(
-                            List.Transform(
-                                DefinicoesEspeciais,
-                                (Definicao as record) =>
-                                    let
-                                        NomeColuna =
-                                            Definicao[Coluna],
-
-                                        ValorCelula =
-                                            Record.FieldOrDefault(
-                                                LinhaAtual,
-                                                NomeColuna,
-                                                null
-                                            ),
-
-                                        EhErro =
-                                            Value.Is(
-                                                ValorCelula,
-                                                type record
-                                            )
-                                            and
-                                            Record.FieldOrDefault(
-                                                ValorCelula,
-                                                "__STG_ERRO",
-                                                false
-                                            ) = true
-                                    in
-                                        if EhErro then
-                                            Record.FieldOrDefault(
-                                                ValorCelula,
-                                                "Ocorrencias",
-                                                null
-                                            )
-                                        else
-                                            null
-                            )
-                        ),
-
-                    TodasOcorrencias =
-                        List.Combine(
-                            {
-                                OcorrenciasNativas,
-                                OcorrenciasEspeciais
-                            }
-                        )
-                in
-                    if List.IsEmpty(TodasOcorrencias) then
-                        null
-                    else
-                        TodasOcorrencias,
-            type any
-        ),
-
-    NativosSemErros =
-        if List.IsEmpty(ColunasNativas) then
-            ComOcorrencias
-        else
-            Table.ReplaceErrorValues(
-                ComOcorrencias,
-                SubstituicoesErroNativos
-            ),
-
-    TransformacoesEspeciaisFinais =
+        )
+    ),
+    
+    // ========================================================================
+    // FASE 4: APLICAÇÃO DE TIPOS NATIVOS
+    // ========================================================================
+    // Usa TransformColumnTypes nativo do Power Query (otimizado)
+    
+    TiposNativos = List.Buffer(
         List.Transform(
-            DefinicoesEspeciais,
-            (Definicao as record) =>
-                let
-                    NomeColuna =
-                        Definicao[Coluna],
-
-                    TipoDestino =
-                        Definicao[Tipo]
-                in
-                    {
-                        NomeColuna,
-
-                        (ValorCelula as any) =>
-                            if
-                                Value.Is(
-                                    ValorCelula,
-                                    type record
-                                )
-                                and
-                                Record.FieldOrDefault(
-                                    ValorCelula,
-                                    "__STG_ERRO",
-                                    false
-                                ) = true
-                            then
-                                null
-                            else
-                                ValorCelula,
-
-                        TipoDestino
-                    }
+            ColunasNativas,
+            (Col) => {Col, Record.Field(MapaTipos, Col)[Tipo]}
+        )
+    ),
+    
+    TiposAplicados = 
+        if List.IsEmpty(TiposNativos) then Preparada
+        else Table.TransformColumnTypes(
+            Preparada,
+            TiposNativos,
+            parCulturaBootstrap
         ),
-
+    
+    // ========================================================================
+    // FASE 5: CONVERSÃO DE TIPOS ESPECIAIS (OTIMIZADA)
+    // ========================================================================
+    // Usa conversores customizados apenas onde necessário
+    
+    TransformacoesEspeciais = List.Transform(
+        ColunasEspeciais,
+        (Col) =>
+            let
+                Info = Record.Field(MapaTipos, Col),
+                TipoDestino = Info[Tipo],
+                TipoTexto = Info[TipoTexto],
+                
+                // Cache do conversor para evitar lookup repetido
+                Conversor = (v) => fxConversor(v, TipoDestino, parCulturaBootstrap)
+            in
+                {
+                    Col,
+                    (ValorCelula) =>
+                        if ValorCelula = null then null
+                        else
+                            let
+                                Tentativa = try Conversor(ValorCelula)
+                            in
+                                if Tentativa[HasError] then
+                                    [
+                                        __STG_ERRO = true,
+                                        Ocorrencias = fxSchemaOcorrencia(
+                                            "TIPO_INVALIDO",
+                                            [
+                                                Coluna = Col,
+                                                Tipo = TipoDestino,
+                                                Operador = [Severidade = "ERRO"]
+                                            ],
+                                            null,
+                                            null,
+                                            "Valor inválido removido. Esperado tipo: " & TipoTexto & ".",
+                                            [
+                                                TipoEsperado = TipoTexto,
+                                                ValorRemovido = true
+                                            ]
+                                        )
+                                    ]
+                                else
+                                    Tentativa[Value],
+                    type any
+                }
+    ),
+    
+    EspeciaisAplicados =
+        if List.IsEmpty(TransformacoesEspeciais) then TiposAplicados
+        else Table.TransformColumns(
+            TiposAplicados,
+            TransformacoesEspeciais,
+            null,
+            MissingField.Ignore
+        ),
+    
+    // ========================================================================
+    // FASE 6: DETECÇÃO DE ERROS OTIMIZADA (SINGLE-PASS)
+    // ========================================================================
+    // Uma única passagem pela tabela para detectar todos os erros
+    
+    // Pré-calcula lista de substituição de erros nativos
+    SubstituicoesErroNativos = List.Buffer(
+        List.Transform(ColunasNativas, (Col) => {Col, null})
+    ),
+    
+    // Adiciona coluna de ocorrências usando List.MatchesAny para short-circuit
+    ComOcorrencias = Table.AddColumn(
+        EspeciaisAplicados,
+        "_STG_Ocorrencias",
+        (LinhaAtual) =>
+            let
+                // OTIMIZAÇÃO 1: Usa List.MatchesAny com early exit
+                TemErroNativo = List.MatchesAny(
+                    DefinicoesNativasCompiladas,
+                    (Def) =>
+                        let
+                            Tentativa = try Record.Field(LinhaAtual, Def[Coluna])
+                        in
+                            Tentativa[HasError]
+                ),
+                
+                // OTIMIZAÇÃO 2: Só processa erros nativos se existirem
+                OcorrenciasNativas =
+                    if not TemErroNativo then {}
+                    else List.RemoveNulls(
+                        List.Transform(
+                            DefinicoesNativasCompiladas,
+                            (Def) =>
+                                let
+                                    Tentativa = try Record.Field(LinhaAtual, Def[Coluna])
+                                in
+                                    if Tentativa[HasError] then
+                                        fxSchemaOcorrencia(
+                                            "TIPO_INVALIDO",
+                                            Def[Contexto],
+                                            null,
+                                            null,
+                                            Def[Mensagem],
+                                            Def[Detalhes]
+                                        )
+                                    else null
+                        )
+                    ),
+                
+                // OTIMIZAÇÃO 3: Usa List.MatchesAny para detectar erros especiais
+                TemErroEspecial = List.MatchesAny(
+                    ColunasEspeciais,
+                    (Col) =>
+                        let
+                            v = Record.FieldOrDefault(LinhaAtual, Col, null)
+                        in
+                            Value.Is(v, type record)
+                            and Record.FieldOrDefault(v, "__STG_ERRO", false) = true
+                ),
+                
+                // OTIMIZAÇÃO 4: Só processa erros especiais se existirem
+                OcorrenciasEspeciais =
+                    if not TemErroEspecial then {}
+                    else List.RemoveNulls(
+                        List.Transform(
+                            ColunasEspeciais,
+                            (Col) =>
+                                let
+                                    v = Record.FieldOrDefault(LinhaAtual, Col, null)
+                                in
+                                    if Value.Is(v, type record)
+                                        and Record.FieldOrDefault(v, "__STG_ERRO", false) = true
+                                    then Record.FieldOrDefault(v, "Ocorrencias", null)
+                                    else null
+                        )
+                    ),
+                
+                // OTIMIZAÇÃO 5: Só combina listas se houver ocorrências
+                TodasOcorrencias =
+                    if not TemErroNativo and not TemErroEspecial then null
+                    else
+                        let
+                            Combinadas = List.Combine({OcorrenciasNativas, OcorrenciasEspeciais})
+                        in
+                            if List.IsEmpty(Combinadas) then null else Combinadas
+            in
+                TodasOcorrencias,
+        type any
+    ),
+    
+    // ========================================================================
+    // FASE 7: SUBSTITUIÇÃO DE ERROS NATIVOS (BATCH)
+    // ========================================================================
+    // Usa ReplaceErrorValues uma única vez para todos os erros
+    
+    NativosSemErros =
+        if List.IsEmpty(ColunasNativas) then ComOcorrencias
+        else Table.ReplaceErrorValues(ComOcorrencias, SubstituicoesErroNativos),
+    
+    // ========================================================================
+    // FASE 8: LIMPEZA DE TIPOS ESPECIAIS
+    // ========================================================================
+    // Remove marcadores de erro e aplica tipos finais
+    
+    TransformacoesEspeciaisFinais = List.Transform(
+        ColunasEspeciais,
+        (Col) =>
+            let
+                Info = Record.Field(MapaTipos, Col)
+            in
+                {
+                    Col,
+                    (ValorCelula) =>
+                        if Value.Is(ValorCelula, type record)
+                            and Record.FieldOrDefault(ValorCelula, "__STG_ERRO", false) = true
+                        then null
+                        else ValorCelula,
+                    Info[Tipo]
+                }
+    ),
+    
     ComTipos =
-        if List.IsEmpty(TransformacoesEspeciaisFinais) then
-            NativosSemErros
-        else
-            Table.TransformColumns(
-                NativosSemErros,
-                TransformacoesEspeciaisFinais,
-                null,
-                MissingField.Ignore
-            ),
-
+        if List.IsEmpty(TransformacoesEspeciaisFinais) then NativosSemErros
+        else Table.TransformColumns(
+            NativosSemErros,
+            TransformacoesEspeciaisFinais,
+            null,
+            MissingField.Ignore
+        ),
+    
+    // ========================================================================
+    // FASE 9: REORDENAÇÃO FINAL
+    // ========================================================================
+    
     Resultado =
-        if List.IsEmpty(Ordem) then
-            ComTipos
-        else
-            Table.ReorderColumns(
-                ComTipos,
-                Ordem,
-                MissingField.Ignore
-            )
+        if List.IsEmpty(Ordem) then ComTipos
+        else Table.ReorderColumns(ComTipos, Ordem, MissingField.Ignore)
 
 in
-    Resultado
-*/;
+    Resultado;
 
 shared fxTratamentoNormalizeBasic = (valor as any, optional parametros as nullable any) as any =>
 
@@ -7607,7 +7480,7 @@ in
 
 shared trnDados = let
     Fonte = stgDados,
-    Transformada = fxTrnAplicar(Fonte, "tstClientes1M")
+    Transformada = fxTrnAplicar(Fonte, "nrmDados")
 in
     Transformada;
 
@@ -7626,14 +7499,7 @@ in
 
 shared qaDados = let
     Fonte = trnDados,
-    qa = fxQaValidar(Fonte, "tstClientes1M")
-
-    // Usar apenas dados válidos
-    // Validos = fxQaFiltrarPorStatus(qa, "OK"),
-
-    // Extrair problemas para auditoria
-    // Problemas = fxQaExtrairProblemas(qa)
-
+    qa = fxQaValidar(Fonte, "nrmDados")
 in
     qa;
 
@@ -7739,15 +7605,15 @@ in
     _QA_OcorrenciasComMensagem;
 
 shared tstClientes_ComFramework = let
-    Schema = "tstClientes1M",
+    Schema = "nrmDados",
     Fonte = srcDados,
-    Stage = fxStgAplicar(Fonte, Schema),
-    Transform = fxTrnAplicar(Stage, Schema),
-    Qa = fxQaValidar(Transform, Schema),
-    Valida = fxQaFiltrarPorStatus(Qa, "OK"),
-    Normalize = fxNrmAplicar(Valida, Schema)
+    Preparacao = fxStgAplicar(Fonte, Schema),
+    Transformacao = fxTrnAplicar(Preparacao, Schema),
+    Qualidade = fxQaValidar(Transformacao, Schema),
+    Validacao = fxQaFiltrarPorStatus(Qualidade, "OK"),
+    Normalizacao = fxNrmAplicar(Validacao, Schema)
 in
-    Normalize;
+    Normalizacao;
 
 shared fxTratamentoReplace = (valor as any, optional parametros as nullable any) as any =>
     //{"antigo","novo"}
@@ -8607,7 +8473,7 @@ in
 
 shared stgDados = let
     Fonte = srcDados,
-    Preparada = fxStgAplicar(Fonte, "tstClientes1M"),
+    Preparada = fxStgAplicar(Fonte, "nrmDados"),
     Resultado = Preparada
 in
     Resultado;
@@ -9027,3 +8893,167 @@ shared diagPipelineExecucao = let
         )
 in
     Resultado;
+
+shared fxDados = (
+    optional Config as nullable record
+)
+as table =>
+
+let
+    Fonte =
+        fxOrigem(
+            Config
+        ),
+
+    FonteDados =
+        Text.Upper(
+            fxParametro(
+                "Dados_Fonte",
+                null,
+                null,
+                Config
+            )
+        ),
+
+    Tabela =
+        if
+            Value.Is(
+                Fonte,
+                type table
+            )
+            and Table.HasColumns(
+                Fonte,
+                "Dados"
+            )
+            and not Table.IsEmpty(
+                Fonte
+            )
+            and Value.Is(
+                Fonte{0}[Dados],
+                type table
+            )
+        then
+
+            Table.Combine(
+                Fonte[Dados]
+            )
+
+        else if
+            FonteDados = "ARQUIVOS"
+            and Value.Is(
+                Fonte,
+                type record
+            )
+            and Record.HasFields(
+                Fonte,
+                "Arquivos"
+            )
+            and Record.HasFields(
+                Fonte,
+                "Arquivo"
+            )
+        then
+
+            let
+                Origem =
+                    Fonte,
+
+                FormatoArquivo =
+                    Text.Upper(
+                        Text.From(
+                            fxParametro(
+                                "Arquivo_Formato",
+                                "",
+                                null,
+                                Config
+                            )
+                        )
+                    ),
+
+                DelimitadorArquivo =
+                    fxParametro(
+                        "Arquivo_Delimitador",
+                        ";",
+                        null,
+                        Config
+                    ),
+
+                CodificadorArquivo =
+                    fxParametro(
+                        "Arquivo_Codificador",
+                        65001,
+                        null,
+                        Config
+                    ),
+
+                QuoteStyleArquivo =
+                    fxParametro(
+                        "Arquivo_QuoteStyle",
+                        QuoteStyle.Csv,
+                        null,
+                        Config
+                    ),
+
+                PromoverCabecalhos =
+                    fxParametro(
+                        "Arquivo_Promover_Cabecalhos",
+                        true,
+                        null,
+                        Config
+                    ),
+
+                ArquivosFiltrados =
+                    fxFiltrarArquivos(
+                        Origem[Arquivos],
+                        FormatoArquivo,
+                        Origem[Arquivo]
+                    ),
+
+                Dados =
+                    Table.AddColumn(
+                        ArquivosFiltrados,
+                        "Dados",
+                        each
+                            fxLeitorArquivo(
+                                [Content],
+                                FormatoArquivo,
+                                DelimitadorArquivo,
+                                CodificadorArquivo,
+                                QuoteStyleArquivo,
+                                PromoverCabecalhos
+                            ),
+                        type any
+                    )
+
+            in
+                if
+                    Table.IsEmpty(
+                        Dados
+                    )
+                then
+                    #table(
+                        {},
+                        {}
+                    )
+                else
+                    Table.Combine(
+                        Dados[Dados]
+                    )
+
+        else
+
+            fxOrigemComoTabela(
+                Fonte
+            ),
+
+    LinhasValidas =
+        Table.SelectRows(
+            Tabela,
+            each
+                List.NonNullCount(
+                    Record.FieldValues(_)
+                ) > 0
+        )
+
+in
+    LinhasValidas;
