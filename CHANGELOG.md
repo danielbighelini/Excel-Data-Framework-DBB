@@ -1,3 +1,10 @@
+## [1.5.3](https://github.com/danielbighelini/Excel-Data-Framework-DBB/compare/v1.5.2...v1.5.3) (2026-08-19)
+
+
+### Bug Fixes
+
+* correção das funções FX.PARAMETRO e fxParametro ([c8cda42](https://github.com/danielbighelini/Excel-Data-Framework-DBB/commit/c8cda4293ff01314c96207e70afec38ee8c4b323))
+
 ## [1.5.2](https://github.com/danielbighelini/Excel-Data-Framework-DBB/compare/v1.5.1...v1.5.2) (2026-08-12)
 
 
