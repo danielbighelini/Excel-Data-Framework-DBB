@@ -1,6 +1,6 @@
 // Power Query from: Excel Data Framework DBB.xlsx
 // Pathname: c:\Users\daniel-bighelini\OneDrive\Documentos\04_Projetos\Excel-Data-Framework-DBB\src\Excel Data Framework DBB.xlsx
-// Extracted: 2026-08-19T15:20:54.350Z
+// Extracted: 2026-08-19T19:08:41.614Z
 
 section Section1;
 
@@ -1322,42 +1322,6 @@ in
             ]
         );
 
-shared fxConfigParametro = (
-    Config as nullable record,
-    Parametro as text,
-    optional ValorPadrao as nullable any,
-    optional Culture as nullable text
-)
-as any =>
-
-let
-    TemOverride =
-        Config <> null
-        and Record.HasFields(
-            Config,
-            Parametro
-        ),
-
-    Resultado =
-        if TemOverride then
-            fxParametro(
-                Parametro,
-                Record.Field(
-                    Config,
-                    Parametro
-                ),
-                Culture
-            )
-        else
-            fxParametro(
-                Parametro,
-                ValorPadrao,
-                Culture
-            )
-
-in
-    Resultado;
-
 
 shared cfgTiposDados = srcTiposDados;
 
@@ -2580,61 +2544,102 @@ in
 [ Description = "Consultas existentes do PowerQuery" ]
 shared diagConsultasPQ = let
 
-//--------------------------------------------------------------------------
-// Objetos do Power Query
-//--------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    // Fonte: apenas os nomes das queries
+    //-------------------------------------------------------------------------
+    Fonte = srcObjetosPowerQuery,
 
-    Objetos =
-        Table.SelectColumns(stgObjetosPowerQuery, {"Nome", "Categoria"}),
+    //-------------------------------------------------------------------------
+    // Transformação mínima: Nome + Categoria
+    //-------------------------------------------------------------------------
+    ComCategoria = Table.AddColumn(
+        Table.FromList(Fonte, Splitter.SplitByNothing(), {"Nome"}),
+        "Categoria",
+        each 
+            let
+                Prefixo = fxObjetoIdentificarPrefixo([Nome]),
+                CategoriaRecord = Record.FieldOrDefault(
+                    cfgCategoriasPowerQuery,
+                    Prefixo,
+                    [Categoria = "Qualquer"]
+                )
+            in
+                CategoriaRecord[Categoria],
+        type text
+    ),
 
-//--------------------------------------------------------------------------
-// Resultado
-//--------------------------------------------------------------------------
-
-    Resultado =
-
-        Table.Sort(
-
-            Objetos,
-
-            {
-
-                {"Categoria", Order.Ascending},
-
-                {"Nome", Order.Ascending}
-
-            }
-
-        )
+    //-------------------------------------------------------------------------
+    // Ordenação final
+    //-------------------------------------------------------------------------
+    Resultado = Table.Sort(
+        ComCategoria,
+        {{"Categoria", Order.Ascending}, {"Nome", Order.Ascending}}
+    )
 
 in
-
     Resultado;
 
 shared diagTabelasExcel = let
 
-    Fonte =
-        Table.SelectColumns(stgTabelasExcel, {"Nome", "Columns"}),
+    //-------------------------------------------------------------------------
+    // Fonte: objetos Excel filtrados
+    //-------------------------------------------------------------------------
+    Fonte = stgObjetosExcel,
 
-    ColunasTexto =
-        Table.TransformColumns(
+    LinhasFiltradas = Table.SelectRows(
+        Fonte,
+        each not Text.Contains([Nome], "!") and not Text.StartsWith([Nome], "diag")
+    ),
 
-            Fonte,
+    //-------------------------------------------------------------------------
+    // Extração otimizada: apenas nomes de colunas
+    //-------------------------------------------------------------------------
+    ComColunas = Table.AddColumn(
+        LinhasFiltradas,
+        "Columns",
+        each 
+            let
+                Conteudo = srcWorkbook{[Name = [Nome]]}[Content],
+                ColunasNomes = Table.ColumnNames(Conteudo)
+            in
+                ColunasNomes,
+        type list
+    ),
 
+    //-------------------------------------------------------------------------
+    // Transformar lista em texto separado por ponto e vírgula
+    //-------------------------------------------------------------------------
+    ColunasTexto = Table.TransformColumns(
+        ComColunas,
+        {
             {
-                {
-                    "Columns",
-                    each Text.Combine(_, ";"),
-                    type text
-                }
+                "Columns",
+                each Text.Combine(_, ";"),
+                type text
             }
+        }
+    ),
 
-        ),
+    //-------------------------------------------------------------------------
+    // Selecionar apenas Nome e Colunas
+    //-------------------------------------------------------------------------
+    Resultado = Table.SelectColumns(
+        ColunasTexto,
+        {"Nome", "Columns"}
+    ),
 
-    ColunasRenomeadas = Table.RenameColumns(ColunasTexto,{{"Nome", "Tabela"}, {"Columns", "Colunas"}})
+    //-------------------------------------------------------------------------
+    // Renomear para consistência com a versão original
+    //-------------------------------------------------------------------------
+    ColunasRenomeadas = Table.RenameColumns(
+        Resultado,
+        {
+            {"Nome", "Tabela"},
+            {"Columns", "Colunas"}
+        }
+    )
 
 in
-
     ColunasRenomeadas;
 
 shared stgClientes = let
@@ -6640,128 +6645,6 @@ in
 
     Resultado;
 
-shared fxPipelineCompilarColuna = // Compila os operadores de uma coluna mesclando padrões do tipo + definições do schema + REQUIRED implícito.
-(
-    Definicao as record
-)
-as record =>
-
-let
-
-//--------------------------------------------------------------------------
-// Operadores padrão
-//--------------------------------------------------------------------------
-
-    OperadoresPadrao =
-
-        fxOperadoresPadrao(
-            Definicao[Tipo]
-        ),
-
-//--------------------------------------------------------------------------
-// Tratamentos
-//--------------------------------------------------------------------------
-
-    Tratamentos =
-
-        List.Buffer(
-
-            fxPipelineCompilarOperadores(
-
-                List.Combine(
-                    {
-                        OperadoresPadrao[Tratamentos],
-                        Definicao[Tratamentos] ?? {}
-                    }
-                )
-
-            ) ?? {}
-
-        ),
-
-//--------------------------------------------------------------------------
-// Validações
-//--------------------------------------------------------------------------
-
-    Validacoes =
-
-        fxPipelineCompilarOperadores(
-
-            List.Combine(
-                {
-                    OperadoresPadrao[Validações],
-                    Definicao[Validações] ?? {}
-                }
-            )
-
-        ),
-
-//--------------------------------------------------------------------------
-// REQUIRED implícito
-//--------------------------------------------------------------------------
-
-    Required =
-
-        if Definicao[Obrigatório] then
-
-            {
-                Record.Combine(
-                    {
-                        cfgOperadores[REQUIRED],
-                        [
-                            Parâmetros = null
-                        ]
-                    }
-                )
-            }
-
-        else
-
-            {},
-
-//--------------------------------------------------------------------------
-// Pipeline de validações
-//--------------------------------------------------------------------------
-
-    PipelineValidacoes =
-
-        List.Buffer(
-
-            List.Combine(
-                {
-                    Required,
-                    Validacoes ?? {}
-                }
-            )
-
-        ),
-
-//--------------------------------------------------------------------------
-// Resultado
-//--------------------------------------------------------------------------
-
-    Resultado =
-
-        [
-
-            Tipo = Definicao[Tipo],
-
-            Obrigatório = Definicao[Obrigatório],
-
-            Ativo = Definicao[Ativo],
-
-            Chave = Record.FieldOrDefault(Definicao, "Chave", null) = true,
-
-            Tratamentos = Tratamentos,
-
-            Validações = PipelineValidacoes
-
-        ]
-
-in
-
-    Resultado;
-
 shared fxPipelineCompilar = // Compila o schema completo de uma tabela em pipeline executável.
 (
     Schema as record
@@ -9057,3 +8940,19 @@ let
 
 in
     LinhasValidas;
+
+shared fxObjetoIdentificarPrefixo = (objeto as text) as nullable text =>
+let
+    ObjetoLower = Text.Lower(objeto),
+    Prefixos = cfgPrefixosPowerQuery,
+    // Ordena por tamanho decrescente para priorizar prefixos mais longos
+    PrefixosOrdenados = List.Sort(Prefixos, (a,b) => Value.Compare(Text.Length(b), Text.Length(a))),
+    PrefixoEncontrado = List.First(
+        List.Select(
+            PrefixosOrdenados,
+            each Text.StartsWith(ObjetoLower, _)
+        ),
+        null
+    )
+in
+    PrefixoEncontrado;
