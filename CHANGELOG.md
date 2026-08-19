@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/danielbighelini/Excel-Data-Framework-DBB/compare/v1.5.3...v1.6.0) (2026-08-19)
+
+
+### Features
+
+* Aprimoramentos de performance nas consultas diag ([96c2ce5](https://github.com/danielbighelini/Excel-Data-Framework-DBB/commit/96c2ce5db1c78958745617f14d7d9cf8a6cbbfa1))
+
 ## [1.5.3](https://github.com/danielbighelini/Excel-Data-Framework-DBB/compare/v1.5.2...v1.5.3) (2026-08-19)
 
 
