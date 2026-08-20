@@ -1,3 +1,10 @@
+## [1.6.1](https://github.com/danielbighelini/Excel-Data-Framework-DBB/compare/v1.6.0...v1.6.1) (2026-08-20)
+
+
+### Bug Fixes
+
+* correções nas tabelas de booleanos e tipos ([3e90ce4](https://github.com/danielbighelini/Excel-Data-Framework-DBB/commit/3e90ce4baf9b8ea9f4f67ef93177974e9f2f324f))
+
 # [1.6.0](https://github.com/danielbighelini/Excel-Data-Framework-DBB/compare/v1.5.3...v1.6.0) (2026-08-19)
 
 
