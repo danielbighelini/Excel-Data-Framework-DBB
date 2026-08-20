@@ -1,66 +1,23 @@
 // Power Query from: Excel Data Framework DBB.xlsx
 // Pathname: c:\Users\daniel-bighelini\OneDrive\Documentos\04_Projetos\Excel-Data-Framework-DBB\src\Excel Data Framework DBB.xlsx
-// Extracted: 2026-08-19T19:08:41.614Z
+// Extracted: 2026-08-20T14:42:35.078Z
 
 section Section1;
 
-shared srcTiposDados =
-//==============================================================================
-// TIPOS DE DADOS - Configuração Central
-//==============================================================================
-// Mapa nome → tipo M; aceita nomes em pt-BR e inglês para compatibilidade.
-[
-    #"BOOLEANO" = type logical,
-    #"DATA" = type date,
-    #"DATA E HORA" = type datetime,
-    #"DATA/HORA/FUSO" = type datetimezone,
-    #"DURAÇÃO" = type duration,
-    #"HORA" = type time,
-    #"LISTA" = type list,
-    #"NÚMERO DECIMAL" = type number,
-    #"NÚMERO INTEIRO" = Int64.Type,
-    #"QUALQUER VALOR" = type any,
-    #"TEXTO" = type text,
-    #"LOGICAL" = type logical,
-    #"DATE" = type date,
-    #"DATETIME" = type datetime,
-    #"DATETIMEZONE" = type datetimezone,
-    #"DURATION" = type duration,
-    #"TIME" = type time,
-    #"LIST" = type list,
-    #"NUMBER" = type number,
-    #"INT64" = Int64.Type,
-    #"ANY" = type any,
-    #"TEXT" = type text
-];
-
-shared srcObjetosPowerQuery =
-// Lista os nomes de todas as queries na seção atual do arquivo M.
-let
-
-    Resultado =
-
-        Record.FieldNames(
-
-            #sections[Section1]
-
-        )
-
-in
-
-    Resultado;
+shared srcObjetosPowerQuery = // Lista os nomes de todas as queries na seção atual do arquivo M.
+Record.FieldNames(
+    #sections[Section1]
+)
+;
 
 shared srcCategoriasPowerQuery = let
     Fonte = srcWorkbook{[Name=parTabelaCategoriasConsultasPQ]}[Content]
 in
     Fonte;
 
-shared srcWorkbook = 
-// Workbook Excel atual bufferizado; ponto de entrada de todas as leituras de tabelas.
-let
-    srcWorkbook = Table.Buffer(Excel.CurrentWorkbook())
-in
-    srcWorkbook;
+shared srcWorkbook = // Workbook Excel atual bufferizado; ponto de entrada de todas as leituras de tabelas.
+Table.Buffer(Excel.CurrentWorkbook())
+;
 
 shared srcParametrosExcel = 
 // Lê tbParametros; retorna tabela vazia se a tabela não existir.
@@ -187,6 +144,20 @@ in
 
 shared srcParametrosFeriados = let
     Fonte = srcWorkbook{[Name=parTabelaParametrosFeriados]}[Content]
+in
+    Fonte;
+shared srcParametrosBooleanos = // Mapa string → logical; aceita representações em pt-BR e en-US.
+let
+    Fonte = srcWorkbook{[Name=parTabelaParametrosBooleanos]}[Content]
+in
+    Fonte;
+
+shared srcParametrosTipos = //==============================================================================
+// TIPOS DE DADOS - Configuração Central
+//==============================================================================
+// Mapa nome → tipo M; aceita nomes em pt-BR e inglês para compatibilidade.
+let
+    Fonte = srcWorkbook{[Name=parTabelaParametrosTipos]}[Content]
 in
     Fonte;
 shared srcSchema = let
@@ -1283,9 +1254,7 @@ shared stgParametros = let
                 "Value"
             }
         )
-
 in
-
     Resultado;
 
 shared fxParametroIdentificarTipo = (tipo as nullable text) as nullable type =>
@@ -1301,8 +1270,8 @@ let
             )
 in
     if Nome = null then null
-    else if Record.HasFields(cfgTiposDados, Nome) then
-        Record.Field(cfgTiposDados, Nome)
+    else if Record.HasFields(cfgTipos, Nome) then
+        Record.Field(cfgTipos, Nome)
     else
         error Error.Record(
             "Tipo inválido",
@@ -1315,7 +1284,7 @@ in
                 TiposDisponiveis =
                     Text.Combine(
                         List.Sort(
-                            Record.FieldNames(cfgTiposDados)
+                            Record.FieldNames(cfgTipos)
                         ),
                         ", "
                     )
@@ -1323,7 +1292,47 @@ in
         );
 
 
-shared cfgTiposDados = srcTiposDados;
+shared cfgTipos = let
+
+    Fonte =
+        Table.Buffer(stgParametrosTipos),
+
+    Tipos =
+        [
+            LOGICAL = type logical,
+            DATE = type date,
+            DATETIME = type datetime,
+            DATETIMEZONE = type datetimezone,
+            DURATION = type duration,
+            TIME = type time,
+            LIST = type list,
+            NUMBER = type number,
+            INT64 = Int64.Type,
+            ANY = type any,
+            TEXT = type text
+        ],
+
+    cfgTipos =
+        Record.Combine(
+            List.Transform(
+                Table.ToRecords(Fonte),
+                each
+                    Record.FromList(
+                        {
+                            Record.Field(Tipos, [Código]),
+                            Record.Field(Tipos, [Código])
+                        },
+                        {
+                            [Descrição],
+                            [Código]
+                        }
+                    )
+            )
+        )
+
+in
+
+    cfgTipos;
 
 shared cfgTiposObjetos = srcTiposObjetos;
 
@@ -1333,133 +1342,133 @@ in
     Record.FromList(Vals, List.Transform(Vals, each [Nome]));
 // Mapa Kind → metadados de tipo M (Nome, Type, Categoria, IsStructured).
 shared srcTiposObjetos = [
-        Table = [
-            Kind = "Table",
-            Nome = "Tabela",
-            Type = type table,
-            Categoria = "Estruturado"
-        ],
+    Table = [
+        Kind = "Table",
+        Nome = "Tabela",
+        Type = type table,
+        Categoria = "Estruturado"
+    ],
 
-        Record = [
-            Kind = "Record",
-            Nome = "Registro",
-            Type = type record,
-            Categoria = "Estruturado"
-        ],
+    Record = [
+        Kind = "Record",
+        Nome = "Registro",
+        Type = type record,
+        Categoria = "Estruturado"
+    ],
 
-        List = [
-            Kind = "List",
-            Nome = "Lista",
-            Type = type list,
-            Categoria = "Estruturado"
-        ],
+    List = [
+        Kind = "List",
+        Nome = "Lista",
+        Type = type list,
+        Categoria = "Estruturado"
+    ],
 
-        Function = [
-            Kind = "Function",
-            Nome = "Função",
-            Type = type function,
-            Categoria = "Executável"
-        ],
+    Function = [
+        Kind = "Function",
+        Nome = "Função",
+        Type = type function,
+        Categoria = "Executável"
+    ],
 
-        Action = [
-            Kind = "Action",
-            Nome = "Ação",
-            Type = type action,
-            Categoria = "Executável"
-        ],
+    Action = [
+        Kind = "Action",
+        Nome = "Ação",
+        Type = type action,
+        Categoria = "Executável"
+    ],
 
-        Text = [
-            Kind = "Text",
-            Nome = "Texto",
-            Type = type text,
-            Categoria = "Escalar"
-        ],
+    Text = [
+        Kind = "Text",
+        Nome = "Texto",
+        Type = type text,
+        Categoria = "Escalar"
+    ],
 
-        Logical = [
-            Kind = "Logical",
-            Nome = "Lógico",
-            Type = type logical,
-            Categoria = "Escalar"
-        ],
+    Logical = [
+        Kind = "Logical",
+        Nome = "Lógico",
+        Type = type logical,
+        Categoria = "Escalar"
+    ],
 
-        Int64 = [
-            Kind = "Int64",
-            Nome = "Inteiro 64 bits",
-            Type = Int64.Type,
-            Categoria = "Numérico"
-        ],
+    Int64 = [
+        Kind = "Int64",
+        Nome = "Inteiro 64 bits",
+        Type = Int64.Type,
+        Categoria = "Numérico"
+    ],
 
-        Number = [
-            Kind = "Number",
-            Nome = "Número",
-            Type = type number,
-            Categoria = "Numérico"
-        ],
+    Number = [
+        Kind = "Number",
+        Nome = "Número",
+        Type = type number,
+        Categoria = "Numérico"
+    ],
 
-        Date = [
-            Kind = "Date",
-            Nome = "Data",
-            Type = type date,
-            Categoria = "Data e Hora"
-        ],
+    Date = [
+        Kind = "Date",
+        Nome = "Data",
+        Type = type date,
+        Categoria = "Data e Hora"
+    ],
 
-        Time = [
-            Kind = "Time",
-            Nome = "Hora",
-            Type = type time,
-            Categoria = "Data e Hora"
-        ],
+    Time = [
+        Kind = "Time",
+        Nome = "Hora",
+        Type = type time,
+        Categoria = "Data e Hora"
+    ],
 
-        DateTime = [
-            Kind = "DateTime",
-            Nome = "Data e Hora",
-            Type = type datetime,
-            Categoria = "Data e Hora"
-        ],
+    DateTime = [
+        Kind = "DateTime",
+        Nome = "Data e Hora",
+        Type = type datetime,
+        Categoria = "Data e Hora"
+    ],
 
-        DateTimeZone = [
-            Kind = "DateTimeZone",
-            Nome = "Data e Hora com Fuso",
-            Type = type datetimezone,
-            Categoria = "Data e Hora"
-        ],
+    DateTimeZone = [
+        Kind = "DateTimeZone",
+        Nome = "Data e Hora com Fuso",
+        Type = type datetimezone,
+        Categoria = "Data e Hora"
+    ],
 
-        Duration = [
-            Kind = "Duration",
-            Nome = "Duração",
-            Type = type duration,
-            Categoria = "Data e Hora"
-        ],
+    Duration = [
+        Kind = "Duration",
+        Nome = "Duração",
+        Type = type duration,
+        Categoria = "Data e Hora"
+    ],
 
-        Binary = [
-            Kind = "Binary",
-            Nome = "Binário",
-            Type = type binary,
-            Categoria = "Binário"
-        ],
+    Binary = [
+        Kind = "Binary",
+        Nome = "Binário",
+        Type = type binary,
+        Categoria = "Binário"
+    ],
 
-        Type = [
-            Kind = "Type",
-            Nome = "Tipo",
-            Type = type type,
-            Categoria = "Especial"
-        ],
+    Type = [
+        Kind = "Type",
+        Nome = "Tipo",
+        Type = type type,
+        Categoria = "Especial"
+    ],
 
-        Null = [
-            Kind = "Null",
-            Nome = "Nulo",
-            Type = type null,
-            Categoria = "Especial"
-        ],
+    Null = [
+        Kind = "Null",
+        Nome = "Nulo",
+        Type = type null,
+        Categoria = "Especial"
+    ],
 
-        Any = [
-            Kind = "Any",
-            Nome = "Qualquer",
-            Type = type any,
-            Categoria = "Especial"
-        ]
+    Any = [
+        Kind = "Any",
+        Nome = "Qualquer",
+        Type = type any,
+        Categoria = "Especial"
+    ]
 
-    ];
+];
 
 
 shared stgParametrosFormatosArquivos = let
@@ -1948,6 +1957,92 @@ shared stgParametrosFeriados = let
 in
     RemoverDuplicados;
 
+shared stgParametrosBooleanos = let
+
+    Fonte =
+        srcParametrosBooleanos,
+
+    LinhasValidas =
+        Table.SelectRows(
+            Fonte,
+            each
+                [Descrição] <> null
+                and Text.Trim(Text.From([Descrição])) <> ""
+                and [Código] <> null
+        ),
+
+    Booleanos =
+        Table.TransformColumns(
+            LinhasValidas,
+            {
+                {
+                    "Descrição",
+                    each Text.Upper(Text.Trim(Text.From(_)))
+                }
+            }
+        ),
+
+    BooleanosTipados =
+        Table.TransformColumnTypes(
+            Booleanos,
+            {
+                {"Código", type logical},
+                {"Descrição", type text}
+            }
+        ),
+
+    Distintos =
+        Table.Distinct(
+            BooleanosTipados,
+            {"Código", "Descrição"}
+        )
+
+in
+
+    Distintos;
+
+shared stgParametrosTipos = let
+
+    Fonte =
+        srcParametrosTipos,
+
+    LinhasValidas =
+        Table.SelectRows(
+            Fonte,
+            each
+                [Descrição] <> null
+                and Text.Trim(Text.From([Descrição])) <> ""
+                and [Código] <> null
+                and Text.Trim(Text.From([Código])) <> ""
+        ),
+
+    Normalizados =
+        Table.TransformColumns(
+            LinhasValidas,
+            {
+                {
+                    "Descrição",
+                    each Text.Upper(Text.Trim(Text.From(_))),
+                    type text
+                },
+                {
+                    "Código",
+                    each Text.Upper(Text.Trim(Text.From(_))),
+                    type text
+                }
+            }
+        ),
+
+    Distintos =
+        Table.Distinct(
+            Normalizados,
+            {"Código", "Descrição"}
+        )
+
+in
+
+    Distintos;
+
 shared stgSchema = 
 // Schema ativo normalizado e filtrado (Ativo=true); base para cfgSchema e cfgPipeline.
 
@@ -2217,18 +2312,22 @@ in
     Resultado
 ;
 
-shared cfgTiposBooleanos = srcTiposBooleanos;
-shared srcTiposBooleanos =
-// Mapa string → logical; aceita representações em pt-BR e en-US.
-[
-    #"TRUE" = true,
-    #"FALSE" = false,
-    #"SIM" = true,
-    #"NÃO" = false,
-    #"NAO" = false,
-    #"1" = true,
-    #"0" = false
-];
+shared cfgTiposBooleanos = let
+    cfgTiposBooleanos =
+        Record.FromTable(
+            Table.RenameColumns(
+                Table.SelectColumns(
+                    Table.Buffer(stgParametrosBooleanos),
+                    {"Descrição", "Código"}
+                ),
+                {
+                    {"Descrição", "Name"},
+                    {"Código", "Value"}
+                }
+            )
+        )
+in
+    cfgTiposBooleanos;
 
 
 shared cfgConversores = srcConversores;
@@ -4582,6 +4681,10 @@ shared parTabelaParametrosCalendario = "tbParametrosCalendario" meta [IsParamete
 shared parTabelaParametrosFeriados = "tbParametrosFeriados" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
 
 shared parTabelaCategoriasConsultasPQ = "tbSobreCategoriasConsultasPQ" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
+
+shared parTabelaParametrosBooleanos = "tbParametrosBooleanos" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
+
+shared parTabelaParametrosTipos = "tbParametrosTipos" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
 shared parTabelaSchema = "tbSchema" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
 shared parTabelaClientes = "tbClientes" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
 shared parTabelaProdutos = "tbProdutos" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
@@ -5534,6 +5637,7 @@ in
                 or Text.Contains(Nome, "Tabelas")
                 or Text.Contains(Nome, "Workbook")
                 or Text.Contains(Nome, "diag")
+                or Text.Contains(Nome, "tst")
         )
     );
 
@@ -7427,6 +7531,33 @@ shared fxTesteExecutar =
     in
         Resultado;
 
+shared tstPipelineExecucao = let
+    Fonte =
+        srcClientes,
+
+    STG =
+        stgClientes,
+
+    TRN =
+        trnClientes,
+
+    QA =
+        qaClientes,
+
+    NRM =
+        nrmClientes,
+
+    Resultado =
+        fxPipelineDiagnostico(
+            Fonte,
+            STG,
+            TRN,
+            QA,
+            NRM
+        )
+in
+    Resultado;
+
 shared tstTesteSTG = let
     Resultado = fxStgAplicar(srcClientes, "tbClientes")
 in
@@ -8749,33 +8880,6 @@ let
 
 in
     Tipos;
-
-shared diagPipelineExecucao = let
-    Fonte =
-        srcClientes,
-
-    STG =
-        stgClientes,
-
-    TRN =
-        trnClientes,
-
-    QA =
-        qaClientes,
-
-    NRM =
-        nrmClientes,
-
-    Resultado =
-        fxPipelineDiagnostico(
-            Fonte,
-            STG,
-            TRN,
-            QA,
-            NRM
-        )
-in
-    Resultado;
 
 shared fxDados = (
     optional Config as nullable record
