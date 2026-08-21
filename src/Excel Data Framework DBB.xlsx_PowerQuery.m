@@ -1,6 +1,6 @@
 // Power Query from: Excel Data Framework DBB.xlsx
 // Pathname: c:\Users\daniel-bighelini\OneDrive\Documentos\04_Projetos\Excel-Data-Framework-DBB\src\Excel Data Framework DBB.xlsx
-// Extracted: 2026-08-20T14:42:35.078Z
+// Extracted: 2026-08-21T11:48:01.087Z
 
 section Section1;
 
@@ -42,84 +42,6 @@ shared srcParametrosFormatosArquivos = let
 in
     Fonte;
 
-shared srcOperadores = // Catálogo de todos os operadores (tratamentos + validações) com ponteiros para as funções de implementação.
-let
-    CategoriaTratamento = "Tratamento",
-    CategoriaValidacao = "Validação",
-    SeveridadeAviso = "Informação",
-    SeveridadeErro = "Erro",
-    TabelaParametros = #table(
-        type table
-        [
-            Código = text,
-            Descrição = text,
-            Função = function,
-            TipoEntrada = type,
-            TipoSaida = type,
-            Padrão = logical,
-            Ativo = logical,
-            Categoria = text,
-            Severidade = text,
-            Parâmetros = nullable record
-        ],
-        {
-            // Tratamentos básicos
-            {"TRIM", "Remove espaços em branco do início e do final do texto.", fxTratamentoTrim, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"UPPER", "Converte todo o texto para letras maiúsculas.", fxTratamentoUpper, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"LOWER", "Converte todo o texto para letras minúsculas.", fxTratamentoLower, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"PROPER", "Converte a primeira letra de cada palavra para maiúscula.", fxTratamentoProper, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"CLEAN", "Remove caracteres não imprimíveis do texto.", fxTratamentoClean, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"EMPTYTONULL", "Converte valores vazios ou em branco para null.", fxTratamentoEmptyToNull, type any, type any, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"NULLTOEMPTY", "Converte valores nulos (null) em textos vazios.", fxTratamentoNullToEmpty, type any, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"SINGLESPACE", "Substitui múltiplos espaços consecutivos por apenas um espaço.", fxTratamentoSingleSpace, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"DIGITS", "Mantém apenas os dígitos numéricos do texto.", fxTratamentoDigits, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"ALPHANUMERIC", "Mantém apenas letras e números, removendo símbolos e pontuações.", fxTratamentoAlphaNumeric, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"ABS", "Retorna o valor absoluto (positivo) de um número.", fxTratamentoAbs, type number, type number, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"ROUND", "Arredonda um número decimal para a quantidade de casas especificadas.", fxTratamentoRound, type number, type number, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"NORMALIZEBASIC", "Remove caracteres de controle, elimina espaços excedentes no início, fim e entre palavras, retornando um texto normalizado ou nulo quando vazio.", fxTratamentoNormalizeBasic, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"NUMBER", "Converte textos contendo valores numéricos em um número, reconhecendo automaticamente sinais, moeda e separadores decimal e de milhar.", fxTratamentoNumber, type text, type number, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"CPF", "Formata ou extrai apenas os números para o padrão de CPF.", fxTratamentoDigits, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"CNPJ", "Formata ou extrai apenas os números para o padrão de CNPJ.", fxTratamentoDigits, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"CEP", "Formata ou extrai apenas os números para o padrão de CEP.", fxTratamentoDigits, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"PHONE", "Formata ou extrai apenas os números para o padrão de telefone.", fxTratamentoDigits, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            
-            // Tratamentos avançados
-            {"REPLACE", "Substitui todas as ocorrências de um texto por outro.", fxTratamentoReplace, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"LEFT", "Mantém os N primeiros caracteres do texto.", fxTratamentoLeft, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"RIGHT", "Mantém os N últimos caracteres do texto.", fxTratamentoRight, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"MID", "Extrai uma quantidade de caracteres a partir de uma posição específica.", fxTratamentoMid, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"BEFORE", "Extrai o texto localizado antes de um delimitador informado.", fxTratamentoBefore, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"AFTER", "Extrai o texto localizado após um delimitador informado.", fxTratamentoAfter, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"ADDPREFIX", "Adiciona um prefixo ao início do texto.", fxTratamentoAddPrefix, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"ADDSUFFIX", "Adiciona um sufixo ao final do texto.", fxTratamentoAddSuffix, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"REMOVEPREFIX", "Remove o primeiro prefixo encontrado no início do texto.", fxTratamentoRemovePrefix, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"REMOVESUFFIX", "Remove o primeiro sufixo encontrado no final do texto.", fxTratamentoRemoveSuffix, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"PADLEFT", "Completa o texto à esquerda até atingir o comprimento especificado.", fxTratamentoPadLeft, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"PADRIGHT", "Completa o texto à direita até atingir o comprimento especificado.", fxTratamentoPadRight, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"REMOVECHARS", "Remove todos os caracteres pertencentes a uma lista informada.", fxTratamentoRemoveChars, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"KEEPCHARS", "Mantém apenas os caracteres pertencentes a uma lista informada.", fxTratamentoKeepChars, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"REMOVEACCENTS", "Remove acentos e caracteres diacríticos do texto.", fxTratamentoRemoveAccents, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"REMOVEPUNCTUATION", "Remove todos os sinais de pontuação do texto.", fxTratamentoRemovePunctuation, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-            {"KEEPTEXT", "Mantém apenas caracteres e espaços do texto.", fxTratamentoKeepText, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
-
-            // Validações
-            {"REQUIRED", "Valida se um campo obrigatório foi preenchido.", fxValidacaoRequired, type any, type any, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"CPFVAL", "Valida se o número de CPF informado é matematicamente válido.", fxValidacaoCPF, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"CNPJVAL", "Valida se o número de CNPJ informado é matematicamente válido.", fxValidacaoCNPJ, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"CEPVAL", "Valida se o formato do CEP informado está correto.", fxValidacaoCEP, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"PHONEVAL", "Valida se o valor possui um formato válido de telefone brasileiro (fixo ou celular), aceitando números com ou sem máscara e com ou sem código do país (+55).", fxValidacaoPhone, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"EMAIL", "Valida se a estrutura do endereço de e-mail está correta.", fxValidacaoEmail, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"URL", "Valida se a estrutura do endereço web (URL) está correta.", fxValidacaoURL, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"LIST", "Valida se o valor pertence a uma lista de opções permitidas.", fxValidacaoList, type any, type any, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"SIZE", "Valida se o tamanho ou comprimento do dado está dentro do limite.", fxValidacaoSize, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"MIN", "Valida se o valor é maior ou igual ao limite mínimo permitido.", fxValidacaoMin, type number, type number, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"MAX", "Valida se o valor é menor ou igual ao limite máximo permitido.", fxValidacaoMax, type number, type number, false, true, CategoriaValidacao, SeveridadeErro, null},
-            {"INTERVAL", "Valida se o valor está dentro de um intervalo numérico ou temporal específico.", fxValidacaoInterval, type number, type number, false, true, CategoriaValidacao, SeveridadeErro, null}
-        }
-    )
-in
-    TabelaParametros;
-
 //==============================================================================
 // PARÂMETROS - Configuração do Framework
 //==============================================================================
@@ -160,8 +82,8 @@ let
     Fonte = srcWorkbook{[Name=parTabelaParametrosTipos]}[Content]
 in
     Fonte;
-shared srcSchema = let
-    Fonte = srcWorkbook{[Name=parTabelaSchema]}[Content]
+shared srcParametrosSchema = let
+    Fonte = srcWorkbook{[Name=parTabelaParametrosSchema]}[Content]
 in
     Fonte;
 shared srcClientes = let
@@ -330,7 +252,16 @@ in
 shared cfgCategoriasPowerQuery = let
     Fonte =
         Table.Buffer(
-            stgCategoriasPowerQuery
+            Table.SelectColumns(
+                stgCategoriasPowerQuery,
+                {
+                    "Prefixo",
+                    "Ordem",
+                    "Categoria",
+                    "Objetivo",
+                    "Saída"
+                }
+            )
         ),
 
     Registros =
@@ -664,18 +595,8 @@ in
     Resultado;
 
 shared stgObjetosPowerQuery = let
-
-//--------------------------------------------------------------------------
-// Fonte
-//--------------------------------------------------------------------------
-
     Fonte =
-
         srcObjetosPowerQuery,
-
-//--------------------------------------------------------------------------
-// Objetos
-//--------------------------------------------------------------------------
 
     Objetos =
         List.RemoveNulls(
@@ -707,14 +628,8 @@ shared stgObjetosPowerQuery = let
             )
         ),
 
-//--------------------------------------------------------------------------
-// Resultado
-//--------------------------------------------------------------------------
-
     Resultado =
-
         Table.FromRecords(
-
             Objetos,
             type table [
                 Origem = text,
@@ -773,7 +688,13 @@ in
 
 shared stgTabelasExcel = let
     Fonte =
-        stgObjetosExcel,
+        Table.RenameColumns(
+            Table.SelectColumns(
+                srcWorkbook,
+                {"Name"}
+            ),
+            {{"Name", "Nome"}}
+        ),
 
     LinhasFiltradas =
         Table.SelectRows(
@@ -807,147 +728,57 @@ in
     Resultado;
 
 shared stgTabelasPowerQuery = let
-
-//--------------------------------------------------------------------------
-// Fonte
-//--------------------------------------------------------------------------
-
-Fonte =
-
-    Table.SelectRows(
-
-        stgObjetosPowerQuery,
-
-        each
-            [Kind] = "Table"
-            and not List.Contains(parObjetosPowerQueryIgnorados, [Nome])
-
-    ),
-
-//--------------------------------------------------------------------------
-// Metadados
-//--------------------------------------------------------------------------
-
-    Registros =
-
-        List.Transform(
-
-            Table.ToRecords(
-                Fonte
-            ),
-
-            (Objeto) =>
-
-                let
-
-                    Tabela =
-
-                        Record.Field(
-
-                            #sections[Section1],
-
-                            Objeto[Nome]
-
-                        ),
-
-                    Metadados =
-
-                        /*
-                        // O codigo abaixo foi desabilitado pelo fato de gerar consultas ciclicas
-                        // e nao estar sendo necessario no framework
-                        if Value.Is(Tabela, type table) then
-
-                            [
-
-                                Columns = Table.ColumnNames(Tabela),
-                                ColumnCount = Table.ColumnCount(Tabela)
-
-                            ]
-
-                        else if Value.Is(Tabela, type list) then
-
-                            let
-
-                                Primeiro = List.First(Tabela, null)
-
-                            in
-
-                                if Value.Is(Primeiro, type record) then
-
-                                    [
-
-                                        Columns = Record.FieldNames(Primeiro),
-                                        ColumnCount = List.Count(Record.FieldNames(Primeiro))
-
-                                    ]
-
-                                else
-
-                                    [
-
-                                        Columns = {},
-                                        ColumnCount = 0
-
-                                    ]
-
-                        else
-*/
-                            [
-
-                                Columns = {},
-                                ColumnCount = 0
-
-                            ]
-
-
-                in
-
-                    Record.Combine({
-                        Objeto,
-                        Metadados
-                    })
-
+    Fonte =
+        Table.SelectColumns(
+            stgObjetosPowerQuery,
+            {"Nome", "Kind"}
         ),
 
-//--------------------------------------------------------------------------
-// Resultado
-//--------------------------------------------------------------------------
+    Filtrado =
+        Table.SelectRows(
+            Fonte,
+            each
+                [Kind] = "Table"
+                and not List.Contains(
+                    parObjetosPowerQueryIgnorados,
+                    [Nome]
+                )
+        ),
 
     Resultado =
+        Table.AddColumn(
+            Table.AddColumn(
+                Table.AddColumn(
+                    Filtrado,
+                    "Schema",
+                    each null,
+                    type nullable text
+                ),
+                "Columns",
+                each null,
+                type nullable list
+            ),
+            "ColumnCount",
+            each null,
+            type nullable number
+        ),
 
-        Table.FromRecords(
-
-            Registros,
-            type table [
-                Origem = text,
-                Nome = text,
-                Prefix = nullable text,
-                Kind = text,
-                Tipo = text,
-                Type = type,
-                Categoria = text,
-                Columns = list,
-                ColumnCount = number
-            ]            
-
+    Selecionado =
+        Table.SelectColumns(
+            Resultado,
+            {"Nome", "Schema", "Columns", "ColumnCount"}
         )
 in
-    Resultado;
+    Selecionado;
 
 shared stgTabelas = let
-
     Resultado =
-
         Table.Combine({
-
             stgTabelasPowerQuery,
-
             stgTabelasExcel
-
         })
 
 in
-
     Resultado;
 
 shared stgParametrosExcel = let
@@ -1469,6 +1300,84 @@ shared srcTiposObjetos = [
     ]
 
 ];
+
+shared srcOperadores = // Catálogo de todos os operadores (tratamentos + validações) com ponteiros para as funções de implementação.
+let
+    CategoriaTratamento = "Tratamento",
+    CategoriaValidacao = "Validação",
+    SeveridadeAviso = "Informação",
+    SeveridadeErro = "Erro",
+    TabelaParametros = #table(
+        type table
+        [
+            Código = text,
+            Descrição = text,
+            Função = function,
+            TipoEntrada = type,
+            TipoSaida = type,
+            Padrão = logical,
+            Ativo = logical,
+            Categoria = text,
+            Severidade = text,
+            Parâmetros = nullable record
+        ],
+        {
+            // Tratamentos básicos
+            {"TRIM", "Remove espaços em branco do início e do final do texto.", fxTratamentoTrim, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"UPPER", "Converte todo o texto para letras maiúsculas.", fxTratamentoUpper, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"LOWER", "Converte todo o texto para letras minúsculas.", fxTratamentoLower, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"PROPER", "Converte a primeira letra de cada palavra para maiúscula.", fxTratamentoProper, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"CLEAN", "Remove caracteres não imprimíveis do texto.", fxTratamentoClean, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"EMPTYTONULL", "Converte valores vazios ou em branco para null.", fxTratamentoEmptyToNull, type any, type any, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"NULLTOEMPTY", "Converte valores nulos (null) em textos vazios.", fxTratamentoNullToEmpty, type any, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"SINGLESPACE", "Substitui múltiplos espaços consecutivos por apenas um espaço.", fxTratamentoSingleSpace, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"DIGITS", "Mantém apenas os dígitos numéricos do texto.", fxTratamentoDigits, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"ALPHANUMERIC", "Mantém apenas letras e números, removendo símbolos e pontuações.", fxTratamentoAlphaNumeric, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"ABS", "Retorna o valor absoluto (positivo) de um número.", fxTratamentoAbs, type number, type number, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"ROUND", "Arredonda um número decimal para a quantidade de casas especificadas.", fxTratamentoRound, type number, type number, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"NORMALIZEBASIC", "Remove caracteres de controle, elimina espaços excedentes no início, fim e entre palavras, retornando um texto normalizado ou nulo quando vazio.", fxTratamentoNormalizeBasic, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"NUMBER", "Converte textos contendo valores numéricos em um número, reconhecendo automaticamente sinais, moeda e separadores decimal e de milhar.", fxTratamentoNumber, type text, type number, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"CPF", "Formata ou extrai apenas os números para o padrão de CPF.", fxTratamentoDigits, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"CNPJ", "Formata ou extrai apenas os números para o padrão de CNPJ.", fxTratamentoDigits, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"CEP", "Formata ou extrai apenas os números para o padrão de CEP.", fxTratamentoDigits, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"PHONE", "Formata ou extrai apenas os números para o padrão de telefone.", fxTratamentoDigits, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            
+            // Tratamentos avançados
+            {"REPLACE", "Substitui todas as ocorrências de um texto por outro.", fxTratamentoReplace, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"LEFT", "Mantém os N primeiros caracteres do texto.", fxTratamentoLeft, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"RIGHT", "Mantém os N últimos caracteres do texto.", fxTratamentoRight, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"MID", "Extrai uma quantidade de caracteres a partir de uma posição específica.", fxTratamentoMid, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"BEFORE", "Extrai o texto localizado antes de um delimitador informado.", fxTratamentoBefore, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"AFTER", "Extrai o texto localizado após um delimitador informado.", fxTratamentoAfter, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"ADDPREFIX", "Adiciona um prefixo ao início do texto.", fxTratamentoAddPrefix, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"ADDSUFFIX", "Adiciona um sufixo ao final do texto.", fxTratamentoAddSuffix, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"REMOVEPREFIX", "Remove o primeiro prefixo encontrado no início do texto.", fxTratamentoRemovePrefix, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"REMOVESUFFIX", "Remove o primeiro sufixo encontrado no final do texto.", fxTratamentoRemoveSuffix, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"PADLEFT", "Completa o texto à esquerda até atingir o comprimento especificado.", fxTratamentoPadLeft, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"PADRIGHT", "Completa o texto à direita até atingir o comprimento especificado.", fxTratamentoPadRight, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"REMOVECHARS", "Remove todos os caracteres pertencentes a uma lista informada.", fxTratamentoRemoveChars, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"KEEPCHARS", "Mantém apenas os caracteres pertencentes a uma lista informada.", fxTratamentoKeepChars, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"REMOVEACCENTS", "Remove acentos e caracteres diacríticos do texto.", fxTratamentoRemoveAccents, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"REMOVEPUNCTUATION", "Remove todos os sinais de pontuação do texto.", fxTratamentoRemovePunctuation, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+            {"KEEPTEXT", "Mantém apenas caracteres e espaços do texto.", fxTratamentoKeepText, type text, type text, false, true, CategoriaTratamento, SeveridadeAviso, null},
+
+            // Validações
+            {"REQUIRED", "Valida se um campo obrigatório foi preenchido.", fxValidacaoRequired, type any, type any, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"CPFVAL", "Valida se o número de CPF informado é matematicamente válido.", fxValidacaoCPF, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"CNPJVAL", "Valida se o número de CNPJ informado é matematicamente válido.", fxValidacaoCNPJ, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"CEPVAL", "Valida se o formato do CEP informado está correto.", fxValidacaoCEP, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"PHONEVAL", "Valida se o valor possui um formato válido de telefone brasileiro (fixo ou celular), aceitando números com ou sem máscara e com ou sem código do país (+55).", fxValidacaoPhone, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"EMAIL", "Valida se a estrutura do endereço de e-mail está correta.", fxValidacaoEmail, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"URL", "Valida se a estrutura do endereço web (URL) está correta.", fxValidacaoURL, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"LIST", "Valida se o valor pertence a uma lista de opções permitidas.", fxValidacaoList, type any, type any, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"SIZE", "Valida se o tamanho ou comprimento do dado está dentro do limite.", fxValidacaoSize, type text, type text, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"MIN", "Valida se o valor é maior ou igual ao limite mínimo permitido.", fxValidacaoMin, type number, type number, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"MAX", "Valida se o valor é menor ou igual ao limite máximo permitido.", fxValidacaoMax, type number, type number, false, true, CategoriaValidacao, SeveridadeErro, null},
+            {"INTERVAL", "Valida se o valor está dentro de um intervalo numérico ou temporal específico.", fxValidacaoInterval, type number, type number, false, true, CategoriaValidacao, SeveridadeErro, null}
+        }
+    )
+in
+    TabelaParametros;
 
 
 shared stgParametrosFormatosArquivos = let
@@ -2043,7 +1952,7 @@ in
 
     Distintos;
 
-shared stgSchema = 
+shared stgParametrosSchema = 
 // Schema ativo normalizado e filtrado (Ativo=true); base para cfgSchema e cfgPipeline.
 
 let
@@ -2053,7 +1962,7 @@ let
 //--------------------------------------------------------------------------
 
     Fonte =
-        srcSchema,
+        srcParametrosSchema,
 
 //--------------------------------------------------------------------------
 // Linhas válidas
@@ -2643,10 +2552,7 @@ in
 [ Description = "Consultas existentes do PowerQuery" ]
 shared diagConsultasPQ = let
 
-    //-------------------------------------------------------------------------
-    // Fonte: apenas os nomes das queries
-    //-------------------------------------------------------------------------
-    Fonte = srcObjetosPowerQuery,
+    Fonte = List.Buffer(srcObjetosPowerQuery),
 
     //-------------------------------------------------------------------------
     // Transformação mínima: Nome + Categoria
@@ -2679,67 +2585,40 @@ in
     Resultado;
 
 shared diagTabelasExcel = let
+    Fonte =
+        Table.Buffer(
+            Table.SelectRows(
+                Table.SelectColumns(
+                    stgTabelasExcel,
+                    {"Nome", "Columns"}
+                ),
+                    each not Text.Contains([Nome], "!") and not Text.StartsWith([Nome], "diag") and
+                         not Text.StartsWith([Nome], "tbParametros") and not Text.StartsWith([Nome], "tbSobre")
+                )
+        ),
 
-    //-------------------------------------------------------------------------
-    // Fonte: objetos Excel filtrados
-    //-------------------------------------------------------------------------
-    Fonte = stgObjetosExcel,
-
-    LinhasFiltradas = Table.SelectRows(
-        Fonte,
-        each not Text.Contains([Nome], "!") and not Text.StartsWith([Nome], "diag")
-    ),
-
-    //-------------------------------------------------------------------------
-    // Extração otimizada: apenas nomes de colunas
-    //-------------------------------------------------------------------------
-    ComColunas = Table.AddColumn(
-        LinhasFiltradas,
-        "Columns",
-        each 
-            let
-                Conteudo = srcWorkbook{[Name = [Nome]]}[Content],
-                ColunasNomes = Table.ColumnNames(Conteudo)
-            in
-                ColunasNomes,
-        type list
-    ),
-
-    //-------------------------------------------------------------------------
-    // Transformar lista em texto separado por ponto e vírgula
-    //-------------------------------------------------------------------------
-    ColunasTexto = Table.TransformColumns(
-        ComColunas,
-        {
+    Colunas =
+        Table.TransformColumns(
+            Fonte,
             {
-                "Columns",
-                each Text.Combine(_, ";"),
-                type text
+                {
+                    "Columns",
+                    each Text.Combine(List.Transform(_, Text.From), ";"),
+                    type text
+                }
             }
-        }
-    ),
+        ),
 
-    //-------------------------------------------------------------------------
-    // Selecionar apenas Nome e Colunas
-    //-------------------------------------------------------------------------
-    Resultado = Table.SelectColumns(
-        ColunasTexto,
-        {"Nome", "Columns"}
-    ),
-
-    //-------------------------------------------------------------------------
-    // Renomear para consistência com a versão original
-    //-------------------------------------------------------------------------
-    ColunasRenomeadas = Table.RenameColumns(
-        Resultado,
-        {
-            {"Nome", "Tabela"},
-            {"Columns", "Colunas"}
-        }
-    )
-
+    Renomeado =
+        Table.RenameColumns(
+            Colunas,
+            {
+                {"Nome", "Tabela"},
+                {"Columns", "Colunas"}
+            }
+        )
 in
-    ColunasRenomeadas;
+    Renomeado;
 
 shared stgClientes = let
     Fonte = srcClientes,
@@ -4685,7 +4564,7 @@ shared parTabelaCategoriasConsultasPQ = "tbSobreCategoriasConsultasPQ" meta [IsP
 shared parTabelaParametrosBooleanos = "tbParametrosBooleanos" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
 
 shared parTabelaParametrosTipos = "tbParametrosTipos" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
-shared parTabelaSchema = "tbSchema" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
+shared parTabelaParametrosSchema = "tbParametrosSchema" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
 shared parTabelaClientes = "tbClientes" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
 shared parTabelaProdutos = "tbProdutos" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
 shared parTabelaVendas = "tbVendas" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true];
@@ -6433,7 +6312,7 @@ let
 
     Fonte =
         Table.Buffer(
-            stgSchema
+            stgParametrosSchema
         ),
 
 //--------------------------------------------------------------------------
@@ -8494,79 +8373,86 @@ in
 
 shared diagPipelineEstrutura = let
     Fonte =
-        stgTabelasPowerQuery,
-
-    Consultas =
-        Table.SelectRows(
-            Fonte,
-            each [Origem] = "PowerQuery"
+        Table.Buffer(
+            Table.SelectColumns(
+                stgObjetosPowerQuery,
+                {"Nome", "Prefix", "Categoria"}
+            )
         ),
 
-    Entidade =
+    ComEntidade =
         Table.AddColumn(
-            Consultas,
+            Fonte,
             "Entidade",
-            each Text.AfterDelimiter([Nome], [Prefix]),
+            each Text.AfterDelimiter([Nome], [Prefix] ?? ""),
             type text
         ),
 
-    Selecionar =
+    Selecao =
         Table.SelectColumns(
-            Entidade,
+            ComEntidade,
             {"Entidade", "Categoria", "Nome"}
         ),
 
-    Pivot =
-        Table.Pivot(
-            Selecionar,
-            List.Distinct(Selecionar[Categoria]),
-            "Categoria",
-            "Nome"
-        ),
-
-    Categorias =
-        Record.ToTable(cfgCategoriasPowerQuery),
-
-    CategoriasOrdenadas =
-        Table.Sort(
-            Table.ExpandRecordColumn(
-                Categorias,
-                "Value",
-                {"Ordem", "Categoria"}
-            ),
-            {{"Ordem", Order.Ascending}}
-        ),
-
-    Ordem =
-        Table.ReorderColumns(
-            Pivot,
-            List.Combine(
+    Agrupado =
+        Table.Group(
+            Selecao,
+            {"Entidade"},
+            {
                 {
-                    {"Entidade"},
-                    CategoriasOrdenadas[Categoria]
+                    "Consultas",
+                    each
+                        Record.Combine(
+                            {
+                                [
+                                    Origem = null,
+                                    #"Preparação" = null,
+                                    #"Transformação" = null,
+                                    Qualidade = null,
+                                    #"Normalização" = null,
+                                    Dimensão = null,
+                                    Fato = null
+                                ],
+                                Record.FromList([Nome], [Categoria])
+                            }
+                        ),
+                    type record
                 }
-            ),
-            MissingField.Ignore
+            }
         ),
 
-    Resultado =
+    Expandido =
+        Table.ExpandRecordColumn(
+            Agrupado,
+            "Consultas",
+            {
+                "Origem",
+                "Preparação",
+                "Transformação",
+                "Qualidade",
+                "Normalização",
+                "Dimensão",
+                "Fato"
+            }
+        ),
+
+    Ordenado =
         Table.Sort(
-            Ordem,
+            Expandido,
             {{"Entidade", Order.Ascending}}
         ),
 
-    Filtrar =
+    Filtro =
         Table.SelectRows(
-            Resultado,
+            Ordenado,
             each not (
                 Record.FieldOrDefault(_, "Normalização", null) = null and
                 Record.FieldOrDefault(_, "Dimensão", null) = null and
                 Record.FieldOrDefault(_, "Fato", null) = null
             )
         )
-
 in
-    Filtrar;
+    Filtro;
 
 shared fxResolverCaminho = (Caminho as text) as record =>
 
